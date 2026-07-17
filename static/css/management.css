@@ -1,0 +1,1344 @@
+/*
+ * This stylesheet defines the custom management shell, navigation, tables, forms, cards, and responsive behaviour used by authorised staff.
+ * Its rules are grouped around page components, responsive layouts, theme support, and visible keyboard focus.
+ * The comments explain those relationships without changing selectors, spacing, colours, or behaviour.
+ */
+/*
+ * Popadoo custom management panel
+ *
+ * The private interface uses the public site's colour tokens but has a compact,
+ * professional layout. All colours are theme variables so text remains readable
+ * in both light and dark mode.
+ */
+
+:root,
+html[data-theme="light"] {
+    --management-sidebar-bg: #34233f;
+    --management-sidebar-text: #f9f4fc;
+    --management-sidebar-muted: #d8cde0;
+    --management-sidebar-active: #ffffff;
+    --management-sidebar-active-text: #4c2f5c;
+    --management-workspace-bg: #f7f3f9;
+    --management-panel-bg: #ffffff;
+    --management-panel-border: #ded5e4;
+    --management-text: #2d2438;
+    --management-muted: #675d72;
+    --management-primary: #6f4a8e;
+    --management-primary-hover: #58366f;
+    --management-danger: #a22945;
+    --management-danger-hover: #861d37;
+    --management-success-bg: #ddf4e7;
+    --management-success-text: #155a35;
+    --management-warning-bg: #fff0c9;
+    --management-warning-text: #664700;
+    --management-danger-bg: #fbe1e6;
+    --management-danger-text: #8a1e36;
+    --management-info-bg: #e8e1f1;
+    --management-info-text: #563b6c;
+    --management-muted-bg: #ece8ef;
+    --management-shadow: 0 0.75rem 2rem rgba(43, 27, 53, 0.09);
+}
+
+/*
+ * These rules adapt the same components for dark mode while preserving readable contrast and familiar structure.
+ */
+html[data-theme="dark"] {
+    --management-sidebar-bg: #17111e;
+    --management-sidebar-text: #fffaff;
+    --management-sidebar-muted: #cfc3d7;
+    --management-sidebar-active: #c9a7e4;
+    --management-sidebar-active-text: #1b1221;
+    --management-workspace-bg: #15111c;
+    --management-panel-bg: #241c2e;
+    --management-panel-border: #4b3d57;
+    --management-text: #faf7fc;
+    --management-muted: #cec4d5;
+    --management-primary: #c9a7e4;
+    --management-primary-hover: #ddc4ef;
+    --management-danger: #ff91ae;
+    --management-danger-hover: #ffb1c5;
+    --management-success-bg: #173d2a;
+    --management-success-text: #b9f1d0;
+    --management-warning-bg: #463818;
+    --management-warning-text: #ffe69a;
+    --management-danger-bg: #4a1d2b;
+    --management-danger-text: #ffc0cf;
+    --management-info-bg: #392d49;
+    --management-info-text: #e5d5f1;
+    --management-muted-bg: #302837;
+    --management-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.32);
+}
+
+.management-body {
+    min-height: 100vh;
+    margin: 0;
+    color: var(--management-text);
+    background: var(--management-workspace-bg);
+}
+
+.management-body h1,
+.management-body h2,
+.management-body h3,
+.management-body h4,
+.management-body p,
+.management-body label,
+.management-body dt,
+.management-body dd,
+.management-body td,
+.management-body th,
+.management-body li,
+.management-body small {
+    color: inherit;
+}
+
+.management-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 17rem minmax(0, 1fr);
+}
+
+/*
+ * This section presents the management navigation while allowing the main working area to resize independently.
+ */
+.management-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 1.25rem;
+    color: var(--management-sidebar-text);
+    background: var(--management-sidebar-bg);
+    z-index: 210;
+}
+
+.management-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.3rem 0.25rem 1.3rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.management-brand img {
+    width: 3rem;
+    height: 3rem;
+}
+
+.management-brand div {
+    display: grid;
+}
+
+.management-brand strong {
+    font-size: 1.08rem;
+}
+
+.management-brand span,
+.management-sidebar-note {
+    color: var(--management-sidebar-muted);
+    font-size: 0.82rem;
+}
+
+/*
+ * This section arranges the shared navigation controls and adapts them when the available width changes.
+ */
+.management-navigation {
+    display: grid;
+    gap: 0.35rem;
+    padding-block: 1.25rem;
+}
+
+.management-navigation a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2.8rem;
+    padding: 0.62rem 0.75rem;
+    color: var(--management-sidebar-text);
+    border-radius: 0.7rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.management-navigation a:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.management-navigation a.active {
+    color: var(--management-sidebar-active-text);
+    background: var(--management-sidebar-active);
+}
+
+.management-sidebar-note {
+    margin-top: 1rem;
+    padding: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 0.75rem;
+}
+
+.management-workspace {
+    min-width: 0;
+}
+
+/*
+ * This section aligns the management page title and actions so staff can understand the current area before acting.
+ */
+.management-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 180;
+    display: grid;
+    grid-template-columns: auto minmax(14rem, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    min-height: 5rem;
+    padding: 0.75rem clamp(1rem, 3vw, 2rem);
+    color: var(--management-text);
+    background: color-mix(in srgb, var(--management-panel-bg) 94%, transparent);
+    border-bottom: 1px solid var(--management-panel-border);
+    backdrop-filter: blur(0.8rem);
+}
+
+.management-sidebar-toggle {
+    display: none;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: var(--management-text);
+    background: var(--management-panel-bg);
+    border: 1px solid var(--management-panel-border);
+    border-radius: 0.65rem;
+}
+
+.management-topbar-heading h1 {
+    margin: 0.15rem 0 0;
+    font-size: clamp(1.25rem, 2.5vw, 1.7rem);
+    letter-spacing: -0.02em;
+}
+
+.management-breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--management-muted);
+    font-size: 0.82rem;
+}
+
+.management-breadcrumbs li:not(:last-child)::after {
+    content: "/";
+    margin-left: 0.35rem;
+}
+
+.management-breadcrumbs a {
+    color: inherit;
+}
+
+.management-topbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+}
+
+/*
+ * This section keeps labels, fields, help text, errors, and actions visually connected so forms remain understandable.
+ */
+.management-topbar-actions form {
+    margin: 0;
+}
+
+.management-user-summary {
+    display: grid;
+    max-width: 12rem;
+    line-height: 1.2;
+}
+
+.management-user-summary span {
+    color: var(--management-muted);
+    font-size: 0.78rem;
+}
+
+.management-link-button,
+.management-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--management-text);
+    background: var(--management-panel-bg);
+    border: 1px solid var(--management-panel-border);
+    border-radius: 0.65rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.management-icon-button {
+    width: 2.5rem;
+    padding: 0;
+}
+
+.management-main {
+    width: min(100%, 95rem);
+    margin-inline: auto;
+    padding: clamp(1rem, 3vw, 2rem);
+}
+
+.management-messages {
+    padding: 1rem clamp(1rem, 3vw, 2rem) 0;
+}
+
+.management-alert {
+    max-width: 95rem;
+    margin: 0 auto 0.75rem;
+    padding: 0.85rem 1rem;
+    color: var(--management-text);
+    background: var(--management-info-bg);
+    border: 1px solid var(--management-panel-border);
+    border-radius: 0.75rem;
+}
+
+.management-alert.success {
+    color: var(--management-success-text);
+    background: var(--management-success-bg);
+}
+
+.management-alert.error,
+.management-alert.danger {
+    color: var(--management-danger-text);
+    background: var(--management-danger-bg);
+}
+
+.management-page-section {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.management-page-header,
+/*
+ * This section shapes the chat panel and keeps its header, history, and composer usable within the available screen height.
+ */
+.management-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.management-page-header h2,
+.management-panel-header h2,
+.management-panel-header h3 {
+    margin-bottom: 0.35rem;
+}
+
+.management-page-header p {
+    max-width: 52rem;
+    margin-bottom: 0;
+    color: var(--management-muted);
+}
+
+.management-eyebrow {
+    margin-bottom: 0.25rem !important;
+    color: var(--management-primary) !important;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.management-quick-actions,
+.management-form-actions,
+.management-row-actions,
+.management-action-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.management-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.65rem;
+    padding: 0.58rem 0.95rem;
+    color: #ffffff;
+    background: var(--management-primary);
+    border: 1px solid var(--management-primary);
+    border-radius: 0.68rem;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.management-button:hover {
+    background: var(--management-primary-hover);
+    border-color: var(--management-primary-hover);
+}
+
+.management-button.secondary {
+    color: var(--management-text);
+    background: transparent;
+    border-color: var(--management-panel-border);
+}
+
+.management-button.danger {
+    color: #ffffff;
+    background: var(--management-danger);
+    border-color: var(--management-danger);
+}
+
+html[data-theme="dark"] .management-button.danger {
+    color: #24111a;
+}
+
+.management-button.danger:hover {
+    background: var(--management-danger-hover);
+    border-color: var(--management-danger-hover);
+}
+
+.management-button[disabled],
+.management-button.is-submitting {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.management-stat-grid,
+.management-module-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(1.15rem, 1.5vw, 1.5rem);
+}
+
+.management-stat-grid a,
+.management-module-grid a {
+    display: grid;
+    gap: 0.35rem;
+    min-height: 7.3rem;
+    padding: 1.15rem;
+    color: var(--management-text);
+    background: var(--management-panel-bg);
+    border: 1px solid var(--management-panel-border);
+    border-radius: 0.9rem;
+    box-shadow: var(--management-shadow);
+    text-decoration: none;
+}
+
+.management-stat-grid a:hover,
+.management-module-grid a:hover {
+    border-color: var(--management-primary);
+    transform: translateY(-1px);
+}
+
+.management-stat-grid span,
+.management-module-grid span {
+    color: var(--management-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.management-stat-grid strong,
+.management-module-grid strong {
+    font-size: 2rem;
+}
+
+.management-module-grid small {
+    color: var(--management-muted);
+}
+
+.management-dashboard-grid,
+.management-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1.15rem, 1.5vw, 1.5rem);
+}
+
+/* The dashboard summary and detailed panels are separate groups, so this gap
+   keeps them visually distinct without adding empty markup. */
+.management-page-section + .management-dashboard-grid {
+    margin-top: clamp(1.5rem, 2vw, 2rem);
+}
+
+.management-panel,
+.management-form-card,
+.management-confirm-card,
+/*
+ * This section presents summary figures as distinct cards that remain readable when the grid wraps.
+ */
+.management-empty-state {
+    padding: clamp(1rem, 2.4vw, 1.5rem);
+    color: var(--management-text);
+    background: var(--management-panel-bg);
+    border: 1px solid var(--management-panel-border);
+    border-radius: 0.9rem;
+    box-shadow: var(--management-shadow);
+}
+
+.management-panel-wide {
+    grid-column: 1 / -1;
+}
+
+.management-compact-list {
+    display: grid;
+    margin-top: 0.75rem;
+}
+
+.management-compact-list > a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    color: var(--management-text);
+    border-bottom: 1px solid var(--management-panel-border);
+    text-decoration: none;
+}
+
+.management-compact-list > a:last-child {
+    border-bottom: 0;
+}
+
+.management-compact-list span:first-child {
+    display: grid;
+}
+
+.management-compact-list small,
+.management-timeline span,
+/*
+ * This section keeps structured staff information scannable while providing a smaller-screen alternative where needed.
+ */
+.management-table-subtext {
+    display: block;
+    color: var(--management-muted);
+    font-size: 0.82rem;
+}
+
+.management-timeline,
+.management-link-list {
+    display: grid;
+    gap: 0.7rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.management-timeline li {
+    display: grid;
+    gap: 0.15rem;
+    padding-left: 0.8rem;
+    border-left: 0.22rem solid var(--management-primary);
+}
+
+.management-filter-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--management-panel-bg);
+    border: 1px solid var(--management-panel-border);
+    border-radius: 0.85rem;
+}
+
+.management-filter-toolbar label {
+    display: grid;
+    flex: 1 1 10rem;
+    gap: 0.3rem;
+    min-width: 9rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.management-filter-toolbar label:first-child {
+    flex-basis: 17rem;
+}
+
+.management-body .form-control,
+.management-body .form-select,
+.management-body textarea,
+.management-body input,
+.management-body select {
+    color: var(--management-text);
+    background-color: var(--management-panel-bg);
+    border-color: var(--management-panel-border);
+}
+
+.management-body .form-control::placeholder,
+.management-body textarea::placeholder {
+    color: var(--management-muted);
+    opacity: 1;
+}
+
+.management-body .form-control:focus,
+.management-body .form-select:focus,
+.management-body textarea:focus,
+.management-body input:focus,
+/*
+ * These focus styles make keyboard position visible without relying on hover or colour alone.
+ */
+.management-body select:focus {
+    color: var(--management-text);
+    background-color: var(--management-panel-bg);
+    border-color: var(--management-primary);
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--management-primary) 28%, transparent);
+}
+
+.management-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--management-panel-bg);
+    border: 1px solid var(--management-panel-border);
+    border-radius: 0.85rem;
+}
+
+.management-table {
+    width: 100%;
+    margin: 0;
+    color: var(--management-text);
+    border-collapse: collapse;
+}
+
+.management-table th,
+.management-table td {
+    padding: 0.82rem 0.9rem;
+    color: var(--management-text);
+    border-bottom: 1px solid var(--management-panel-border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.management-table th {
+    color: var(--management-muted);
+    background: color-mix(in srgb, var(--management-panel-bg) 75%, var(--management-primary) 5%);
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.management-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.management-table.compact th,
+.management-table.compact td {
+    padding: 0.65rem 0.75rem;
+}
+
+.management-record-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 14rem;
+}
+
+.management-record-cell img,
+.management-thumbnail-placeholder {
+    flex: 0 0 3.4rem;
+    width: 3.4rem;
+    height: 3.4rem;
+    border-radius: 0.65rem;
+    object-fit: cover;
+}
+
+.management-thumbnail-placeholder {
+    display: grid;
+    place-items: center;
+    color: var(--management-info-text);
+    background: var(--management-info-bg);
+    font-size: 1.35rem;
+}
+
+.management-record-cell > span:last-child {
+    display: grid;
+}
+
+.management-row-actions a,
+.danger-link {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.danger-link {
+    color: var(--management-danger);
+}
+
+.management-result-summary {
+    color: var(--management-muted);
+    font-size: 0.85rem;
+}
+
+.management-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    color: var(--management-muted);
+}
+
+.management-pagination div {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.management-pagination a {
+    padding: 0.45rem 0.7rem;
+    color: var(--management-text);
+    border: 1px solid var(--management-panel-border);
+    border-radius: 0.55rem;
+    text-decoration: none;
+}
+
+.management-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0.28rem 0.58rem;
+    color: var(--management-muted);
+    background: var(--management-muted-bg);
+    border-radius: 999px;
+    font-size: 0.77rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.management-badge.success {
+    color: var(--management-success-text);
+    background: var(--management-success-bg);
+}
+
+.management-badge.warning {
+    color: var(--management-warning-text);
+    background: var(--management-warning-bg);
+}
+
+.management-badge.danger {
+    color: var(--management-danger-text);
+    background: var(--management-danger-bg);
+}
+
+.management-badge.info {
+    color: var(--management-info-text);
+    background: var(--management-info-bg);
+}
+
+.management-form-card {
+    max-width: 66rem;
+}
+
+.management-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.management-form-field {
+    display: grid;
+    align-content: start;
+    gap: 0.35rem;
+}
+
+.management-form-field:has(textarea),
+.management-form-field:has(input[type="file"]),
+.management-form-field:has(#id_included_experiences),
+.management-form-field:has(#id_description) {
+    grid-column: 1 / -1;
+}
+
+.management-form-field label {
+    font-weight: 750;
+}
+
+.management-form-check {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+}
+
+.management-form-check .management-form-help,
+.management-form-check .management-form-error {
+    grid-column: 2;
+}
+
+.management-form-help {
+    margin: 0;
+    color: var(--management-muted) !important;
+    font-size: 0.82rem;
+}
+
+.management-form-help ul {
+    margin: 0.35rem 0 0;
+    padding-left: 1.2rem;
+}
+
+.management-form-error {
+    min-height: 0.2rem;
+    color: var(--management-danger) !important;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.management-form-error p {
+    margin: 0;
+}
+
+.management-form-field.has-error .form-control,
+.management-form-field.has-error .form-select {
+    border-color: var(--management-danger);
+}
+
+.management-error-summary {
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+    color: var(--management-danger-text);
+    background: var(--management-danger-bg);
+    border: 1px solid var(--management-danger);
+    border-radius: 0.7rem;
+}
+
+.management-form-actions {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--management-panel-border);
+}
+
+.management-form-image-layout {
+    display: grid;
+    grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+/*
+ * This section presents ratings and testimonial choices with visible labels, feedback, and keyboard focus.
+ */
+.management-image-preview {
+    position: sticky;
+    top: 6.5rem;
+    min-height: 12rem;
+    overflow: hidden;
+    background: var(--management-muted-bg);
+    border: 1px dashed var(--management-panel-border);
+    border-radius: 0.75rem;
+}
+
+.management-image-preview img {
+    width: 100%;
+    min-height: 12rem;
+    max-height: 20rem;
+    object-fit: cover;
+}
+
+.management-image-placeholder {
+    display: grid;
+    place-items: center;
+    min-height: 12rem;
+    padding: 1rem;
+    color: var(--management-muted);
+    text-align: center;
+}
+
+.management-detail-image {
+    width: min(100%, 34rem);
+    max-height: 22rem;
+    margin-bottom: 1rem;
+    border-radius: 0.75rem;
+    object-fit: cover;
+}
+
+.management-definition-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0;
+}
+
+.management-definition-grid > div {
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--management-panel-border);
+}
+
+.management-definition-grid dt {
+    color: var(--management-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.management-definition-grid dd {
+    margin: 0.2rem 0 0;
+    overflow-wrap: anywhere;
+}
+
+.management-definition-wide {
+    grid-column: 1 / -1;
+}
+
+.management-confirm-card {
+    max-width: 42rem;
+}
+
+.management-empty-state {
+    display: grid;
+    justify-items: start;
+    gap: 0.5rem;
+    min-height: 10rem;
+    align-content: center;
+}
+
+.management-empty-state h2,
+.management-empty-state p {
+    margin: 0;
+}
+
+.management-empty-state p {
+    color: var(--management-muted);
+}
+
+.management-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(8, 5, 10, 0.58);
+}
+
+.management-drawer-backdrop[hidden] {
+    display: none;
+}
+
+/*
+ * This responsive section rearranges the component for narrower or wider screens without removing important actions.
+ */
+@media (max-width: 76rem) {
+    .management-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .management-sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: min(19rem, 88vw);
+        transform: translateX(-105%);
+        transition: transform 180ms ease;
+    }
+
+    .management-sidebar[data-open="true"] {
+        transform: translateX(0);
+    }
+
+    .management-sidebar-toggle {
+        display: grid;
+    }
+
+    .management-topbar {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .management-user-summary,
+    .management-topbar-actions .management-link-button:first-child {
+        display: none;
+    }
+}
+
+@media (max-width: 62rem) {
+    .management-stat-grid,
+    .management-module-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .management-dashboard-grid,
+    .management-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .management-panel-wide {
+        grid-column: auto;
+    }
+
+    .management-form-image-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .management-image-preview {
+        position: static;
+        max-width: 24rem;
+    }
+}
+
+@media (max-width: 46rem) {
+    .management-topbar {
+        min-height: 4rem;
+        padding: 0.55rem 0.75rem;
+    }
+
+    .management-topbar-actions .management-link-button,
+    .management-breadcrumbs {
+        display: none;
+    }
+
+    .management-main {
+        padding: 1rem 0.75rem 2rem;
+    }
+
+    .management-messages {
+        padding-inline: 0.75rem;
+    }
+
+    .management-page-header,
+    .management-panel-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .management-form-grid,
+    .management-definition-grid,
+    .management-stat-grid,
+    .management-module-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .management-table-wrap {
+        overflow: visible;
+        border: 0;
+        background: transparent;
+    }
+
+    .management-table,
+    .management-table thead,
+    .management-table tbody,
+    .management-table tr,
+    .management-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .management-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+    }
+
+    .management-table tr {
+        margin-bottom: 0.8rem;
+        padding: 0.7rem;
+        background: var(--management-panel-bg);
+        border: 1px solid var(--management-panel-border);
+        border-radius: 0.75rem;
+    }
+
+    .management-table td {
+        display: grid;
+        grid-template-columns: minmax(6rem, 38%) 1fr;
+        gap: 0.7rem;
+        padding: 0.55rem;
+        border-bottom: 1px solid var(--management-panel-border);
+    }
+
+    .management-table td::before {
+        content: attr(data-label);
+        color: var(--management-muted);
+        font-size: 0.76rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .management-table td:last-child {
+        border-bottom: 0;
+    }
+
+    .management-record-cell {
+        min-width: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .management-sidebar,
+    .management-stat-grid a,
+    .management-module-grid a {
+        transition: none;
+        transform: none;
+    }
+}
+
+/* Analytics keeps summary cards and tables readable without a charting library. */
+.analytics-stat-grid { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
+.management-stat-card { display: grid; gap: .35rem; padding: 1rem; border: 1px solid var(--management-panel-border); border-radius: 1rem; background: var(--management-panel-bg); box-shadow: var(--management-shadow); }
+.management-stat-card span { color: var(--management-muted); }
+.management-stat-card strong { font-size: 1.6rem; }
+.management-filter-inline { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem; }
+
+.management-timeline-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.management-badge.neutral {
+    background: var(--management-surface-muted, var(--management-panel-bg));
+    color: var(--management-text);
+    border: 1px solid var(--management-panel-border);
+}
+
+/* Shared management layout and control tokens --------------------------------
+ * One content frame keeps the sticky header, messages, headings, filters, and
+ * tables on the same vertical grid. Button tokens make every state readable
+ * instead of relying on inherited colours that vary between themes.
+ */
+:root,
+html[data-theme="light"] {
+    --management-content-max: 95rem;
+    --management-content-padding: clamp(1rem, 3vw, 2rem);
+    --management-button-primary-bg: #6f4a8e;
+    --management-button-primary-text: #ffffff;
+    --management-button-primary-hover-bg: #58366f;
+    --management-button-primary-active-bg: #482b5c;
+    --management-button-secondary-bg: #ffffff;
+    --management-button-secondary-text: #2d2438;
+    --management-button-secondary-border: #b9aabd;
+    --management-button-secondary-hover-bg: #eee6f2;
+    --management-button-danger-bg: #a22945;
+    --management-button-danger-text: #ffffff;
+    --management-button-danger-hover-bg: #861d37;
+    --management-button-disabled-bg: #e7e0eb;
+    --management-button-disabled-text: #62586c;
+    --management-button-disabled-border: #c8bdce;
+    --management-focus-ring: #3157d5;
+}
+
+html[data-theme="dark"] {
+    --management-button-primary-bg: #c9a7e4;
+    --management-button-primary-text: #1b1221;
+    --management-button-primary-hover-bg: #ddc4ef;
+    --management-button-primary-active-bg: #b892d5;
+    --management-button-secondary-bg: #5a3b70;
+    --management-button-secondary-text: #fffaff;
+    --management-button-secondary-border: #c9a7e4;
+    --management-button-secondary-hover-bg: #704b8a;
+    --management-button-danger-bg: #ff91ae;
+    --management-button-danger-text: #2b1019;
+    --management-button-danger-hover-bg: #ffb1c5;
+    --management-button-disabled-bg: #352d3d;
+    --management-button-disabled-text: #c9bdcf;
+    --management-button-disabled-border: #5f5069;
+    --management-focus-ring: #91b5ff;
+}
+
+html[data-theme="light"] .management-body { color-scheme: light; }
+html[data-theme="dark"] .management-body { color-scheme: dark; }
+
+.management-content-frame {
+    width: min(100%, var(--management-content-max));
+    margin-inline: auto;
+    padding-inline: var(--management-content-padding);
+}
+
+.management-topbar {
+    display: block;
+    min-height: 0;
+    padding: 0;
+}
+
+.management-topbar-inner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 5rem;
+    padding-block: 0.75rem;
+}
+
+/* The title keeps the available space while the account actions stay at the far right. */
+.management-topbar-heading {
+    min-width: 0;
+}
+
+.management-topbar-actions {
+    flex-shrink: 0;
+    margin-inline-start: auto;
+}
+
+.management-main {
+    width: min(100%, var(--management-content-max));
+    margin-inline: auto;
+    padding-block: clamp(1rem, 3vw, 2rem);
+}
+
+.management-messages {
+    padding: 0;
+}
+
+.management-messages > .management-content-frame {
+    padding-top: 1rem;
+}
+
+.management-alert {
+    max-width: none;
+}
+
+.management-page-header {
+    min-width: 0;
+}
+
+.management-page-header > :first-child {
+    min-width: 0;
+}
+
+.management-quick-actions {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+}
+
+.management-button,
+.management-link-button,
+.management-icon-button {
+    color: var(--management-button-primary-text);
+    background: var(--management-button-primary-bg);
+    border-color: var(--management-button-primary-bg);
+}
+
+.management-button:hover,
+.management-link-button:hover,
+.management-icon-button:hover {
+    color: var(--management-button-primary-text);
+    background: var(--management-button-primary-hover-bg);
+    border-color: var(--management-button-primary-hover-bg);
+}
+
+.management-button:active,
+.management-link-button:active,
+.management-icon-button:active {
+    color: var(--management-button-primary-text);
+    background: var(--management-button-primary-active-bg);
+    border-color: var(--management-button-primary-active-bg);
+}
+
+.management-button.secondary,
+.management-link-button,
+.management-icon-button {
+    color: var(--management-button-secondary-text);
+    background: var(--management-button-secondary-bg);
+    border-color: var(--management-button-secondary-border);
+}
+
+.management-button.secondary:hover,
+.management-link-button:hover,
+.management-icon-button:hover {
+    color: var(--management-button-secondary-text);
+    background: var(--management-button-secondary-hover-bg);
+    border-color: var(--management-button-secondary-border);
+}
+
+/* Dark management actions use a solid purple surface so labels stay clear
+ * against the dark workspace, including links that the browser marks visited. */
+html[data-theme="dark"] .management-body .management-button.secondary,
+html[data-theme="dark"] .management-body a.management-button.secondary:link,
+html[data-theme="dark"] .management-body a.management-button.secondary:visited,
+html[data-theme="dark"] .management-body .management-link-button,
+html[data-theme="dark"] .management-body .management-icon-button {
+    color: var(--management-button-secondary-text);
+    background: var(--management-button-secondary-bg);
+    border-color: var(--management-button-secondary-border);
+}
+
+html[data-theme="dark"] .management-body .management-button.secondary:hover,
+html[data-theme="dark"] .management-body .management-button.secondary:focus-visible,
+html[data-theme="dark"] .management-body .management-link-button:hover,
+html[data-theme="dark"] .management-body .management-icon-button:hover {
+    color: var(--management-button-secondary-text);
+    background: var(--management-button-secondary-hover-bg);
+    border-color: #e0c8f0;
+}
+
+.management-button.danger {
+    color: var(--management-button-danger-text);
+    background: var(--management-button-danger-bg);
+    border-color: var(--management-button-danger-bg);
+}
+
+.management-button.danger:hover,
+.management-button.danger:active {
+    color: var(--management-button-danger-text);
+    background: var(--management-button-danger-hover-bg);
+    border-color: var(--management-button-danger-hover-bg);
+}
+
+.management-button:focus-visible,
+.management-link-button:focus-visible,
+.management-icon-button:focus-visible,
+.management-navigation a:focus-visible,
+.management-row-actions a:focus-visible {
+    outline: 3px solid var(--management-focus-ring);
+    outline-offset: 3px;
+    box-shadow: none;
+}
+
+.management-button:disabled,
+.management-button[disabled],
+.management-button[aria-disabled="true"],
+.management-button.is-submitting,
+.management-link-button:disabled,
+.management-icon-button:disabled {
+    color: var(--management-button-disabled-text);
+    background: var(--management-button-disabled-bg);
+    border-color: var(--management-button-disabled-border);
+    opacity: 1;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+html[data-theme="dark"] .management-body .management-button.secondary:disabled,
+html[data-theme="dark"] .management-body .management-button.secondary[disabled],
+html[data-theme="dark"] .management-body .management-button.secondary[aria-disabled="true"],
+html[data-theme="dark"] .management-body .management-button.secondary.is-submitting {
+    color: var(--management-button-disabled-text);
+    background: var(--management-button-disabled-bg);
+    border-color: var(--management-button-disabled-border);
+}
+
+.management-body .form-select option {
+    color: var(--management-text);
+    background: var(--management-panel-bg);
+}
+
+.management-help-text {
+    margin: 0.9rem 0 0;
+    color: var(--management-muted) !important;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 76rem) {
+    .management-topbar-inner {
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 46rem) {
+    :root,
+    html[data-theme="light"],
+    html[data-theme="dark"] {
+        --management-content-padding: 0.75rem;
+    }
+
+    .management-topbar-inner {
+        min-height: 4rem;
+        padding-block: 0.55rem;
+    }
+
+    .management-main {
+        padding-block: 1rem 2rem;
+    }
+
+    .management-messages > .management-content-frame {
+        padding-top: 0.75rem;
+    }
+
+    .management-quick-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}

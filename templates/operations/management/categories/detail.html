@@ -1,0 +1,29 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the detail screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div><p class="management-eyebrow">Category details</p><h2>{{ category.name }}</h2><p>{{ category.description|default:"No description has been added." }}</p></div>
+        <div class="management-quick-actions">{% if category.is_active %}{% if not category.parent or category.parent.is_active %}<a class="management-button secondary" href="{% url 'party_ideas:category_detail' category.slug %}">View on website</a>{% endif %}{% endif %}<a class="management-button" href="{% url 'management:management_category_update' category.pk %}">Edit</a><a class="management-button danger" href="{% url 'management:management_category_remove' category.pk %}">Delete/Deactivate</a></div>
+    </div>
+
+    <div class="management-detail-grid">
+        <section class="management-panel">
+            {% if category.image %}<img class="management-detail-image" src="{{ category.image.url }}" alt="{{ category.image_alt_text }}">{% endif %}
+            <dl class="management-definition-grid">
+                <div><dt>Slug</dt><dd>{{ category.slug }}</dd></div>
+                <div><dt>Parent</dt><dd>{{ category.parent.name|default:"Main category" }}</dd></div>
+                <div><dt>Status</dt><dd>{% if category.is_active %}Active{% else %}Inactive{% endif %}</dd></div>
+                <div><dt>Display order</dt><dd>{{ category.display_order }}</dd></div>
+                <div><dt>Updated</dt><dd>{{ category.updated_at|date:"d M Y H:i" }}</dd></div>
+            </dl>
+        </section>
+        <section class="management-panel"><h3>Subcategories</h3>{% if category.children.all %}<ul class="management-link-list">{% for child in category.children.all %}<li><a href="{% url 'management:management_category_detail' child.pk %}">{{ child.name }}</a></li>{% endfor %}</ul>{% else %}<p>No subcategories.</p>{% endif %}</section>
+        <section class="management-panel"><h3>Packages</h3>{% if category.packages.all %}<ul class="management-link-list">{% for package in category.packages.all %}<li><a href="{% url 'management:management_package_detail' package.pk %}">{{ package.name }}</a></li>{% endfor %}</ul>{% else %}<p>No packages use this category.</p>{% endif %}</section>
+        <section class="management-panel"><h3>Add-ons</h3>{% if category.addons.all %}<ul class="management-link-list">{% for addon in category.addons.all %}<li><a href="{% url 'management:management_addon_detail' addon.pk %}">{{ addon.name }}</a></li>{% endfor %}</ul>{% else %}<p>No add-ons use this category.</p>{% endif %}</section>
+    </div>
+</section>
+{% endblock %}

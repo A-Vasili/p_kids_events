@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{# This worker template presents worker schedule for active staff using the operations area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+{% block title %}
+    My Schedule | P Kids Events
+{% endblock %}
+{% block meta_robots %}
+    noindex,nofollow
+{% endblock %}
+{% block page_name %}
+    operationsSchedule
+{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/operations.css' %}">
+{% endblock %}
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+    {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+    <section class="operations-page" aria-labelledby="schedule-heading">
+        <div class="container">
+            {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+            {% include "operations/includes/nav.html" %}
+            <header class="operations-heading">
+                <h1 id="schedule-heading">
+                    Confirmed schedule
+                </h1>
+                <p>
+                    Only accepted assignments appear here.
+                </p>
+            </header>
+            <div class="operations-list">
+                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                {% for assignment in assignments %}
+                    <article class="operations-row">
+                        <div>
+                            <strong>
+                                {{ assignment.party_build.event_date|date:"l, j F" }}
+                                ·
+                                {{ assignment.party_build.event_time|time:"H:i" }}
+                            </strong>
+                            <span>
+                                {{ assignment.party_build.contact_name }}
+                                —
+                                {{ assignment.party_build.event_address }}
+                            </span>
+                        </div>
+                        <a href="{% url 'operations:operations_worker_assignment_detail' assignment.pk %}">
+                            Details
+                        </a>
+                    </article>
+                {% empty %}
+                    <p>
+                        No upcoming confirmed parties.
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

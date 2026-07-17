@@ -1,0 +1,20 @@
+{# This template presents progress within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+
+{# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+<nav class="checkout-progress" aria-label="Booking checkout progress">
+    <ol>
+        <li{% if current_step == 1 %} aria-current="step"{% endif %} class="{% if current_step > 1 %}is-complete{% elif current_step == 1 %}is-current{% endif %}">
+            <span aria-hidden="true">1</span>
+            <strong data-i18n="builder.progressPackage">Package</strong>
+        </li>
+        <li{% if current_step == 2 %} aria-current="step"{% endif %} class="{% if current_step > 2 %}is-complete{% elif current_step == 2 %}is-current{% endif %}">
+            <span aria-hidden="true">2</span>
+            <strong data-i18n="builder.progressDetails">Details</strong>
+        </li>
+        <li{% if current_step == 3 %} aria-current="step"{% endif %} class="{% if current_step == 3 %}is-current{% endif %}">
+            <span aria-hidden="true">3</span>
+            <strong data-i18n="builder.progressCheckout">Checkout</strong>
+        </li>
+    </ol>
+</nav>

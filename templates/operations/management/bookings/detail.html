@@ -1,0 +1,47 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the detail screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div><p class="management-eyebrow">Booking {{ booking.public_id }}</p><h2>{{ booking.contact_name }} · {{ booking.event_date }}</h2><p>{{ booking.package.name }} · {{ booking.party_size_display }}.</p></div>
+        <div class="management-quick-actions"><a class="management-button" href="{% url 'management:management_booking_assign' booking.public_id %}">Assign or reassign worker</a><a class="management-button secondary" href="{% url 'management:management_booking_list' %}">Back to bookings</a></div>
+    </div>
+
+    <div class="management-detail-grid">
+        <section class="management-panel"><h3>Customer and event</h3><dl class="management-definition-grid"><div><dt>Contact name</dt><dd>{{ booking.contact_name }}</dd></div><div><dt>Email</dt><dd><a href="mailto:{{ booking.contact_email }}">{{ booking.contact_email }}</a></dd></div><div><dt>Phone</dt><dd><a href="tel:{{ booking.contact_phone }}">{{ booking.contact_phone }}</a></dd></div><div><dt>Date</dt><dd>{{ booking.event_date }}</dd></div><div><dt>Time</dt><dd>{{ booking.event_time|time:"H:i"|default:"To be confirmed" }}</dd></div><div><dt>Package capacity</dt><dd>{{ booking.party_size_display }}</dd></div><div class="management-definition-wide"><dt>Address</dt><dd>{{ booking.event_address|default:"Not provided" }} {{ booking.postal_code }}</dd></div><div class="management-definition-wide"><dt>Notes</dt><dd>{{ booking.notes|default:"No notes."|linebreaksbr }}</dd></div></dl></section>
+
+        <section class="management-panel"><h3>Package and price snapshots</h3><dl class="management-definition-grid"><div><dt>Package</dt><dd>{{ booking.package.name }}</dd></div><div><dt>Party size snapshot</dt><dd>{{ booking.party_size_display }}</dd></div><div><dt>Package snapshot</dt><dd>€{{ booking.package_price }}</dd></div><div><dt>Add-on snapshot</dt><dd>€{{ booking.addon_price }}</dd></div><div><dt>Total</dt><dd><strong>€{{ booking.total_price }}</strong></dd></div><div><dt>Payment</dt><dd>{{ booking.get_payment_status_display }}</dd></div></dl><h4>Selected add-ons</h4><ul>{% for item in booking.addon_items.all %}<li>{{ item.addon.name }} — €{{ item.unit_price }}</li>{% empty %}<li>No add-ons selected.</li>{% endfor %}</ul></section>
+
+        <section class="management-panel"><h3>Review access and feedback</h3><dl class="management-definition-grid"><div><dt>Review code</dt><dd><strong>{{ booking.review_code }}</strong></dd></div><div><dt>Completed at</dt><dd>{{ booking.completed_at|date:"d M Y H:i"|default:"Not completed" }}</dd></div></dl>{% if booking.review %}<p><strong>Package score:</strong> {{ booking.review.package_score }}/5</p>{% if booking.review.comment %}<p>{{ booking.review.comment }}</p>{% endif %}<h4>Add-on ratings</h4><ul>{% for rating in booking.review.addon_ratings.all %}<li>{{ rating.build_addon.addon.name }} — {{ rating.score }}/5</li>{% empty %}<li>No add-ons were rated.</li>{% endfor %}</ul>{% else %}<p>No verified review has been submitted.</p>{% endif %}</section>
+
+        <section class="management-panel"><h3>Booking and assignment state</h3><p>{% include "operations/management/includes/status_badge.html" with value=booking.status label=booking.get_status_display %} {% include "operations/management/includes/status_badge.html" with value=booking.assignment_state label=booking.get_assignment_state_display %}</p><h4>Assignment history</h4><ul class="management-timeline">{% for assignment in booking.assignments.all %}<li><strong>{{ assignment.worker }} · {{ assignment.get_status_display }}</strong><span>{{ assignment.get_assignment_source_display }} · {{ assignment.assigned_at|date:"d M Y H:i" }}{% if assignment.decline_reason %} · {{ assignment.decline_reason }}{% endif %}</span></li>{% empty %}<li>No assignment attempts yet.</li>{% endfor %}</ul></section>
+
+        {# This dedicated panel makes the final delivery action clear to full managers. The server decides eligibility and repeats the checks after submission before customer feedback is unlocked. #}
+        <section class="management-panel" aria-labelledby="management-completion-heading">
+            <h3 id="management-completion-heading">Complete this party</h3>
+            {% if booking.status == 'completed' %}
+                <p><strong>Party completed</strong></p>
+                <p>Completed {{ booking.completed_at|date:"d M Y H:i" }}. Customer review access is available.</p>
+            {% elif can_mark_party_done %}
+                <p>Use this after the event has taken place. Marking it as done confirms delivery and allows the customer to rate the party and leave feedback.</p>
+                {# This form submits only the manager’s intent. Django supplies the trusted completed status and server time instead of accepting them from the browser. #}
+                <form method="post" action="{% url 'management:management_booking_complete' booking.public_id %}" data-prevent-double-submit>
+                    {% csrf_token %}
+                    <button class="management-button" type="submit">Mark party as done</button>
+                </form>
+            {% elif completion_block_reason %}
+                <p>{{ completion_block_reason }}</p>
+            {% endif %}
+        </section>
+
+        <section class="management-panel"><h3>Update booking status</h3>{% if status_form.fields.status.choices %}<form method="post" action="{% url 'management:management_booking_status' booking.public_id %}" data-prevent-double-submit>{% csrf_token %}{% for field in status_form %}{% include "operations/management/includes/form_field.html" with field=field %}{% endfor %}<button class="management-button" type="submit">Update status</button></form>{% else %}<p>No further status transitions are available.</p>{% endif %}</section>
+
+        <section class="management-panel"><h3>Send to manual review</h3><p>This stops pending offers and places the booking in the owner attention queue.</p><form method="post" action="{% url 'management:management_booking_manual_review' booking.public_id %}" data-prevent-double-submit>{% csrf_token %}{% for field in manual_review_form %}{% include "operations/management/includes/form_field.html" with field=field %}{% endfor %}<button class="management-button danger" type="submit">Require manual review</button></form></section>
+
+        <section class="management-panel management-panel-wide"><h3>Relevant audit history</h3>{% if audit_events %}<ul class="management-timeline">{% for event in audit_events %}<li><strong>{{ event.summary }}</strong><span>{{ event.created_at|date:"d M Y H:i" }}{% if event.actor %} · {{ event.actor.username }}{% endif %}</span></li>{% endfor %}</ul>{% else %}<p>No booking audit events recorded.</p>{% endif %}</section>
+    </div>
+</section>
+{% endblock %}

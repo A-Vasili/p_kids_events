@@ -1,0 +1,55 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the analytics screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section" aria-labelledby="analytics-heading">
+    <div class="management-page-header">
+        <div><p class="management-eyebrow">Verified completed-party data</p><h2 id="analytics-heading">Reviews and popularity analytics</h2><p>Usage counts and recommendations are calculated from completed parties only.</p></div>
+        {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+        <form method="get" class="management-filter-inline">
+            <label for="period">Reporting period</label>
+            <select id="period" name="period" class="form-select">
+                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                {% for value, label in period_options %}<option value="{{ value }}"{% if period_key == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+            <button class="management-button" type="submit">Apply</button>
+        </form>
+    </div>
+
+    <div class="management-stat-grid analytics-stat-grid">
+        <div class="management-stat-card"><span>Completed parties</span><strong>{{ summary.completed_parties }}</strong></div>
+        <div class="management-stat-card"><span>Reviews submitted</span><strong>{{ summary.reviews_submitted }}</strong></div>
+        <div class="management-stat-card"><span>Review completion</span><strong>{{ summary.review_completion_rate|floatformat:1 }}%</strong></div>
+        <div class="management-stat-card"><span>Average package score</span><strong>{% if summary.average_package_score %}{{ summary.average_package_score|floatformat:1 }} / 5{% else %}—{% endif %}</strong></div>
+        <div class="management-stat-card"><span>Add-on selections</span><strong>{{ summary.total_addon_selections }}</strong></div>
+    </div>
+
+    <section class="management-panel"><h3>Add-on performance</h3><div class="management-table-wrap"><table class="management-table"><caption class="visually-hidden">Add-on usage and rating performance</caption><thead><tr><th scope="col">Position</th><th scope="col">Add-on</th><th scope="col">Category</th><th scope="col">Completed uses</th><th scope="col">Selection rate</th><th scope="col">Ratings</th><th scope="col">Average</th></tr></thead><tbody>{% for row in addon_rows %}<tr><td>{{ row.position }}</td><th scope="row">{{ row.addon.name }}{% if row.is_most_popular %} <span class="management-badge success">Most popular</span>{% endif %}</th><td>{{ row.addon.category.name }}</td><td>{{ row.completed_booking_count }}</td><td>{{ row.selection_percentage|floatformat:1 }}%</td><td>{{ row.rating_count }}</td><td>{% if row.average_rating %}{{ row.average_rating|floatformat:1 }} / 5{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="7">No completed-party data in this period.</td></tr>{% endfor %}</tbody></table></div></section>
+
+    <section class="management-panel"><h3>Common combinations</h3><div class="management-table-wrap"><table class="management-table"><caption class="visually-hidden">Add-ons commonly selected together</caption><thead><tr><th scope="col">Add-on A</th><th scope="col">Add-on B</th><th scope="col">Completed pairs</th><th scope="col">Confidence</th></tr></thead><tbody>{% for row in pair_rows %}<tr><th scope="row">{{ row.addon_a.name }}</th><td>{{ row.addon_b.name }}</td><td>{{ row.pair_count }}</td><td>{{ row.confidence_percentage|floatformat:1 }}%</td></tr>{% empty %}<tr><td colspan="4">There is not enough combination history yet.</td></tr>{% endfor %}</tbody></table></div></section>
+
+    <section class="management-panel"><h3>Package ratings</h3><div class="management-table-wrap"><table class="management-table"><thead><tr><th scope="col">Package</th><th scope="col">Reviews</th><th scope="col">Average score</th></tr></thead><tbody>{% for package in package_rows %}<tr><th scope="row">{{ package.name }}</th><td>{{ package.review_count }}</td><td>{{ package.average_rating|floatformat:1 }} / 5</td></tr>{% empty %}<tr><td colspan="3">No package reviews in this period.</td></tr>{% endfor %}</tbody></table></div></section>
+
+    <section class="management-panel">
+        <h3>Recent verified comments</h3>
+        <ul class="management-timeline">
+            {% for review in recent_comments %}
+                <li>
+                    <div class="management-timeline-heading">
+                        <strong>{{ review.reviewer.get_full_name|default:review.reviewer.username }} · {{ review.booking.package.name }} · {{ review.package_score }}/5</strong>
+                        <span class="management-badge {% if review.visibility == 'testimonial' %}success{% else %}neutral{% endif %}">
+                            {{ review.get_visibility_display }}
+                        </span>
+                    </div>
+                    <span>{{ review.booking.event_date|date:"d M Y" }} · reviewed {{ review.updated_at|date:"d M Y H:i" }}</span>
+                    <p>{{ review.comment }}</p>
+                </li>
+            {% empty %}
+                <li>No written comments in this period.</li>
+            {% endfor %}
+        </ul>
+    </section>
+</section>
+{% endblock %}

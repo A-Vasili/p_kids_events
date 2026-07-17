@@ -1,0 +1,553 @@
+/*
+ * This stylesheet presents worker dashboards, assignments, availability, and schedules while keeping operational details usable on narrow screens.
+ * Its rules are grouped around page components, responsive layouts, theme support, and visible keyboard focus.
+ * The comments explain those relationships without changing selectors, spacing, colours, or behaviour.
+ */
+/*
+ * This stylesheet presents the private worker and owner operations pages.
+ * The comments explain visual sections without changing the styles applied by the browser.
+ */
+.operations-page {
+    padding: clamp(2.5rem, 6vw, 5rem) 0;
+}
+
+/* These rules style the page introduction and its main heading. */
+.operations-heading {
+    margin-bottom: 1.5rem;
+}
+
+/* These rules arrange and style the site navigation area. */
+.operations-subnav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+    padding: .75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-surface);
+}
+
+/* These rules arrange and style the site navigation area. */
+.operations-subnav a {
+    padding: .55rem .8rem;
+    border-radius: .7rem;
+    font-weight: 700;
+}
+
+/* These rules style this group of related page elements. */
+/*
+ * This section presents summary figures as distinct cards that remain readable when the grid wraps.
+ */
+.operations-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+/* These rules style this group of related page elements. */
+.operations-stats article {
+    padding: 1.25rem;
+    border-radius: 1rem;
+    background: var(--surface-lavender);
+    display: grid;
+    gap: .2rem;
+}
+
+/* These rules style this group of related page elements. */
+.operations-stats strong {
+    font-size: 2rem;
+}
+
+/* These rules present each item as a clear, reusable content card. */
+/*
+ * This section shapes the chat panel and keeps its header, history, and composer usable within the available screen height.
+ */
+.operations-panel, .assignment-card, .user-role-card, .empty-state {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 1.2rem;
+    padding: clamp(1.1rem, 3vw, 2rem);
+    margin-bottom: 1.25rem;
+    box-shadow: 0 .8rem 2rem rgba(35,20,45,.06);
+}
+
+/* These rules style this group of related page elements. */
+.operations-list {
+    display: grid;
+    gap: .75rem;
+}
+
+/* These rules present each item as a clear, reusable content card. */
+.operations-row, .user-role-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+/* These rules present each item as a clear, reusable content card. */
+.operations-row div, .user-role-card > div {
+    display: grid;
+    gap: .2rem;
+}
+
+/* These rules style this group of related page elements. */
+.operations-row span {
+    color: var(--color-muted);
+}
+
+/* These rules arrange and style the site navigation area. */
+.assignment-card header, .assignment-detail > header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: start;
+}
+
+/* These rules present each item as a clear, reusable content card. */
+.assignment-card dl, .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+/* These rules style this group of related page elements. */
+.detail-wide {
+    grid-column: 1 / -1;
+}
+
+/* These rules style this group of related page elements. */
+dt {
+    font-size: .85rem;
+    color: var(--color-muted);
+}
+
+dd {
+    margin: .2rem 0 0;
+    font-weight: 650;
+}
+
+/* These rules make status and validation messages easy to notice and understand. */
+.status-pill, .role-tag {
+    display: inline-block;
+    border-radius: 999px;
+    padding: .3rem .65rem;
+    background: #ece6ef;
+    font-size: .82rem;
+    font-weight: 700;
+}
+
+/* These rules make status and validation messages easy to notice and understand. */
+.status-accepted {
+    background: #dff5e7;
+    color: #145c34;
+}
+
+.status-declined {
+    background: #fde2e5;
+    color: #8c1d2f;
+}
+
+.status-pending {
+    background: #fff0cf;
+    color: #714c00;
+}
+
+/* These rules make this action look and behave like an interactive control. */
+.assignment-actions {
+    display: grid;
+    grid-template-columns: auto minmax(280px, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    margin-top: 2rem;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+/*
+ * This section keeps labels, fields, help text, errors, and actions visually connected so forms remain understandable.
+ */
+.decline-form, .form-field {
+    display: grid;
+    gap: .4rem;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.form-error, .conflict-text {
+    color: #9b1c31;
+}
+
+.form-help {
+    color: var(--color-muted);
+    font-size: .9rem;
+}
+
+/* These rules make this action look and behave like an interactive control. */
+.button-danger {
+    background: #8c1d2f;
+    border-color: #8c1d2f;
+}
+
+.button-small {
+    padding: .55rem .85rem;
+    font-size: .9rem;
+}
+
+.text-button {
+    background: transparent;
+    border: 0;
+    color: var(--color-primary);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* These rules control spacing and the page layout for this group of content. */
+.operations-two-column {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.operations-search, .pricing-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.role-actions form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    justify-content: end;
+}
+
+/* These rules keep structured records readable across different screen sizes. */
+/*
+ * This section keeps structured staff information scannable while providing a smaller-screen alternative where needed.
+ */
+.schedule-table-wrap {
+    overflow-x: auto;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.schedule-table caption {
+    text-align: left;
+    font-weight: 700;
+    margin-bottom: .5rem;
+}
+
+.schedule-table th, .schedule-table td {
+    padding: .75rem;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+}
+
+/* These rules control spacing and the page layout for this group of content. */
+/*
+ * This section presents optional experiences as selectable cards while keeping labels and selected state clear.
+ */
+.tier-grid, .addon-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.pricing-card {
+    display: grid;
+    gap: .6rem;
+    border: 1px solid var(--color-border);
+    border-radius: .9rem;
+    padding: 1rem;
+}
+
+.pricing-card label, .pricing-form label {
+    display: grid;
+    gap: .3rem;
+}
+
+/* The following rules adjust the layout for this screen size. */
+/*
+ * This responsive section rearranges the component for narrower or wider screens without removing important actions.
+ */
+@media (max-width: 900px) {
+    .operations-stats, .tier-grid, .addon-admin-grid {
+        grid-template-columns: repeat(2, minmax(0,1fr));
+    }
+
+    .operations-two-column, .assignment-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .assignment-card dl, .detail-grid {
+        grid-template-columns: repeat(2, minmax(0,1fr));
+    }
+
+}
+
+/* The following rules adjust the layout for this screen size. */
+@media (max-width: 620px) {
+    .operations-stats, .tier-grid, .addon-admin-grid, .assignment-card dl, .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .operations-row, .user-role-card {
+        align-items: start;
+        flex-direction: column;
+    }
+
+    .role-actions form {
+        justify-content: start;
+    }
+
+}
+
+
+/*
+ * Theme-safe operations colours
+ *
+ * All private staff pages use the shared theme variables rather than fixed
+ * white backgrounds. This prevents white text from disappearing on white cards
+ * when dark mode is active.
+ */
+.operations-page {
+    color: var(--color-text);
+}
+
+.operations-heading,
+.operations-panel,
+.assignment-card,
+.user-role-card,
+.empty-state,
+.pricing-card,
+.schedule-table,
+.operations-subnav {
+    color: var(--color-text);
+}
+
+.operations-heading-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.operations-heading-row > div {
+    max-width: 48rem;
+}
+
+.operations-subnav a {
+    color: var(--color-primary-strong);
+    text-decoration: none;
+}
+
+.operations-subnav a:hover,
+/*
+ * These focus styles make keyboard position visible without relying on hover or colour alone.
+ */
+.operations-subnav a:focus-visible {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-strong);
+}
+
+.operations-stats article {
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.operations-row span,
+.user-role-card p,
+.operations-heading p,
+.pricing-card p {
+    color: var(--color-muted);
+}
+
+.role-tag,
+.status-pill {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-strong);
+    border: 1px solid var(--color-border);
+}
+
+/* Status labels keep explicit high-contrast colours in both themes. */
+.status-accepted {
+    background: #dff5e7;
+    color: #145c34;
+    border-color: #94d4ad;
+}
+
+.status-declined {
+    background: #fde2e5;
+    color: #8c1d2f;
+    border-color: #e8a8b2;
+}
+
+.status-pending {
+    background: #fff0cf;
+    color: #714c00;
+    border-color: #e7c774;
+}
+
+/*
+ * Form controls inherit the active theme explicitly. Browser defaults often
+ * use a white field even inside dark pages, making labels and entered text hard
+ * to read.
+ */
+.operations-page .form-control,
+.operations-page input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.operations-page select,
+.operations-page textarea {
+    width: 100%;
+    min-height: 2.85rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    caret-color: var(--color-text);
+    font: inherit;
+}
+
+.operations-page textarea {
+    min-height: 7rem;
+    resize: vertical;
+}
+
+.operations-page .form-control::placeholder,
+.operations-page input::placeholder,
+.operations-page textarea::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+}
+
+.operations-page .form-control:focus,
+.operations-page input:focus,
+.operations-page select:focus,
+.operations-page textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.22rem var(--color-primary-soft);
+}
+
+.operations-page .form-error,
+.operations-page .conflict-text {
+    color: #b4233c;
+}
+
+html[data-theme="dark"] .operations-page .form-error,
+/*
+ * These rules adapt the same components for dark mode while preserving readable contrast and familiar structure.
+ */
+html[data-theme="dark"] .operations-page .conflict-text {
+    color: #ff9daf;
+}
+
+.operations-search label,
+.pricing-form label,
+.operations-form label {
+    color: var(--color-heading);
+    font-weight: 700;
+}
+
+.schedule-table th {
+    color: var(--color-heading);
+    background: var(--color-surface-soft);
+}
+
+.schedule-table td {
+    color: var(--color-text);
+    background: var(--color-surface);
+}
+
+.schedule-table th,
+.schedule-table td {
+    border-color: var(--color-border);
+}
+
+.text-button {
+    color: var(--color-primary-strong);
+}
+
+/* Owner worker creation form */
+.operations-narrow-shell {
+    max-width: 58rem;
+}
+
+.operations-form {
+    margin-inline: auto;
+}
+
+.operations-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.25rem;
+    align-items: start;
+}
+
+.operations-form-grid .form-field {
+    min-width: 0;
+    align-content: start;
+}
+
+.operations-form-grid .form-field--username,
+.operations-form-grid .form-field--password1,
+.operations-form-grid .form-field--password2 {
+    grid-column: 1 / -1;
+}
+
+.operations-form-grid .form-help,
+.operations-form-grid .form-error {
+    margin: 0;
+}
+
+.operations-form-grid .form-help ul {
+    margin: 0.4rem 0 0;
+    padding-inline-start: 1.2rem;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+html[data-theme="dark"] .operations-panel,
+html[data-theme="dark"] .assignment-card,
+html[data-theme="dark"] .user-role-card,
+html[data-theme="dark"] .empty-state,
+html[data-theme="dark"] .pricing-card,
+html[data-theme="dark"] .operations-subnav {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-card);
+}
+
+/* Browser autofill should match the selected theme instead of forcing white. */
+.operations-page input:-webkit-autofill,
+.operations-page input:-webkit-autofill:hover,
+.operations-page input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--color-text);
+    box-shadow: 0 0 0 1000px var(--color-surface-raised) inset;
+    transition: background-color 9999s ease-out 0s;
+}
+
+@media (max-width: 720px) {
+    .operations-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .operations-form-grid .form-field {
+        grid-column: 1;
+    }
+}

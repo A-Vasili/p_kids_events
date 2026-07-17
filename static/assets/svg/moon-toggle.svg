@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="82" height="82" viewBox="0 0 82 82" fill="none">
+    <g filter="url(#shadow)">
+        <circle cx="43" cy="40" r="35" fill="url(#outer)"/>
+        <circle cx="43" cy="40" r="29" fill="url(#inner)"/>
+        <g opacity="0.72">
+            <circle cx="63" cy="54" r="15" fill="url(#crater)"/>
+            <circle cx="35" cy="70" r="9" fill="url(#crater)"/>
+            <circle cx="46" cy="36" r="2" fill="url(#crater)"/>
+            <circle cx="35" cy="47" r="4" fill="url(#crater)"/>
+            <circle cx="14.5" cy="45.5" r="5.5" fill="url(#crater)"/>
+        </g>
+    </g>
+    <defs>
+        <filter id="shadow" x="0" y="0" width="82" height="82" filterUnits="userSpaceOnUse">
+            <feDropShadow dx="-2" dy="1" stdDeviation="3" flood-opacity="0.25"/>
+        </filter>
+        <linearGradient id="outer" x1="43" y1="5" x2="43" y2="75" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#DDEDFF"/>
+            <stop offset="1" stop-color="#3483F9"/>
+        </linearGradient>
+        <linearGradient id="inner" x1="43" y1="11" x2="43" y2="69" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#CEE5FF"/>
+            <stop offset="1" stop-color="#EDF6FF"/>
+        </linearGradient>
+        <linearGradient id="crater" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+            <stop stop-color="#C8D7FF"/>
+            <stop offset="1" stop-color="#DCF0FF" stop-opacity="0"/>
+        </linearGradient>
+    </defs>
+</svg>

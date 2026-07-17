@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{# This public template presents the gallery page as part of the Popadoo customer website. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+
+{% block title %}Gallery | P Kids Events{% endblock %}
+{% block page_name %}gallery{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/content-pages.css' %}"
+    >
+{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+    <div class="page-main">
+        <div class="container">
+            {# This header introduces the page and gives visitors the main context before they continue. #}
+            <header class="page-heading">
+                <p
+                    class="section-kicker"
+                    data-i18n="gallery.kicker"
+                >
+                    Visual inspiration
+                </p>
+
+                <h1 data-i18n="gallery.heading">
+                    Gallery
+                </h1>
+
+                <p
+                    class="lead"
+                    data-i18n="gallery.lead"
+                >
+                    Explore four playful colour studies from the
+                    P Kids Events visual concept. They show how confetti,
+                    balloons, and pastel combinations can shape a
+                    cheerful event mood.
+                </p>
+            </header>
+
+                        {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+                        <section aria-labelledby="gallery-grid-heading">
+                <div class="section-heading-group">
+                    <h2
+                        id="gallery-grid-heading"
+                        data-i18n="gallery.gridHeading"
+                    >
+                        Celebration colour studies
+                    </h2>
+
+                    <p data-i18n="gallery.gridText">
+                        These concept images can help start a
+                        conversation about the colours and atmosphere
+                        for a children’s event.
+                    </p>
+                </div>
+
+                <div class="row g-4 gallery-grid">
+                    <div class="col-md-6">
+                        <figure class="gallery-card card h-100">
+                            <img
+                                class="card-img-top"
+                                src="{% static 'assets/images/carousel/party-slide-1.jpg' %}"
+                                alt="Abstract blush background with colourful circles and confetti"
+                                data-i18n-alt="gallery.imageOneAlt"
+                                width="1600"
+                                height="900"
+                            >
+
+                            <figcaption
+                                class="card-body"
+                                data-i18n="gallery.imageOneCaption"
+                            >
+                                Blush confetti: a warm palette with
+                                pink, lavender, sky, and butter accents.
+                            </figcaption>
+                        </figure>
+                    </div>
+
+                    <div class="col-md-6">
+                        <figure class="gallery-card card h-100">
+                            <img
+                                class="card-img-top"
+                                src="{% static 'assets/images/carousel/party-slide-2.jpg' %}"
+                                alt="Abstract sky-blue background with colourful circles and confetti"
+                                data-i18n-alt="gallery.imageTwoAlt"
+                                width="1600"
+                                height="900"
+                            >
+
+                            <figcaption
+                                class="card-body"
+                                data-i18n="gallery.imageTwoCaption"
+                            >
+                                Sky celebration: bright blue with sunny
+                                yellow, orange, and purple details.
+                            </figcaption>
+                        </figure>
+                    </div>
+
+                    <div class="col-md-6">
+                        <figure class="gallery-card card h-100">
+                            <img
+                                class="card-img-top"
+                                src="{% static 'assets/images/carousel/party-slide-3.jpg' %}"
+                                alt="Abstract mint background with colourful circles and confetti"
+                                data-i18n-alt="gallery.imageThreeAlt"
+                                width="1600"
+                                height="900"
+                            >
+
+                            <figcaption
+                                class="card-body"
+                                data-i18n="gallery.imageThreeCaption"
+                            >
+                                Mint garden: a fresh green base balanced
+                                with peach, yellow, and teal.
+                            </figcaption>
+                        </figure>
+                    </div>
+
+                    <div class="col-md-6">
+                        <figure class="gallery-card card h-100">
+                            <img
+                                class="card-img-top"
+                                src="{% static 'assets/images/carousel/party-slide-4.jpg' %}"
+                                alt="Abstract pink background with colourful circles and confetti"
+                                data-i18n-alt="gallery.imageFourAlt"
+                                width="1600"
+                                height="900"
+                            >
+
+                            <figcaption
+                                class="card-body"
+                                data-i18n="gallery.imageFourCaption"
+                            >
+                                Pink party: a lively mix of rose,
+                                lavender, aqua, and peach.
+                            </figcaption>
+                        </figure>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}

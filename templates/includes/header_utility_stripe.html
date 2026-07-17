@@ -1,0 +1,29 @@
+{# This reusable template presents header utility stripe wherever the shared site layout includes it. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% comment %}
+This reusable stripe holds secondary controls that should remain separate from
+page navigation. It can be extended later without restructuring the main menu.
+{% endcomment %}
+<div class="header-utility-stripe">
+    <div class="container header-utility-inner">
+        <p class="header-utility-message" data-i18n="nav.utilityMessage">
+            Plan a celebration your child will remember.
+        </p>
+
+        {# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+        <nav
+            class="header-utility-controls"
+            aria-label="Language and account options"
+            data-i18n-aria-label="nav.utilityLabel"
+        >
+            <div class="header-utility-language">
+                {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+                {% include "includes/language_picker.html" %}
+            </div>
+
+            <span class="header-utility-separator" aria-hidden="true"></span>
+
+            {% include "includes/account_selector.html" %}
+        </nav>
+    </div>
+</div>

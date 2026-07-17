@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{# This template presents addon detail within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+
+{% block title %}{{ addon.name }} | Party Ideas{% endblock %}
+{% block meta_description %}{{ addon.short_description }}{% endblock %}
+{% block page_name %}partyIdeas{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/party-ideas.css' %}">{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="party-idea-detail">
+    <div class="container">
+        {# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+        <nav class="party-ideas-breadcrumbs" aria-label="Breadcrumb">
+            <a href="{% url 'party_ideas:list' %}">Party Ideas</a>
+            <a href="{% url 'party_ideas:category_detail' addon.category.slug %}">
+                {{ addon.category }}
+            </a>
+            <span aria-current="page">{{ addon.name }}</span>
+        </nav>
+
+        <div class="party-detail-grid">
+            <div class="party-detail-media">
+                {# Custom uploads remain the owner’s choice; the bundled image fills the page only when no upload exists. #}
+                {% if addon.has_custom_image %}
+                    <img src="{{ addon.image.url }}" alt="{{ addon.display_image_alt_text }}">
+                {% elif addon.default_static_image_path %}
+                    <img src="{% static addon.default_static_image_path %}" alt="{{ addon.display_image_alt_text }}">
+                {% else %}
+                    <span aria-hidden="true">{{ addon.icon }}</span>
+                {% endif %}
+            </div>
+
+            <article class="party-detail-content">
+                <p class="section-kicker">Optional party experience</p>
+                <h1>{{ addon.name }}</h1>
+                <p class="lead">{{ addon.short_description }}</p>
+
+                <p
+                    class="party-idea-rating"
+                    aria-label="{% if addon.rating_count %}Average rating {{ addon.average_rating|floatformat:1 }} out of 5 from {{ addon.rating_count }} verified parties{% else %}No ratings yet{% endif %}"
+                >
+                    {% if addon.rating_count %}
+                        <span aria-hidden="true">★</span>
+                        {{ addon.average_rating|floatformat:1 }} ·
+                        {{ addon.rating_count }} verified part{{ addon.rating_count|pluralize:"y,ies" }}
+                    {% else %}
+                        <span data-i18n="partyIdeas.noRatings">No ratings yet</span>
+                    {% endif %}
+                </p>
+
+                <dl class="party-detail-facts">
+                    <div><dt>Price</dt><dd>+€{{ addon.price|floatformat:2 }}</dd></div>
+                    <div>
+                        <dt>Duration</dt>
+                        <dd>
+                            {% if addon.duration_minutes %}
+                                {{ addon.duration_minutes }} minutes
+                            {% else %}
+                                Runs within party time
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div><dt>Category</dt><dd>{{ addon.category }}</dd></div>
+                </dl>
+
+                <p class="party-starting-message">
+                    Add this experience now, then choose or change your capacity-based package in the builder.
+                </p>
+
+                <div class="party-detail-actions">
+                    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+                    <form method="post" action="{% url 'party_ideas:add_addon' addon.slug %}">
+                        {% csrf_token %}
+                        <button class="button" type="submit" data-i18n="partyIdeas.add">
+                            Add to my party
+                        </button>
+                    </form>
+                    <a class="button button-outline" href="{% url 'party_ideas:list' %}">
+                        Compare all party ideas
+                    </a>
+                </div>
+            </article>
+        </div>
+
+        <section class="party-recommendations" aria-labelledby="addon-recommendations-heading">
+            <p class="section-kicker">More inspiration</p>
+            <h2 id="addon-recommendations-heading" data-i18n="partyIdeas.related">
+                You might also like
+            </h2>
+            <div class="party-recommendation-grid">
+                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                {% for recommendation in recommendations %}
+                    <article>
+                        <h3>
+                            <a href="{% url 'party_ideas:addon_detail' recommendation.addon.slug %}">
+                                {{ recommendation.addon.name }}
+                            </a>
+                        </h3>
+                        <p>{{ recommendation.addon.short_description }}</p>
+                        <p class="recommendation-reason">{{ recommendation.reason }}</p>
+                        <strong>+€{{ recommendation.addon.price|floatformat:2 }}</strong>
+                    </article>
+                {% empty %}
+                    <p>No related ideas are available yet.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</section>
+{% endblock %}

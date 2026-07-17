@@ -1,0 +1,114 @@
+{# This is the shared frame for the custom management area. It combines the authorised sidebar, page header, feedback messages, and per-page content without using Django Admin. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static management_tags %}
+{# The private management shell now displays the hosted P Kids Events name without changing any access rules. #}
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Secure P Kids Events management panel for catalogue, bookings, users, schedules, and audit history.">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="theme-color" content="#fff9fc">
+    <title>{{ management_page_title|default:"Management" }} | P Kids Events</title>
+    <script src="{% static 'js/theme-init.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/management.css' %}?v=dashboard-spacing-1">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="management-body">
+    <a class="visually-hidden-focusable" href="#management-main">Skip to management content</a>
+
+    <div class="management-shell" data-management-shell>
+        {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+        {% include "operations/management/includes/sidebar.html" %}
+
+        <div class="management-workspace">
+            <header class="management-topbar">
+                <div class="management-content-frame management-topbar-inner">
+                <button
+                    class="management-sidebar-toggle"
+                    type="button"
+                    aria-controls="management-sidebar"
+                    aria-expanded="false"
+                    data-management-sidebar-toggle
+                >
+                    <span aria-hidden="true">☰</span>
+                    <span class="visually-hidden">Open management navigation</span>
+                </button>
+
+                <div class="management-topbar-heading">
+                    {% if management_breadcrumbs %}
+                        {# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+                        <nav aria-label="Breadcrumb">
+                            <ol class="management-breadcrumbs">
+                                <li>
+                                    {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+                                    {% if nav_can_access_full_management %}
+                                        <a href="{% url 'management:management_dashboard' %}">Management</a>
+                                    {% elif nav_can_manage_pricing %}
+                                        <a href="{% url 'management:management_catalogue' %}">Management</a>
+                                    {% else %}
+                                        <a href="{% url 'communications:management_inbox' %}">Management</a>
+                                    {% endif %}
+                                </li>
+                                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                                {% for label, target in management_breadcrumbs %}
+                                    <li>
+                                        {% if target %}<a href="{{ target }}">{{ label }}</a>{% else %}<span aria-current="page">{{ label }}</span>{% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ol>
+                        </nav>
+                    {% endif %}
+                    <h1>{{ management_page_title|default:"Management" }}</h1>
+                </div>
+
+                <div class="management-topbar-actions">
+                    <a class="management-link-button" href="{% url 'core:core_home' %}">View website</a>
+                    <button
+                        class="management-icon-button"
+                        id="management-theme-toggle"
+                        type="button"
+                        role="switch"
+                        aria-checked="false"
+                        aria-label="Switch to dark mode"
+                    >
+                        <span aria-hidden="true">◐</span>
+                    </button>
+                    <div class="management-user-summary">
+                        <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+                        <span>{{ request.user|management_role }}</span>
+                    </div>
+                    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+                    <form method="post" action="{% url 'accounts:accounts_sign_out' %}">
+                        {% csrf_token %}
+                        <button class="management-link-button" type="submit">Sign out</button>
+                    </form>
+                </div>
+                </div>
+            </header>
+
+            {% if messages %}
+            <div class="management-messages" aria-live="polite" aria-atomic="true">
+                <div class="management-content-frame">
+                {% for message in messages %}
+                    <div class="management-alert {{ message.tags|default:'info' }}" role="status">{{ message }}</div>
+                {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <main id="management-main" class="management-main management-content-frame" tabindex="-1">
+                {% block management_content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <div class="management-drawer-backdrop" hidden data-management-backdrop></div>
+    <script src="{% static 'vendor/bootstrap/bootstrap.js' %}" defer></script>
+    <script src="{% static 'js/management.js' %}" defer></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,868 @@
+/*
+ * This is the shared visual foundation for Popadoo, including colours, typography, buttons, layout helpers, theme variables, and global accessibility utilities.
+ * Its rules are grouped around page components, responsive layouts, theme support, and visible keyboard focus.
+ * The comments explain those relationships without changing selectors, spacing, colours, or behaviour.
+ */
+/*
+ * This stylesheet contains the shared colours, layout rules, navigation, reusable components, and responsive behaviour used across the website.
+ * The comments explain visual sections without changing the styles applied by the browser.
+ */
+/*
+ * Universal Popadoo styles shared by every page.
+ *
+ * This file contains the design tokens, theme definitions, resets, typography,
+ * layout utilities, navigation, theme switch, reusable components, footer,
+ * responsive behaviour, and reduced-motion preferences used site-wide.
+ */
+/*
+ * The Popadoo palette is derived from the six pastel colours in the logo.
+ * Light mode uses pale tints for backgrounds and deeper brand anchors for
+ * readable actions. Dark mode preserves the same hues at lower brightness,
+ * with lighter companion accents for text and interactive states.
+ */
+:root, html[data-theme="light"] {
+    /* Logo-derived pastel palette */
+    --pastel-lavender: #d7c6f2;
+    --pastel-pink: #f5c3d8;
+    --pastel-mint: #bee8d8;
+    --pastel-sky: #b9dff3;
+    --pastel-butter: #f8e7a1;
+    --pastel-peach: #f9cdb4;
+    /* Soft surfaces */
+    --surface-lavender: #f4effa;
+    --surface-pink: #fceef4;
+    --surface-mint: #edf9f5;
+    --surface-sky: #eef7fc;
+    --surface-butter: #fff9e2;
+    --surface-peach: #fff1ea;
+    /* Semantic design tokens */
+    --color-background: #fff9fc;
+    --color-surface: #ffffff;
+    --color-surface-raised: #ffffff;
+    --color-surface-soft: var(--surface-lavender);
+    --color-text: #2d2438;
+    --color-heading: #3e2d50;
+    --color-muted: #675d72;
+    --color-border: #e3d9ea;
+    --color-primary: #6f4a8e;
+    --color-primary-strong: #58366f;
+    --color-primary-soft: #eee5f6;
+    --color-secondary: #a84473;
+    --color-accent: #b06b8f;
+    --color-focus: #9b5d83;
+    --color-button-background: #6f4a8e;
+    --color-button-background-hover: #58366f;
+    --color-button-text: #ffffff;
+    --color-on-pastel: #35283f;
+    --header-background: rgba(255, 249, 252, 0.92);
+    --page-glow-one: rgba(215, 198, 242, 0.42);
+    --page-glow-two: rgba(190, 232, 216, 0.32);
+    --shadow-soft: 0 1rem 2.75rem rgba(63, 42, 79, 0.12);
+    --shadow-card: 0 0.75rem 1.8rem rgba(63, 42, 79, 0.09);
+    --content-width: 72rem;
+    color-scheme: light;
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+/*
+ * These rules adapt the same components for dark mode while preserving readable contrast and familiar structure.
+ */
+html[data-theme="dark"] {
+    /* Dark equivalents of the logo palette */
+    --pastel-lavender: #cbb5e8;
+    --pastel-pink: #f0a8c4;
+    --pastel-mint: #96dcc2;
+    --pastel-sky: #95cdeb;
+    --pastel-butter: #f0d77e;
+    --pastel-peach: #f2b18d;
+    /* Hue-preserving dark surfaces */
+    --surface-lavender: #382c49;
+    --surface-pink: #482a38;
+    --surface-mint: #1e3b32;
+    --surface-sky: #1e3645;
+    --surface-butter: #3a321d;
+    --surface-peach: #40291f;
+    /* Semantic design tokens */
+    --color-background: #15111c;
+    --color-surface: #211a2b;
+    --color-surface-raised: #2a2136;
+    --color-surface-soft: #282031;
+    --color-text: #faf7fc;
+    --color-heading: #ffffff;
+    --color-muted: #c9c0d1;
+    --color-border: #493c55;
+    --color-primary: #c9a7e4;
+    --color-primary-strong: #e4d2f2;
+    --color-primary-soft: #382c49;
+    --color-secondary: #f0a8c4;
+    --color-accent: #f0d77e;
+    --color-focus: #f3d77b;
+    --color-button-background: #b58ad6;
+    --color-button-background-hover: #c7a2e2;
+    --color-button-text: #1d1225;
+    --color-on-pastel: #17111e;
+    --header-background: rgba(21, 17, 28, 0.92);
+    --page-glow-one: rgba(92, 65, 119, 0.22);
+    --page-glow-two: rgba(47, 102, 82, 0.16);
+    --shadow-soft: 0 1rem 2.75rem rgba(0, 0, 0, 0.38);
+    --shadow-card: 0 0.75rem 1.8rem rgba(0, 0, 0, 0.26);
+    color-scheme: dark;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* These rules style this group of related page elements. */
+html {
+    min-width: 20rem;
+    font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+    line-height: 1.55;
+    scroll-behavior: smooth;
+}
+
+/* These rules style this group of related page elements. */
+body {
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    color: var(--color-text);
+    background: radial-gradient(circle at 4% 2%, var(--page-glow-one), transparent 24rem), radial-gradient(circle at 98% 22%, var(--page-glow-two), transparent 22rem), var(--color-background);
+    transition: color 180ms ease, background-color 180ms ease;
+}
+
+/* These rules style this group of related page elements. */
+main {
+    flex: 1;
+}
+
+/* Reusable custom elements behave as normal block-level page regions. */
+popadoo-header, popadoo-footer {
+    display: block;
+}
+
+/* These rules style this group of related page elements. */
+h1, h2, h3, p, figure, blockquote {
+    margin-top: 0;
+}
+
+/* These rules style this group of related page elements. */
+h1, h2, h3 {
+    color: var(--color-heading);
+    line-height: 1.15;
+    text-wrap: balance;
+}
+
+/* These rules style this group of related page elements. */
+h1 {
+    font-size: clamp(2.25rem, 6vw, 4.75rem);
+    letter-spacing: -0.035em;
+}
+
+/* These rules style this group of related page elements. */
+h2 {
+    font-size: clamp(1.65rem, 4vw, 2.5rem);
+    letter-spacing: -0.02em;
+}
+
+/* These rules style this group of related page elements. */
+h3 {
+    font-size: 1.35rem;
+}
+
+/* These rules style this group of related page elements. */
+p {
+    text-wrap: pretty;
+}
+
+/* These rules style this group of related page elements. */
+a {
+    color: inherit;
+}
+
+/* These rules make this action look and behave like an interactive control. */
+main a:not(.button):not(.book-now-button):not(.party-booking-button) {
+    text-decoration-color: var(--pastel-pink);
+    text-decoration-thickness: 0.13em;
+    text-underline-offset: 0.18em;
+}
+
+/* These rules style this group of related page elements. */
+img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+button, input, select, textarea {
+    font: inherit;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+button, select {
+    cursor: pointer;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+::selection {
+    background: var(--pastel-pink);
+    color: var(--color-on-pastel);
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+/*
+ * These focus styles make keyboard position visible without relying on hover or colour alone.
+ */
+:focus-visible {
+    outline: 0.2rem solid var(--color-focus);
+    outline-offset: 0.2rem;
+}
+
+/* These rules control spacing and the page layout for this group of content. */
+.container {
+    width: min(var(--content-width), 92%);
+    margin-inline: auto;
+}
+
+/* These rules style this group of related page elements. */
+.narrow-content {
+    max-width: 52rem;
+}
+
+/* These rules style this group of related page elements. */
+.lead {
+    color: var(--color-muted);
+    font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+}
+
+/* These rules style this group of related page elements. */
+.section-kicker {
+    margin-bottom: 0.55rem;
+    color: var(--color-secondary);
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.visually-hidden, .visually-hidden-focusable:not(:focus):not(:focus-within) {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.visually-hidden-focusable:focus {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 1000;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background: var(--color-surface-raised);
+    color: var(--color-primary-strong);
+    box-shadow: var(--shadow-soft);
+}
+
+/* Header and navigation */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--header-background);
+    backdrop-filter: blur(0.85rem);
+}
+
+/* These rules arrange and style the site navigation area. */
+/*
+ * This section arranges the shared navigation controls and adapts them when the available width changes.
+ */
+.site-navigation {
+    position: relative;
+    min-height: 5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+/* These rules style this group of related page elements. */
+.site-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex-shrink: 0;
+    color: var(--color-heading);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+}
+
+/* These rules style this group of related page elements. */
+.site-logo-mark {
+    width: 3.1rem;
+    height: 3.1rem;
+    flex: 0 0 auto;
+    filter: drop-shadow(0 0.35rem 0.65rem rgba(77, 51, 94, 0.18));
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+html[data-theme="dark"] .site-logo-mark {
+    filter: drop-shadow(0 0.35rem 0.75rem rgba(0, 0, 0, 0.34));
+}
+
+/* These rules style this group of related page elements. */
+.site-logo-text {
+    white-space: nowrap;
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-toggle {
+    display: none;
+    width: 3rem;
+    min-height: 3rem;
+    padding: 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.8rem;
+    background: var(--color-surface-raised);
+    color: var(--color-primary-strong);
+    box-shadow: var(--shadow-card);
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-toggle-line {
+    display: block;
+    width: 100%;
+    height: 0.16rem;
+    border-radius: 999px;
+    background: currentColor;
+    transition: transform 180ms ease, opacity 180ms ease;
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-toggle-line + .site-navigation-toggle-line {
+    margin-top: 0.32rem;
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-toggle[aria-expanded="true"] .site-navigation-toggle-line:first-child {
+    transform: translateY(0.48rem) rotate(45deg);
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-toggle[aria-expanded="true"] .site-navigation-toggle-line:nth-child(2) {
+    opacity: 0;
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-toggle[aria-expanded="true"] .site-navigation-toggle-line:last-child {
+    transform: translateY(-0.48rem) rotate(-45deg);
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-menu, .site-controls, .site-navigation-links {
+    display: flex;
+    align-items: center;
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-menu {
+    justify-content: flex-end;
+    gap: 0.8rem;
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-links {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.12rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-link {
+    display: inline-block;
+    padding: 0.6rem 0.68rem;
+    border-radius: 999px;
+    color: var(--color-text);
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 160ms ease, color 160ms ease;
+}
+
+/* These rules arrange and style the site navigation area. */
+.site-navigation-link:hover, .site-navigation-link.active {
+    color: var(--color-primary-strong);
+    background: var(--color-primary-soft);
+}
+
+/* These rules style this group of related page elements. */
+.site-controls {
+    gap: 0.6rem;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.language-selector {
+    width: auto;
+    min-height: 2.65rem;
+    padding: 0.55rem 2.4rem 0.55rem 0.95rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    appearance: none;
+    background-color: var(--color-surface-raised);
+    background-image: linear-gradient(45deg, transparent 50%, var(--color-primary-strong) 50%), linear-gradient(135deg, var(--color-primary-strong) 50%, transparent 50%), linear-gradient(135deg, var(--surface-lavender), var(--surface-pink));
+    background-position: calc(100% - 1.05rem) 50%, calc(100% - 0.72rem) 50%, 0 0;
+    background-repeat: no-repeat;
+    background-size: 0.35rem 0.35rem, 0.35rem 0.35rem, 100% 100%;
+    color: var(--color-text);
+    font-weight: 800;
+    box-shadow: 0 0.25rem 0.8rem rgba(63, 42, 79, 0.06);
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.language-selector:hover {
+    border-color: var(--pastel-lavender);
+    transform: translateY(-0.04rem);
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.language-selector:focus-visible {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.22rem var(--color-primary-soft);
+}
+
+/* These rules make this action look and behave like an interactive control. */
+.book-now-button, .primary-button, .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-height: 2.75rem;
+    padding: 0.7rem 1.15rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: var(--color-button-background);
+    color: var(--color-button-text);
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 0.55rem 1.2rem rgba(73, 46, 93, 0.16);
+    transition: background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+/* These rules make this action look and behave like an interactive control. */
+.book-now-button:hover, .book-now-button.active, .primary-button:hover, .button:hover {
+    background: var(--color-button-background-hover);
+    box-shadow: 0 0.75rem 1.4rem rgba(73, 46, 93, 0.22);
+    transform: translateY(-0.1rem);
+}
+
+/* Light/dark theme switch based on the supplied moon-and-sun reference. */
+.theme-toggle {
+    width: auto;
+    padding: 0.18rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-track {
+    position: relative;
+    width: 5.25rem;
+    height: 2.35rem;
+    display: block;
+    overflow: hidden;
+    border-radius: 999px;
+    background: linear-gradient(184deg, #293b61 6.6%, #667da8 96.98%);
+    box-shadow: 0 0.2rem 0.35rem 0.12rem rgba(0, 0, 0, 0.3) inset;
+    transition: background 220ms ease;
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+html[data-theme="light"] .theme-toggle-track {
+    background: linear-gradient(180deg, var(--pastel-mint) 0%, var(--pastel-butter) 100%);
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-stars, .theme-toggle-clouds {
+    position: absolute;
+    inset: 0;
+    transition: opacity 180ms ease;
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-stars::before, .theme-toggle-stars::after {
+    position: absolute;
+    content: "";
+    border-radius: 50%;
+    background: #d9efff;
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-stars::before {
+    width: 0.2rem;
+    height: 0.2rem;
+    top: 0.5rem;
+    left: 2.75rem;
+    box-shadow: 0.8rem 0.45rem 0 0.05rem #d9efff, 1.55rem -0.1rem 0 -0.02rem #d9efff, 1.95rem 0.75rem 0 0.02rem #d9efff;
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-stars::after {
+    width: 0.28rem;
+    height: 0.28rem;
+    top: 1.28rem;
+    left: 3.25rem;
+    box-shadow: 1.1rem -0.2rem 0 -0.04rem #d9efff;
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-clouds {
+    opacity: 0;
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-clouds::before, .theme-toggle-clouds::after {
+    position: absolute;
+    content: "";
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-clouds::before {
+    width: 1.35rem;
+    height: 0.32rem;
+    top: 0.7rem;
+    left: 0.75rem;
+    box-shadow: 0.25rem -0.18rem 0 0.05rem rgba(255, 255, 255, 0.68);
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-clouds::after {
+    width: 1.6rem;
+    height: 0.35rem;
+    bottom: 0.52rem;
+    left: 0.35rem;
+    box-shadow: 0.55rem -0.18rem 0 0.08rem rgba(255, 255, 255, 0.62);
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+html[data-theme="light"] .theme-toggle-stars {
+    opacity: 0;
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+html[data-theme="light"] .theme-toggle-clouds {
+    opacity: 1;
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-knob {
+    position: absolute;
+    top: 0.16rem;
+    left: 0.16rem;
+    width: 2.03rem;
+    height: 2.03rem;
+    border-radius: 50%;
+    filter: drop-shadow(-0.1rem 0.05rem 0.2rem rgba(0, 0, 0, 0.25));
+    transition: transform 220ms ease;
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+html[data-theme="light"] .theme-toggle-knob {
+    transform: translateX(2.9rem);
+    filter: drop-shadow(0.1rem 0.05rem 0.2rem rgba(0, 0, 0, 0.25));
+}
+
+/* These rules style this group of related page elements. */
+.theme-toggle-icon {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transition: opacity 160ms ease;
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+.theme-toggle-icon-sun, html[data-theme="light"] .theme-toggle-icon-moon {
+    opacity: 0;
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+html[data-theme="light"] .theme-toggle-icon-sun {
+    opacity: 1;
+}
+
+/* Shared surfaces and footer */
+.section-surface {
+    background: linear-gradient(135deg, var(--surface-lavender), var(--surface-mint));
+    border-block: 1px solid var(--color-border);
+}
+
+/* These rules style this group of related page elements. */
+/*
+ * This section presents package choices as complete, comparable starting points with capacity, price, and action information kept together.
+ */
+.page-main, .content-section, .page-intro, .packages-section, .comparison-section, .faq-section, .style-guide-section {
+    padding-block: clamp(3rem, 7vw, 5rem);
+}
+
+/* These rules style the page introduction and its main heading. */
+.page-heading {
+    max-width: 52rem;
+    margin-bottom: 2.5rem;
+}
+
+/* These rules style the page introduction and its main heading. */
+.page-heading h1 {
+    margin-bottom: 0.75rem;
+}
+
+/* Consistent reusable footer with brand, contact, and resource columns. */
+.site-footer {
+    border-top: 1px solid var(--color-border);
+    padding-block: 2rem;
+    background: linear-gradient(135deg, var(--surface-lavender), var(--surface-pink));
+}
+
+/* These rules arrange and style the shared page footer. */
+.site-footer-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(10rem, 0.8fr);
+    gap: 1.5rem 2rem;
+    align-items: start;
+}
+
+/* These rules arrange and style the shared page footer. */
+.site-footer-brand, .site-footer-contact {
+    display: grid;
+    align-content: start;
+    gap: 0.55rem;
+}
+
+/* These rules arrange and style the shared page footer. */
+.site-footer-logo {
+    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-heading);
+    text-decoration: none;
+}
+
+/* These rules arrange and style the shared page footer. */
+.site-footer-logo img {
+    width: 3.25rem;
+    height: 3.25rem;
+    flex: 0 0 auto;
+    filter: drop-shadow(0 0.35rem 0.65rem rgba(77, 51, 94, 0.16));
+}
+
+/* These rules arrange and style the shared page footer. */
+.site-footer-brand p {
+    margin-bottom: 0;
+}
+
+/* These rules arrange and style the shared page footer. */
+.site-footer-brand p {
+    max-width: 28rem;
+    color: var(--color-muted);
+}
+
+/* These rules arrange and style the shared page footer. */
+.site-footer-heading {
+    margin-bottom: 0.15rem;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* These rules arrange and style the shared page footer. */
+.site-footer a {
+    width: fit-content;
+    color: var(--color-primary-strong);
+    font-weight: 700;
+    text-underline-offset: 0.18em;
+}
+
+/* These rules arrange and style the shared page footer. */
+.site-footer-social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.62);
+    border-radius: 999px;
+    background: var(--color-surface-raised);
+    box-shadow: 0 0.45rem 1rem rgba(63, 42, 79, 0.12);
+    transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.site-footer-social-link:hover, .site-footer-social-link:focus-visible {
+    transform: translateY(-0.1rem);
+    box-shadow: var(--shadow-card);
+}
+
+/* These rules arrange and style the shared page footer. */
+.site-footer-social-icon {
+    width: 1.7rem;
+    height: 1.7rem;
+}
+
+/* The following rules adjust the layout for this screen size. */
+/*
+ * This responsive section rearranges the component for narrower or wider screens without removing important actions.
+ */
+@media (max-width: 72rem) {
+    /* These rules arrange and style the site navigation area. */
+    .site-navigation {
+        min-height: 4.5rem;
+    }
+
+    /* These rules arrange and style the site navigation area. */
+    .site-navigation-toggle {
+        display: block;
+        flex: 0 0 auto;
+    }
+
+    /* These rules arrange and style the site navigation area. */
+    .site-navigation-menu {
+        position: absolute;
+        top: calc(100% + 0.65rem);
+        right: 0;
+        z-index: 30;
+        display: none;
+        width: min(24rem, calc(100vw - 2rem));
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.9rem;
+        padding: 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 1.1rem;
+        background: var(--color-surface-raised);
+        box-shadow: var(--shadow-soft);
+    }
+
+    /* These rules arrange and style the site navigation area. */
+    .site-navigation-menu.is-open {
+        display: flex;
+    }
+
+    /* These rules arrange and style the site navigation area. */
+    .site-navigation-links {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    /* These rules arrange and style the site navigation area. */
+    .site-navigation-link {
+        display: block;
+        width: 100%;
+        border-radius: 0.75rem;
+    }
+
+    /* These rules style this group of related page elements. */
+    .site-controls {
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
+
+    /* These rules style this group of related page elements. */
+    .language-control {
+        flex: 1;
+    }
+
+    /* These rules make form fields and validation feedback clear and consistent. */
+    .language-selector {
+        width: 100%;
+    }
+
+    /* These rules make this action look and behave like an interactive control. */
+    .book-now-button {
+        width: 100%;
+    }
+
+}
+
+/* The following rules adjust the layout for this screen size. */
+@media (max-width: 48rem) {
+    /* These rules arrange and style the shared page footer. */
+    .site-footer-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+/* The following rules adjust the layout for this screen size. */
+@media (max-width: 32rem) {
+    /* These rules style this group of related page elements. */
+    .site-logo-mark {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+
+    /* These rules style this group of related page elements. */
+    .site-logo-text {
+        max-width: 9.5rem;
+        white-space: normal;
+        line-height: 1.12;
+    }
+
+    /* These rules arrange and style the shared page footer. */
+    .site-footer-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+/* The following rules adjust the layout for this screen size. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+}
+
+/*
+ * Navigation alignment refinements.
+ * The menu may grow, while the control group stays in a predictable order:
+ * language, theme, the party-builder action, then account access at the far right.
+ */
+@media (min-width: 72.001rem) {
+    .site-navigation-menu {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .site-navigation-links {
+        margin-left: auto;
+    }
+
+    .site-controls {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+}

@@ -1,0 +1,62 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the form screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div>
+            <p class="management-eyebrow">Catalogue management</p>
+            <h2>{% if is_create %}Create {{ object_label }}{% else %}Edit {{ object }}{% endif %}</h2>
+            <p>Fields marked with an asterisk are required. Validation messages appear beside the relevant field.</p>
+        </div>
+    </div>
+
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form method="post" enctype="multipart/form-data" class="management-form-card" data-prevent-double-submit novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="management-error-summary" role="alert" tabindex="-1" data-error-summary>
+                <h3>Review the following issue</h3>
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% if form.image %}
+            <div class="management-form-image-layout">
+                <div class="management-image-preview" data-image-preview>
+                    {# The preview shows the owner’s upload first, then the bundled catalogue default that customers currently see. #}
+                    {% if object and object.has_custom_image %}
+                        <img src="{{ object.image.url }}" alt="{{ object.display_image_alt_text|default:'Current catalogue image' }}" data-image-preview-output>
+                    {% elif object and object.default_static_image_path %}
+                        <img src="{% static object.default_static_image_path %}" alt="{{ object.display_image_alt_text|default:'Current catalogue image' }}" data-image-preview-output>
+                    {% else %}
+                        <div class="management-image-placeholder" data-image-preview-placeholder>No image uploaded</div>
+                        <img src="" alt="New image preview" hidden data-image-preview-output>
+                    {% endif %}
+                </div>
+                <div class="management-form-grid">
+                    {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                    {% for field in form %}
+                        {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+                        {% include "operations/management/includes/form_field.html" with field=field %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="management-form-grid">
+                {% for field in form %}
+                    {% include "operations/management/includes/form_field.html" with field=field %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="management-form-actions">
+            <button class="management-button" type="submit">Save {{ object_label }}</button>
+            <a class="management-button secondary" href="{{ cancel_url }}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

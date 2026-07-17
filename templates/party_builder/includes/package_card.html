@@ -1,0 +1,48 @@
+{# This template presents package card within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+<article class="package-option" data-package-option>
+    <input
+        class="package-radio"
+        type="radio"
+        name="package"
+        value="{{ package.pk }}"
+        id="package-{{ package.pk }}"
+        data-package-radio
+        data-package-id="{{ package.pk }}"
+        data-package-name="{{ package.name }}"
+        data-package-slug="{{ package.slug }}"
+        data-package-price="{{ package.catalogue_price }}"
+        data-package-capacity="{{ package.included_guest_count }}"
+        {% if package.pk|stringformat:'s' == selected_package_id %}checked{% endif %}
+        aria-describedby="package-{{ package.pk }}-description package-{{ package.pk }}-capacity package-{{ package.pk }}-price"
+    >
+    <label class="package-card" for="package-{{ package.pk }}">
+        {# A manager-uploaded image stays in control; otherwise seeded packages use artwork shipped with the website. #}
+        {% if package.has_custom_image %}
+            <img class="package-card-image" src="{{ package.image.url }}" alt="{{ package.display_image_alt_text }}">
+        {% elif package.default_static_image_path %}
+            <img class="package-card-image" src="{% static package.default_static_image_path %}" alt="{{ package.display_image_alt_text }}">
+        {% else %}
+            <span class="package-card-placeholder" aria-hidden="true">✦</span>
+        {% endif %}
+        <span class="package-card-content">
+            <span class="package-card-heading">
+                <strong data-catalogue-i18n="catalogue.package.{{ package.slug }}.name">{{ package.name }}</strong>
+                {% if package.is_default %}<span class="package-badge" data-i18n="builder.popularStart">Popular start</span>{% endif %}
+            </span>
+            <span id="package-{{ package.pk }}-description" data-catalogue-i18n="catalogue.package.{{ package.slug }}.description">{{ package.short_description }}</span>
+            <span class="package-card-includes" id="package-{{ package.pk }}-capacity">
+                <span data-i18n-template="builder.upToChildren" data-i18n-value-count="{{ package.included_guest_count }}">Up to {{ package.included_guest_count }} children</span> · <span data-i18n-template="builder.durationMinutes" data-i18n-value-count="{{ package.duration_minutes }}">{{ package.duration_minutes }} minutes</span>
+            </span>
+            <span class="package-card-includes" data-catalogue-i18n="catalogue.package.{{ package.slug }}.includes">{{ package.included_experiences|default:"Flexible activities confirmed with the team." }}</span>
+            {% if package.rating_count %}
+                <span class="addon-rating-summary" aria-label="Average rating {{ package.average_rating|floatformat:1 }} out of 5 from {{ package.rating_count }} verified parties" data-i18n-aria-label="builder.averageRating" data-i18n-value-rating="{{ package.average_rating|floatformat:1 }}" data-i18n-value-count="{{ package.rating_count }}"><span aria-hidden="true">★</span> {{ package.average_rating|floatformat:1 }} ({{ package.rating_count }})</span>
+            {% else %}
+                <span class="package-card-no-rating" data-i18n="builder.noRatings">No ratings yet</span>
+            {% endif %}
+            <span class="package-card-price" id="package-{{ package.pk }}-price">€{{ package.catalogue_price|floatformat:2 }}</span>
+            <span class="package-card-action" data-package-action data-i18n="{% if package.pk|stringformat:'s' == selected_package_id %}builder.selectedPackage{% else %}builder.choosePackageAction{% endif %}">{% if package.pk|stringformat:'s' == selected_package_id %}Selected package{% else %}Choose this package{% endif %}</span>
+        </span>
+    </label>
+</article>

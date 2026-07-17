@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{# This public template presents the testimonials page as part of the Popadoo customer website. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+{% block title %}Testimonials | P Kids Events{% endblock %}
+{% block page_name %}testimonials{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/content-pages.css' %}">
+{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+<div class="page-main testimonial-page">
+    <div class="container">
+        <header class="page-heading">
+            <p class="section-kicker" data-i18n="testimonials.kicker">Verified feedback</p>
+            <h1 data-i18n="testimonials.heading">Testimonials</h1>
+            <p class="lead" data-i18n="testimonials.lead">
+                These comments come from verified completed parties and are displayed only with the customer's explicit permission.
+            </p>
+        </header>
+
+        {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+        <section aria-labelledby="testimonial-list-heading">
+            <div class="section-heading-group">
+                <h2 id="testimonial-list-heading" data-i18n="testimonials.listHeading">Shared family experiences</h2>
+                <p data-i18n="testimonials.intro">
+                    Ratings help P Kids Events improve every celebration. Written comments appear here only when the customer chooses Public testimonial.
+                </p>
+            </div>
+
+            {% if testimonials %}
+                <div class="testimonial-public-grid">
+                    {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                    {% for testimonial in testimonials %}
+                        <article class="testimonial-public-card">
+                            <header class="testimonial-public-card__header">
+                                <div
+                                    class="testimonial-stars"
+                                    role="img"
+                                    aria-label="{{ testimonial.package_score }} out of 5 stars"
+                                >
+                                    <span aria-hidden="true">
+                                        {% for number in "12345" %}{% if forloop.counter <= testimonial.package_score %}★{% else %}☆{% endif %}{% endfor %}
+                                    </span>
+                                </div>
+                                <span class="verified-testimonial-badge" data-i18n="testimonials.verifiedParty">
+                                    Verified completed party
+                                </span>
+                            </header>
+
+                            <blockquote>
+                                <p>{{ testimonial.comment }}</p>
+                            </blockquote>
+
+                            <footer>
+                                {% if testimonial.public_display_name == "Verified customer" %}
+                                    <strong data-i18n="testimonials.verifiedCustomer">Verified customer</strong>
+                                {% else %}
+                                    <strong>{{ testimonial.public_display_name }}</strong>
+                                {% endif %}
+                                <span>{{ testimonial.booking.package.name }}</span>
+                                <time datetime="{{ testimonial.updated_at|date:'Y-m' }}">
+                                    {{ testimonial.updated_at|date:"F Y" }}
+                                </time>
+                            </footer>
+                        </article>
+                    {% endfor %}
+                </div>
+
+                {% if is_paginated %}
+                    {# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+                    <nav class="testimonial-pagination" aria-label="Testimonials pagination">
+                        {% if page_obj.has_previous %}
+                            <a class="button button-outline" href="?page={{ page_obj.previous_page_number }}" rel="prev" data-i18n="testimonials.previous">Previous</a>
+                        {% endif %}
+                        <span aria-current="page">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                        {% if page_obj.has_next %}
+                            <a class="button button-outline" href="?page={{ page_obj.next_page_number }}" rel="next" data-i18n="testimonials.next">Next</a>
+                        {% endif %}
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="testimonial-empty-state" role="status">
+                    <h2 data-i18n="testimonials.emptyHeading">No public testimonials have been shared yet.</h2>
+                    <p data-i18n="testimonials.emptyText">
+                        Verified customers can choose to publish feedback after their completed party.
+                    </p>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

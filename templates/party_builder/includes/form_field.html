@@ -1,0 +1,18 @@
+{# This template presents form field within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+
+<div class="form-field{% if wide %} form-field-wide{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+    <span class="field-help" id="{{ field.id_for_label }}_help">
+        {% if help_text %}{{ help_text }}{% elif field.help_text %}{{ field.help_text }}{% else %}Required.{% endif %}
+    </span>
+        {% if field.errors %}
+        <ul class="field-errors" id="{{ field.id_for_label }}_error" role="alert">
+                        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                        {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+    {% else %}
+        <span class="visually-hidden" id="{{ field.id_for_label }}_error"></span>
+    {% endif %}
+</div>

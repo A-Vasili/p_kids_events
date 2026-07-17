@@ -1,0 +1,95 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the detail screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load management_tags %}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div>
+            <p class="management-eyebrow">User account</p>
+            <h2>{{ managed_user.get_full_name|default:managed_user.username }}</h2>
+            <p>{{ managed_user.email|default:"No email address" }} · {{ managed_user|management_role }}</p>
+        </div>
+        <div class="management-quick-actions">
+            {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+            {% if can_edit_worker %}
+                <a class="management-button" href="{% url 'management:management_user_update' managed_user.pk %}">Edit worker settings</a>
+            {% endif %}
+            <a class="management-button secondary" href="{% url 'management:management_user_list' %}">Back to users</a>
+        </div>
+    </div>
+
+    {% if managed_user_is_customer %}
+        <div class="management-alert info" role="note">Customer information is read-only here. Customers control their own name, contact details, and saved booking information.</div>
+    {% elif managed_user_is_owner %}
+        <div class="management-alert info" role="note">Owners are protected business accounts. Only an Administrator may change their sign-in status.</div>
+    {% endif %}
+
+    <div class="management-detail-grid">
+        <section class="management-panel">
+            <h3>Account details</h3>
+            <dl class="management-definition-grid">
+                <div><dt>Username</dt><dd>{{ managed_user.username }}</dd></div>
+                <div><dt>Role</dt><dd>{{ managed_user|management_role }}</dd></div>
+                <div><dt>Status</dt><dd>{{ managed_user.is_active|yesno:"Active,Banned" }}</dd></div>
+                <div><dt>Pricing access</dt><dd>{{ managed_user|has_pricing_access|yesno:"Granted,Not granted" }}</dd></div>
+                <div><dt>Chat responder access</dt><dd>{{ managed_user|has_chat_access|yesno:"Granted,Not granted" }}</dd></div>
+                <div><dt>Date joined</dt><dd>{{ managed_user.date_joined|date:"d M Y H:i" }}</dd></div>
+                <div><dt>Last sign in</dt><dd>{{ managed_user.last_login|date:"d M Y H:i"|default:"Never" }}</dd></div>
+            </dl>
+            {% if managed_user.customer_profile %}
+                <h3>Saved booking details</h3>
+                <dl class="management-definition-grid">
+                    <div><dt>Name</dt><dd>{{ managed_user.get_full_name|default:"Not provided" }}</dd></div>
+                    <div><dt>Email</dt><dd>{{ managed_user.email|default:"Not provided" }}</dd></div>
+                    <div><dt>Phone</dt><dd>{{ managed_user.customer_profile.phone|default:"Not provided" }}</dd></div>
+                    <div><dt>Address</dt><dd>{{ managed_user.customer_profile.default_address|default:"Not provided" }}</dd></div>
+                    <div><dt>Postal code</dt><dd>{{ managed_user.customer_profile.default_postal_code|default:"Not provided" }}</dd></div>
+                </dl>
+            {% endif %}
+        </section>
+
+        {% if can_change_account_status or can_delete_customer or managed_user_is_worker %}
+        <section class="management-panel">
+            <h3>Available account actions</h3>
+            <div class="management-action-list">
+                {% if can_change_account_status %}
+                    {% if managed_user.is_active %}
+                        <a class="management-button danger" href="{% url 'management:management_user_action' managed_user.pk 'ban' %}">Ban account</a>
+                    {% else %}
+                        <a class="management-button" href="{% url 'management:management_user_action' managed_user.pk 'unban' %}">Unban account</a>
+                    {% endif %}
+                {% endif %}
+
+                {% if managed_user_is_worker %}
+                    <a class="management-button secondary" href="{% url 'management:management_user_action' managed_user.pk 'demote' %}">Remove worker access</a>
+                    {% if managed_user|has_pricing_access %}
+                        <a class="management-button secondary" href="{% url 'management:management_user_action' managed_user.pk 'revoke_pricing' %}">Revoke pricing access</a>
+                    {% else %}
+                        <a class="management-button secondary" href="{% url 'management:management_user_action' managed_user.pk 'grant_pricing' %}">Grant pricing access</a>
+                    {% endif %}
+                    {% if managed_user|has_chat_access %}
+                        <a class="management-button secondary" href="{% url 'management:management_user_action' managed_user.pk 'revoke_chat' %}">Revoke chat responder access</a>
+                    {% else %}
+                        <a class="management-button secondary" href="{% url 'management:management_user_action' managed_user.pk 'grant_chat' %}">Grant chat responder access</a>
+                    {% endif %}
+                {% endif %}
+
+                {% if can_delete_customer %}
+                    <a class="management-button danger" href="{% url 'management:management_user_action' managed_user.pk 'delete' %}">Delete unused account</a>
+                {% endif %}
+            </div>
+            {% if customer_delete_blockers %}
+                <p class="management-help-text">This customer has historical records and cannot be hard-deleted. Ban the account to preserve: {{ customer_delete_blockers|join:", " }}.</p>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <section class="management-panel"><h3>Recent bookings</h3>{% if customer_bookings %}<ul class="management-link-list">{% for booking in customer_bookings %}<li><a href="{% url 'management:management_booking_detail' booking.public_id %}">{{ booking.event_date }} · {{ booking.package.name }} · {{ booking.get_status_display }}</a></li>{% endfor %}</ul>{% else %}<p>No customer bookings found.</p>{% endif %}</section>
+        <section class="management-panel"><h3>Recent worker assignments</h3>{% if worker_assignments %}<ul class="management-link-list">{% for assignment in worker_assignments %}<li><a href="{% url 'management:management_booking_detail' assignment.party_build.public_id %}">{{ assignment.party_build.event_date }} · {{ assignment.get_status_display }}</a></li>{% endfor %}</ul>{% else %}<p>No worker assignments found.</p>{% endif %}</section>
+        <section class="management-panel"><h3>Recent audit activity</h3>{% if recent_events %}<ul class="management-timeline">{% for event in recent_events %}<li><strong>{{ event.summary }}</strong><span>{{ event.created_at|date:"d M Y H:i" }}</span></li>{% endfor %}</ul>{% else %}<p>No recent account activity.</p>{% endif %}</section>
+    </div>
+</section>
+{% endblock %}

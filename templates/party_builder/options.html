@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{# This template presents options within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+{% block title %}Make Your Own Party | P Kids Events{% endblock %}
+{% block meta_description %}Choose a capacity-based package and optional experiences for a personalised P Kids Events party.{% endblock %}
+{% block og_title %}Make Your Own Party | P Kids Events{% endblock %}
+{% block og_description %}Choose the package size that fits your celebration, then add experiences to make it your own.{% endblock %}
+{% block page_name %}partyBuilder{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/party-builder.css' %}?v=20260715-package-rows">{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+<header class="checkout-hero" aria-labelledby="party-options-heading">
+    <div class="container narrow-content">
+        <p class="section-kicker" data-i18n="builder.browseIntro">Browse for inspiration, then make it your own</p>
+        <h1 id="party-options-heading" data-i18n="builder.makeOwn">Make your party your own</h1>
+        <p class="lead" data-i18n="builder.optionsLead">Choose a package that fits your group, then add the experiences you love.</p>
+        {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+        {% include "party_builder/includes/progress.html" %}
+    </div>
+</header>
+
+{# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+<form class="checkout-form" id="party-options-form" method="post" action="{% url 'party_builder:party_builder_package_options' %}" data-party-options-form novalidate>
+    {% csrf_token %}
+    <div class="container checkout-layout">
+        <div class="checkout-main-column">
+            {% if form.non_field_errors %}<section class="form-alert" role="alert" aria-labelledby="options-error-heading"><h2 id="options-error-heading" data-i18n="builder.reviewSelections">Please review your selections</h2>{{ form.non_field_errors }}</section>{% endif %}
+
+            {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+            <section class="checkout-panel" aria-labelledby="base-package-heading">
+                <div class="panel-heading"><span class="panel-step" aria-hidden="true">1A</span><div><p class="section-kicker" data-i18n="builder.choosePackage">Choose a package that fits your party</p><h2 id="base-package-heading" data-i18n="builder.packageChoiceHeading">Package size and price in one choice</h2><p id="package-help" data-i18n="builder.packageChoiceHelp">Each package has a fixed capacity and price. Choose the closest fit, then personalise it with optional experiences.</p></div></div>
+                <fieldset class="choice-fieldset" aria-describedby="package-help id_package_error">
+                    <legend class="visually-hidden" data-i18n="builder.packageChoiceLegend">Package and party size</legend>
+                    {% if form.package.errors %}<ul class="field-errors" id="id_package_error" role="alert">{% for error in form.package.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% else %}<span class="visually-hidden" id="id_package_error"></span>{% endif %}
+                    <div class="package-grid" data-package-grid>
+                        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                        {% for option in package_options %}{% include "party_builder/includes/package_card.html" with package=option selected_package_id=selected_package_id only %}{% empty %}<p data-i18n="builder.noPackages">No starting packages are currently available.</p>{% endfor %}
+                    </div>
+                </fieldset>
+            </section>
+
+            <section class="checkout-panel" aria-labelledby="addon-heading">
+                <div class="panel-heading"><span class="panel-step" aria-hidden="true">1B</span><div><p class="section-kicker" data-i18n="builder.makeItOwn">Make it your own</p><h2 id="addon-heading" data-i18n="builder.addOptionalExperiences">Add optional experiences</h2><p id="addon-help" data-i18n="builder.addonHelp">Search or filter the cards. Hidden cards stay selected until you remove them.</p></div></div>
+                <div class="builder-addon-filters" data-addon-filters>
+                    <label for="builder-addon-search" data-i18n="builder.searchLabel">Search experiences</label>
+                    <input class="form-control" type="search" id="builder-addon-search" data-addon-search placeholder="Search experiences" data-i18n-placeholder="builder.searchExperiences" autocomplete="off">
+                    <div class="builder-addon-filter-buttons" role="group" aria-label="Filter experiences by category" data-i18n-aria-label="builder.filterByCategory">
+                        <button class="builder-addon-filter active" type="button" data-addon-filter="all" aria-pressed="true" data-i18n="builder.all">All</button>
+                        {% for category in addon_categories %}<button class="builder-addon-filter" type="button" data-addon-filter="{{ category.slug }}" aria-pressed="false"><span data-catalogue-i18n="catalogue.category.{{ category.slug }}">{{ category.name }}</span></button>{% endfor %}
+                    </div>
+                    <p class="builder-filter-status" data-addon-filter-status role="status" aria-live="polite"></p>
+                </div>
+                <fieldset class="choice-fieldset" aria-describedby="addon-help id_addons_error">
+                    <legend class="visually-hidden" data-i18n="builder.optionalExperiences">Optional experiences</legend>
+                    {% if form.addons.errors %}<ul class="field-errors" id="id_addons_error" role="alert">{% for error in form.addons.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% else %}<span class="visually-hidden" id="id_addons_error"></span>{% endif %}
+                    <div class="addon-grid" data-addon-grid>{% for option in addon_options %}{% include "party_builder/includes/addon_card.html" with addon=option.addon selected=option.selected analytics=option.analytics only %}{% empty %}<p data-i18n="builder.noExperiences">No optional experiences are currently available.</p>{% endfor %}</div>
+                    <p class="builder-filter-empty" data-addon-filter-empty hidden data-i18n="builder.noFilterMatches">No experiences match that search. Try another word or choose All.</p>
+                </fieldset>
+            </section>
+
+            <section class="checkout-panel recommendation-section" aria-labelledby="recommendation-heading" data-recommendations data-endpoint="{% url 'party_builder:party_builder_recommendations' %}" data-package-id="{{ package.pk }}">
+                <div class="panel-heading"><span class="panel-step" aria-hidden="true">1C</span><div><p class="section-kicker" data-i18n="builder.helpfulSuggestions">Helpful suggestions</p><h2 id="recommendation-heading" data-i18n="builder.recommendations">Popular additions for your party</h2><p data-i18n="builder.recommendationHelp">Suggestions respond to your package and experiences. Nothing is added unless you choose it.</p></div></div>
+                <div class="recommendation-grid" data-recommendation-list aria-live="polite">
+                    {% for recommendation in recommendations %}
+                        <article class="recommendation-card">
+                            <div class="recommendation-card-content">
+                                <h3 data-catalogue-i18n="catalogue.addon.{{ recommendation.addon.slug }}.name">{{ recommendation.addon.name }}</h3>
+                                <p class="recommendation-description" data-catalogue-i18n="catalogue.addon.{{ recommendation.addon.slug }}.description">{{ recommendation.addon.short_description }}</p>
+                                <p
+                                    class="recommendation-reason"
+                                    data-recommendation-reason-key="{{ recommendation.reason_key }}"
+                                    data-recommendation-count="{{ recommendation.reason_values.count|default:'' }}"
+                                    data-recommendation-addon-name="{{ recommendation.reason_values.addon_name|default:'' }}"
+                                    data-recommendation-addon-slug="{{ recommendation.reason_values.addon_slug|default:'' }}"
+                                    data-recommendation-package-name="{{ recommendation.reason_values.package_name|default:'' }}"
+                                    data-recommendation-package-slug="{{ recommendation.reason_values.package_slug|default:'' }}"
+                                >{{ recommendation.reason }}</p>
+                            </div>
+                            <div class="recommendation-card-footer">
+                                <strong class="recommendation-price">+€{{ recommendation.addon.price|floatformat:2 }}</strong>
+                                <a class="button button-outline recommendation-action" href="#addon-{{ recommendation.addon.pk }}" data-i18n="builder.reviewOption">Review this option</a>
+                            </div>
+                        </article>
+                    {% empty %}<p data-i18n="builder.noAdditionalSuggestions">No additional suggestions are available yet.</p>{% endfor %}
+                </div>
+            </section>
+        </div>
+
+        <aside class="checkout-summary live-summary" aria-labelledby="live-summary-heading">
+            <div class="checkout-summary-inner">
+                <p class="section-kicker" data-i18n="builder.liveCart">Live cart</p><h2 id="live-summary-heading" data-i18n="builder.partyTotal">Your party total</h2>
+                <p class="summary-package"><strong data-selected-package-name data-package-slug="{{ package.slug }}" data-catalogue-i18n="catalogue.package.{{ package.slug }}.name">{{ package.name }}</strong></p>
+                <dl class="price-breakdown">
+                    <div><dt id="selected-package-capacity" data-i18n-template="builder.upToChildren" data-i18n-value-count="{{ package.included_guest_count }}">Up to {{ package.included_guest_count }} children</dt><dd id="selected-package-price">€{{ initial_quote.package_price|floatformat:2 }}</dd></div>
+                </dl>
+                <section class="selected-addon-summary" aria-labelledby="selected-addons-heading"><h3 id="selected-addons-heading" data-i18n="builder.addedExperiences">Added experiences</h3><p id="summary-empty"{% if initial_quote.addon_price %} hidden{% endif %} data-i18n="builder.noSelectedExperiences">No optional experiences selected.</p><ul id="selected-addon-summary" aria-label="Selected optional experiences" data-i18n-aria-label="builder.selectedExperiences"></ul></section>
+                <div class="price-total"><span data-i18n="builder.estimatedTotal">Estimated total</span><output id="party-total" aria-live="polite">€{{ initial_quote.total_price|floatformat:2 }}</output></div>
+                <p class="price-note" data-i18n="builder.travelNote">Travel outside the agreed service area may be confirmed separately.</p>
+                <p class="visually-hidden" id="builder-live-status" role="status" aria-live="polite" aria-atomic="true"></p>
+                <button class="button checkout-primary-action" type="submit" data-i18n="builder.continueDetails">Continue to your details</button>
+                <a class="checkout-secondary-link" href="{% url 'party_ideas:list' %}" data-i18n="builder.exploreIdeas">Explore more Party Ideas</a>
+                <p class="checkout-security-note" data-i18n="builder.cartEditNote">You can return and edit the cart before the simulated payment step.</p>
+            </div>
+        </aside>
+    </div>
+</form>
+{% endblock %}
+{# This version marker makes browsers load the corrected parent-and-subcategory filtering script. #}
+{% block extra_js %}<script src="{% static 'js/party-builder.js' %}?v=20260716-category-filters" defer></script>{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the inbox screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The management filter uses the same rebranded status wording shown elsewhere in the chat workflow. #}
+{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/chat.css' %}?v=1">{% endblock %}
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div>
+            <p class="management-eyebrow">Customer support</p>
+            <h2>Messages</h2>
+            <p>Read and reply to private customer chats. Unread status is personal to your account.</p>
+        </div>
+    </div>
+
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form class="management-filter-toolbar" method="get" role="search">
+        <label><span>Search</span><input class="form-control" type="search" name="search" value="{{ request.GET.search }}" placeholder="Customer, email, or message text"></label>
+        <label><span>Status</span><select class="form-select" name="status"><option value="">All statuses</option><option value="waiting_staff" {% if request.GET.status == 'waiting_staff' %}selected{% endif %}>Waiting for P Kids Events</option><option value="waiting_customer" {% if request.GET.status == 'waiting_customer' %}selected{% endif %}>Waiting for customer</option></select></label>
+        <label><span>Sort</span><select class="form-select" name="ordering"><option value="recent">Most recent</option><option value="oldest" {% if request.GET.ordering == 'oldest' %}selected{% endif %}>Oldest activity</option><option value="customer" {% if request.GET.ordering == 'customer' %}selected{% endif %}>Customer name</option></select></label>
+        <label class="management-checkbox-label"><input type="checkbox" name="unread_only" value="1" {% if request.GET.unread_only %}checked{% endif %}> <span>Unread only</span></label>
+        <button class="management-button" type="submit">Apply</button>
+        <a class="management-button secondary" href="{% url 'communications:management_inbox' %}">Clear</a>
+    </form>
+
+    {% if chats %}
+        <div class="management-result-summary">{{ page_obj.paginator.count }} customer chat{{ page_obj.paginator.count|pluralize }}</div>
+        <div class="management-table-wrap">
+            {# This table lets staff compare structured records while headings and responsive styles preserve context. #}
+            <table class="management-table management-chat-list">
+                <caption class="visually-hidden">Customer chat messages</caption>
+                <thead><tr><th>Customer</th><th>Latest message</th><th>Status</th><th>Last activity</th><th>Action</th></tr></thead>
+                <tbody>
+                    {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                    {% for chat in chats %}
+                    <tr{% if chat.is_unread_for_user %} class="management-chat-unread"{% endif %}>
+                        <td data-label="Customer"><strong>{{ chat.customer.get_full_name|default:chat.customer.username }}</strong><small class="management-table-subtext">{{ chat.customer.email|default:"No email" }}{% if chat.is_unread_for_user %} · Unread{% endif %}</small></td>
+                        <td data-label="Latest message">{% if chat.latest_preview %}{{ chat.latest_preview|truncatechars:90 }}{% else %}No messages{% endif %}</td>
+                        <td data-label="Status">{{ chat.get_status_display }}</td>
+                        <td data-label="Last activity">{{ chat.last_message_at|date:"d M Y H:i" }}</td>
+                        <td data-label="Action"><a href="{% url 'communications:management_chat' chat.public_id %}">Open chat</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+        {% include "operations/management/includes/pagination.html" %}
+    {% else %}
+        {% include "operations/management/includes/empty_state.html" with empty_title="No customer chats found" empty_message="New customer messages will appear here." %}
+    {% endif %}
+</section>
+{% endblock %}

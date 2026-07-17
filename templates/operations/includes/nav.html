@@ -1,0 +1,14 @@
+{# This worker template presents nav for active staff using the operations area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+<nav class="operations-subnav" aria-label="Staff portal">
+    <a href="{% url 'operations:operations_dashboard' %}">Overview</a>
+    <a href="{% url 'operations:operations_worker_assignments' %}">Assignments</a>
+    <a href="{% url 'operations:operations_worker_profile' %}">Worker profile</a>
+    <a href="{% url 'operations:operations_worker_availability' %}">Availability</a>
+    <a href="{% url 'operations:operations_worker_schedule' %}">My schedule</a>
+    {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+    {% if nav_can_manage_pricing %}
+        <a href="{% url 'management:management_catalogue' %}">Catalogue management</a>
+    {% endif %}
+</nav>

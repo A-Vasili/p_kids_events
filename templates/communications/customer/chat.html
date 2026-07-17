@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{# This customer template presents chat as part of the private Popadoo support conversation. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+{% block title %}Messages | P Kids Events{% endblock %}
+{% block page_name %}messages{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/chat.css' %}?v=1">{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="support-chat-page">
+    <div class="support-chat-page-inner">
+        <header class="support-chat-page-header">
+            <p class="management-eyebrow" data-i18n="chat.messages">Messages</p>
+            <h1 data-i18n="chat.heading">Chat with P Kids Events</h1>
+            <p data-i18n="chat.pageHelp">Ask a question and continue the same private conversation whenever you return.</p>
+        </header>
+
+        {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+        {% if not request.user.is_authenticated %}
+            <div class="support-chat-auth-card">
+                <h2 data-i18n="chat.signInPrompt">Sign in to chat with P Kids Events</h2>
+                <p data-i18n="chat.signInReason">An account keeps your conversation private and lets you return to replies later.</p>
+                <div class="support-chat-actions">
+                    <a class="button" href="{% url 'accounts:accounts_sign_in' %}?next={% url 'communications:customer_chat' %}" data-i18n="account.signIn">Sign in</a>
+                    <a class="button secondary" href="{% url 'accounts:accounts_sign_up' %}?next={% url 'communications:customer_chat' %}" data-i18n="chat.createAccount">Create an account</a>
+                </div>
+            </div>
+        {% else %}
+            <div class="support-chat-card">
+                <p class="popadoo-chat-status" role="status">
+                    {% if chat and chat.status == 'waiting_customer' %}
+                        <span data-i18n="chat.waitingCustomer">Waiting for your reply</span>
+                    {% else %}
+                        <span data-i18n="chat.waitingPopadoo">Waiting for P Kids Events</span>
+                    {% endif %}
+                </p>
+                {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+                {% include "communications/includes/message_list.html" with customer_view=True %}
+                {% url 'communications:customer_send' as customer_send_url %}
+                {% include "communications/includes/message_form.html" with form_action=customer_send_url %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{# This account template presents sign in for sign-in, registration, profile, or the customer dashboard. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+
+{% block title %}Sign In | P Kids Events{% endblock %}
+{% block meta_description %}Sign in to view saved P Kids Events bookings and account details.{% endblock %}
+{% block page_name %}accountSignIn{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/accounts.css' %}">{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="account-page" aria-labelledby="sign-in-heading">
+    <div class="container account-shell account-shell-small">
+        {# This header introduces the page and gives visitors the main context before they continue. #}
+        <header class="account-heading">
+            <p class="section-kicker">Welcome back</p>
+            <h1 id="sign-in-heading">Sign in</h1>
+            <p>Access your saved details, bookings, and staff tools where applicable.</p>
+        </header>
+        {# This form sends the visitor’s choices to Django, where the information is checked again on the server. #}
+        {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+        <form method="post" class="account-card" novalidate>
+            {% csrf_token %}
+                        {% if form.non_field_errors %}<div class="form-alert" role="alert">The username or password was not accepted.</div>{% endif %}
+                        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                        {% for field in form %}{% include "accounts/form_field.html" with field=field %}{% endfor %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            <button class="button" type="submit">Sign in</button>
+            <p class="account-switch">New to P Kids Events? <a href="{% url 'accounts:accounts_sign_up' %}">Create an account</a>.</p>
+        </form>
+    </div>
+</section>
+{% endblock %}

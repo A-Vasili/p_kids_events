@@ -1,0 +1,12 @@
+{# This reusable chat template presents message form consistently in the floating panel and full-page conversation. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+<form class="popadoo-chat-composer" method="post" action="{{ form_action }}" data-chat-form{% if widget_form %} data-widget-form{% endif %}>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="popadoo-chat-form-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    <label for="{{ form.message.id_for_label }}" data-i18n="chat.writeMessage">Write your message</label>
+    {{ form.message }}
+    {% if form.message.help_text %}<small id="id_message-help" data-i18n="chat.plainTextHelp">Plain text only. Maximum 5000 characters.</small>{% endif %}
+    {% if form.message.errors %}<div id="id_message-error" class="popadoo-chat-form-error" role="alert">{{ form.message.errors }}</div>{% endif %}
+    <button class="button" type="submit" data-chat-submit data-i18n="chat.send">Send</button>
+</form>

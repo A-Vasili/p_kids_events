@@ -1,0 +1,73 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the list screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load management_tags %}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div>
+            <p class="management-eyebrow">Accounts and permissions</p>
+            <h2>Users and roles</h2>
+            <p>Administrators and Owners share business-management access, but they remain separate protected roles. Customer information is read-only.</p>
+        </div>
+        <div class="management-quick-actions">
+            {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+            {% if nav_can_create_owner %}
+                <a class="management-button secondary" href="{% url 'management:management_user_create_owner' %}">Create Owner</a>
+            {% endif %}
+            <a class="management-button" href="{% url 'management:management_user_create_worker' %}">Create Worker</a>
+        </div>
+    </div>
+
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form class="management-filter-toolbar" method="get" role="search">
+        <label><span>Search</span><input class="form-control" type="search" name="q" value="{{ request.GET.q }}" placeholder="Name, username, or email"></label>
+        <label><span>Role</span><select class="form-select" name="role"><option value="">All</option><option value="customer" {% if request.GET.role == 'customer' %}selected{% endif %}>Customer</option><option value="worker" {% if request.GET.role == 'worker' %}selected{% endif %}>Worker</option><option value="owner" {% if request.GET.role == 'owner' %}selected{% endif %}>Owner</option></select></label>
+        <label><span>Status</span><select class="form-select" name="status"><option value="">All</option><option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option><option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Banned</option></select></label>
+        <button class="management-button" type="submit">Apply</button>
+        {% if request.GET.q or request.GET.role or request.GET.status %}
+            <a class="management-button secondary" href="{% url 'management:management_user_list' %}">Clear filters</a>
+        {% else %}
+            <span class="management-button secondary" aria-disabled="true">Clear filters</span>
+        {% endif %}
+    </form>
+
+    {% if managed_users %}
+        <div class="management-result-summary">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</div>
+        <div class="management-table-wrap">
+            {# This table lets staff compare structured records while headings and responsive styles preserve context. #}
+            <table class="management-table">
+                <caption class="visually-hidden">User accounts</caption>
+                <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Pricing access</th><th>Chat access</th><th>Joined</th><th>Actions</th></tr></thead>
+                <tbody>
+                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                {% for managed_user in managed_users %}
+                    <tr>
+                        <td data-label="User"><a href="{% url 'management:management_user_detail' managed_user.pk %}"><strong>{{ managed_user.get_full_name|default:managed_user.username }}</strong></a><small class="management-table-subtext">{{ managed_user.username }}{% if managed_user.email %} · {{ managed_user.email }}{% endif %}</small></td>
+                        <td data-label="Role"><span class="management-badge info">{{ managed_user|management_role }}</span></td>
+                        <td data-label="Status">{% if managed_user.is_active %}{% include "operations/management/includes/status_badge.html" with value="active" label="Active" %}{% else %}{% include "operations/management/includes/status_badge.html" with value="inactive" label="Banned" %}{% endif %}</td>
+                        <td data-label="Pricing access">{{ managed_user|has_pricing_access|yesno:"Granted,Not granted" }}</td>
+                        <td data-label="Chat access">{{ managed_user|has_chat_access|yesno:"Granted,Not granted" }}</td>
+                        <td data-label="Joined">{{ managed_user.date_joined|date:"d M Y" }}</td>
+                        <td data-label="Actions">
+                            <div class="management-row-actions">
+                                <a href="{% url 'management:management_user_detail' managed_user.pk %}">View</a>
+                                {% if managed_user|is_worker_account %}
+                                    <a href="{% url 'management:management_user_update' managed_user.pk %}">Edit worker settings</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+        {% include "operations/management/includes/pagination.html" %}
+    {% else %}
+        {% include "operations/management/includes/empty_state.html" with empty_title="No users found" empty_message="Try clearing the current filters." %}
+    {% endif %}
+</section>
+{% endblock %}

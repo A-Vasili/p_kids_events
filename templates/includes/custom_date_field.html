@@ -1,0 +1,87 @@
+{# This reusable template presents custom date field wherever the shared site layout includes it. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% comment %}
+Reusable custom date control.
+  Django still receives the hidden field value, while the visible calendar is
+  fully controlled by our external JavaScript and CSS.
+{% endcomment %}
+<div class="form-field custom-field" data-custom-field>
+    <span class="form-label" id="{{ field.id_for_label }}_label">
+        {{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}
+    </span>
+
+    <div
+        class="custom-date-picker"
+        data-date-picker
+        data-placeholder="{{ placeholder|default:'Choose a date' }}"
+    >
+        {{ field }}
+
+        <div
+            class="custom-control-trigger"
+            id="{{ field.id_for_label }}_trigger"
+            role="combobox"
+            tabindex="0"
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            aria-controls="{{ field.id_for_label }}_calendar"
+            aria-labelledby="{{ field.id_for_label }}_label {{ field.id_for_label }}_display"
+            aria-describedby="{{ field.id_for_label }}_help {{ field.id_for_label }}_error"
+            {% if field.errors %}aria-invalid="true"{% endif %}
+            data-date-trigger
+        >
+            <span id="{{ field.id_for_label }}_display" data-date-display>
+                {{ placeholder|default:"Choose a date" }}
+            </span>
+            <span class="custom-calendar-icon" aria-hidden="true"></span>
+        </div>
+
+        <div
+            class="custom-control-popover custom-date-popover"
+            id="{{ field.id_for_label }}_calendar"
+            role="dialog"
+            aria-modal="false"
+            aria-labelledby="{{ field.id_for_label }}_month_label"
+            hidden
+            data-date-panel
+        >
+            <div class="custom-date-header">
+                <div
+                    class="custom-icon-action"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Previous month"
+                    data-date-previous
+                >
+                    <span aria-hidden="true">‹</span>
+                </div>
+                <strong id="{{ field.id_for_label }}_month_label" data-date-month-label></strong>
+                <div
+                    class="custom-icon-action"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Next month"
+                    data-date-next
+                >
+                    <span aria-hidden="true">›</span>
+                </div>
+            </div>
+
+            <div class="custom-date-weekdays" aria-hidden="true" data-date-weekdays></div>
+            <div
+                class="custom-date-grid"
+                role="grid"
+                aria-labelledby="{{ field.id_for_label }}_month_label"
+                data-date-grid
+            ></div>
+        </div>
+    </div>
+
+    <p class="form-help" id="{{ field.id_for_label }}_help">
+        {{ help_text|default:field.help_text }}
+    </p>
+    <div class="form-error" id="{{ field.id_for_label }}_error" aria-live="polite">
+        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+        {% for error in field.errors %}<p role="alert">{{ error }}</p>{% endfor %}
+    </div>
+</div>

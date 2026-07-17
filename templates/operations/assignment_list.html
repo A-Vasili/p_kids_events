@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{# This worker template presents assignment list for active staff using the operations area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+{% block title %}
+    Assignments | P Kids Events
+{% endblock %}
+{% block meta_robots %}
+    noindex,nofollow
+{% endblock %}
+{% block page_name %}
+    operationsAssignments
+{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/operations.css' %}">
+{% endblock %}
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+        {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+        <section class="operations-page" aria-labelledby="assignments-heading">
+        <div class="container">
+            {# This header introduces the page and gives visitors the main context before they continue. #}
+            <header class="operations-heading">
+                <p class="section-kicker">
+                    Staff portal
+                </p>
+                <h1 id="assignments-heading">
+                    Party assignments
+                </h1>
+            </header>
+            {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+            {% include "operations/includes/nav.html" %}
+            <div class="operations-list">
+                                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                                {% for assignment in assignments %}
+                    {# This article represents one self-contained item that can be understood on its own. #}
+                    <article class="assignment-card">
+                        {# This header introduces the page and gives visitors the main context before they continue. #}
+                        <header>
+                            <div>
+                                <h2>
+                                    {{ assignment.party_build.contact_name }}
+                                </h2>
+                                <p>
+                                    {{ assignment.party_build.event_date|date:"j F Y" }}
+                                    ·
+                                    {{ assignment.party_build.event_time|time:"H:i"|default:"Time to confirm" }}
+                                </p>
+                            </div>
+                            <span class="status-pill status-{{ assignment.status }}">
+                                {{ assignment.get_status_display }}
+                            </span>
+                        </header>
+                        <dl>
+                            <div>
+                                <dt>
+                                    Worker
+                                </dt>
+                                <dd>
+                                    {{ assignment.worker }}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt>
+                                    Package capacity
+                                </dt>
+                                <dd>
+                                    {{ assignment.party_build.party_size_display }}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt>
+                                    Source
+                                </dt>
+                                <dd>
+                                    {{ assignment.get_assignment_source_display }}
+                                </dd>
+                            </div>
+                        </dl>
+                        <a href="{% url 'operations:operations_worker_assignment_detail' assignment.pk %}">
+                            Open assignment
+                        </a>
+                    </article>
+                {% empty %}
+                    <div class="empty-state">
+                        <h2>
+                            No assignments found
+                        </h2>
+                        <p>
+                            New offers will appear here.
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

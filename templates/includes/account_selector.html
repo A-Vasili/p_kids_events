@@ -1,0 +1,87 @@
+{# This reusable account menu shows links that match the signed-in person’s customer, worker, pricing, chat, or full-management privileges. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% comment %}
+The account selector supports both guests and signed-in users. Sign-out uses a
+POST form with Django's CSRF token because it changes the user's session.
+{% endcomment %}
+<div class="header-account-selector account-menu" data-account-menu>
+    <button
+        class="header-account-trigger"
+        type="button"
+        aria-expanded="false"
+        aria-controls="header-account-panel"
+        aria-haspopup="menu"
+        data-account-menu-button
+    >
+        {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+        {% if request.user.is_authenticated %}
+            <span class="header-account-avatar" aria-hidden="true">
+                {{ request.user.first_name|first|default:request.user.username|first|upper }}
+            </span>
+            <span class="header-account-label" data-i18n="account.myAccount">My account</span>
+            <span class="visually-hidden">{{ request.user.get_full_name|default:request.user.username }}</span>
+        {% else %}
+            <span class="header-account-icon" aria-hidden="true"></span>
+            <span class="header-account-label" data-i18n="account.signInSignUp">Sign in / Sign up</span>
+        {% endif %}
+        <span class="header-account-chevron" aria-hidden="true"></span>
+    </button>
+
+    <div
+        class="account-menu-panel header-account-panel"
+        id="header-account-panel"
+        role="menu"
+        aria-label="Account options"
+        data-i18n-aria-label="account.menuLabel"
+        hidden
+        data-account-menu-panel
+    >
+        {% if request.user.is_authenticated %}
+            <div class="header-account-identity">
+                <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+                {% if request.user.email %}<span>{{ request.user.email }}</span>{% endif %}
+            </div>
+
+            <a href="{% url 'accounts:accounts_customer_dashboard' %}" role="menuitem" data-account-menu-item data-i18n="account.myBookings">My bookings</a>
+            <a href="{% url 'accounts:accounts_profile' %}" role="menuitem" data-account-menu-item data-i18n="account.myProfile">My profile</a>
+
+            {% if not nav_can_access_management and not nav_can_access_operations %}
+                <a href="{% url 'communications:customer_chat' %}" role="menuitem" data-account-menu-item>
+                    <span data-i18n="chat.messages">Messages</span>
+                    {% if chat_has_unread %}<span class="support-unread-badge"><span aria-hidden="true">{{ chat_unread_count }}</span><span class="visually-hidden">{{ chat_unread_count }} <span data-i18n="chat.unreadMessages">unread messages</span></span></span>{% endif %}
+                </a>
+            {% endif %}
+
+            {% if nav_can_access_full_management %}
+                <a href="{% url 'management:management_dashboard' %}" role="menuitem" data-account-menu-item>Management panel</a>
+            {% endif %}
+            {% if nav_can_manage_pricing and not nav_can_access_full_management %}
+                <a href="{% url 'management:management_catalogue' %}" role="menuitem" data-account-menu-item>Catalogue management</a>
+            {% endif %}
+            {% if nav_can_respond_to_chat %}
+                <a href="{% url 'communications:management_inbox' %}" role="menuitem" data-account-menu-item>
+                    Messages
+                    {% if chat_has_unread %}<span class="support-unread-badge"><span aria-hidden="true">{{ chat_unread_count }}</span><span class="visually-hidden">{{ chat_unread_count }} <span data-i18n="chat.unreadMessages">unread messages</span></span></span>{% endif %}
+                </a>
+            {% endif %}
+            {% if nav_can_access_operations and not nav_can_access_full_management %}
+                <a href="{% url 'operations:operations_dashboard' %}" role="menuitem" data-account-menu-item data-i18n="account.operations">Staff portal</a>
+            {% endif %}
+
+            {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+            <form method="post" action="{% url 'accounts:accounts_sign_out' %}" class="header-account-signout-form">
+                {% csrf_token %}
+                <button type="submit" role="menuitem" data-account-menu-item data-i18n="account.signOut">Sign out</button>
+            </form>
+        {% else %}
+            <a class="header-account-action" href="{% url 'accounts:accounts_sign_in' %}" role="menuitem" data-account-menu-item>
+                <strong data-i18n="account.signIn">Sign in</strong>
+                <span data-i18n="account.signInHelp">Access bookings and saved details</span>
+            </a>
+            <a class="header-account-action" href="{% url 'accounts:accounts_sign_up' %}" role="menuitem" data-account-menu-item>
+                <strong data-i18n="account.signUp">Create account</strong>
+                <span data-i18n="account.signUpHelp">Save details for faster future bookings</span>
+            </a>
+        {% endif %}
+    </div>
+</div>

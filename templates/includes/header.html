@@ -1,0 +1,73 @@
+{# This reusable template presents header wherever the shared site layout includes it. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+
+{% comment %}
+The shared header has two clear levels:
+1. A slim utility stripe for language and account actions.
+2. The main navigation for public pages, Party Ideas, the builder, and the theme switch.
+Keeping these areas separate makes the header easier to understand and update.
+{% endcomment %}
+{# The header presents the fictional hosted brand while continuing to use the same approved logo image. #}
+<header class="site-header">
+    {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+    {% include "includes/header_utility_stripe.html" %}
+
+    <div class="header-main-row">
+        <div class="container">
+            {# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+            <nav class="site-navigation" aria-label="Primary navigation" data-i18n-aria-label="nav.primaryLabel">
+                <a class="site-logo" href="{% url 'core:core_home' %}" aria-label="P Kids Events home" data-i18n-aria-label="nav.logoLabel">
+                    <img class="site-logo-mark" src="{% static 'assets/svg/popadoo-logo.svg' %}" alt="" width="128" height="128">
+                    <span class="site-logo-text">P Kids Events</span>
+                </a>
+
+                <button class="site-navigation-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false" aria-label="Open primary navigation">
+                    <span class="site-navigation-toggle-line" aria-hidden="true"></span>
+                    <span class="site-navigation-toggle-line" aria-hidden="true"></span>
+                    <span class="site-navigation-toggle-line" aria-hidden="true"></span>
+                </button>
+
+                <div class="site-navigation-menu" id="primary-navigation">
+                    <ul class="site-navigation-links">
+                        <li><a class="site-navigation-link{% if request.resolver_match.url_name == 'core_home' %} active{% endif %}" href="{% url 'core:core_home' %}" {% if request.resolver_match.url_name == 'core_home' %}aria-current="page"{% endif %} data-i18n="nav.home">Home</a></li>
+                        <li><a class="site-navigation-link{% if request.resolver_match.namespace == 'party_ideas' %} active{% endif %}" href="{% url 'party_ideas:list' %}" {% if request.resolver_match.namespace == 'party_ideas' %}aria-current="page"{% endif %} data-i18n="nav.partyIdeas">Party Ideas</a></li>
+                        <li><a class="site-navigation-link{% if request.resolver_match.url_name == 'core_gallery' %} active{% endif %}" href="{% url 'core:core_gallery' %}" {% if request.resolver_match.url_name == 'core_gallery' %}aria-current="page"{% endif %} data-i18n="nav.gallery">Gallery</a></li>
+                        <li><a class="site-navigation-link{% if request.resolver_match.url_name == 'core_about' %} active{% endif %}" href="{% url 'core:core_about' %}" {% if request.resolver_match.url_name == 'core_about' %}aria-current="page"{% endif %} data-i18n="nav.about">About Us</a></li>
+                        <li><a class="site-navigation-link{% if request.resolver_match.url_name == 'core_testimonials' %} active{% endif %}" href="{% url 'core:core_testimonials' %}" {% if request.resolver_match.url_name == 'core_testimonials' %}aria-current="page"{% endif %} data-i18n="nav.testimonials">Testimonials</a></li>
+                        {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+                        {% if nav_can_access_full_management %}
+                            <li><a class="site-navigation-link" href="{% url 'management:management_dashboard' %}">Management</a></li>
+                        {% elif nav_can_manage_pricing %}
+                            <li><a class="site-navigation-link" href="{% url 'management:management_catalogue' %}">Catalogue management</a></li>
+                        {% elif nav_can_access_operations %}
+                            <li><a class="site-navigation-link{% if request.resolver_match.app_name == 'operations' %} active{% endif %}" href="{% url 'operations:operations_dashboard' %}" {% if request.resolver_match.app_name == 'operations' %}aria-current="page"{% endif %} data-i18n="account.operations">Staff portal</a></li>
+                        {% endif %}
+                    </ul>
+
+                    <div class="site-controls">
+                        <a
+                            class="book-now-button{% if request.resolver_match.app_name == 'party_builder' %} active{% endif %}"
+                            href="{% url 'party_builder:party_builder_package_options' %}"
+                            {% if request.resolver_match.app_name == 'party_builder' %}aria-current="page"{% endif %}
+                            data-i18n="nav.bookNow"
+                        >
+                            Make Your Own Party
+                        </a>
+
+                        <button class="theme-toggle" id="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Switch to dark mode">
+                            <span class="theme-toggle-track" aria-hidden="true">
+                                <span class="theme-toggle-stars"></span><span class="theme-toggle-clouds"></span>
+                                <span class="theme-toggle-knob">
+                                    <img class="theme-toggle-icon theme-toggle-icon-moon" src="{% static 'assets/svg/moon-toggle.svg' %}" alt="" width="82" height="82">
+                                    <img class="theme-toggle-icon theme-toggle-icon-sun" src="{% static 'assets/svg/sun-toggle.svg' %}" alt="" width="82" height="82">
+                                </span>
+                            </span>
+                            <span class="visually-hidden" data-theme-status>Light mode</span>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+</header>

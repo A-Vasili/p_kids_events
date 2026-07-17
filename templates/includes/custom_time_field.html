@@ -1,0 +1,60 @@
+{# This reusable template presents custom time field wherever the shared site layout includes it. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% comment %}
+Reusable custom time control.
+  The visible list is keyboard accessible and writes an HH:MM value to the
+  hidden Django field used during server-side validation.
+{% endcomment %}
+<div class="form-field custom-field" data-custom-field>
+    <span class="form-label" id="{{ field.id_for_label }}_label">
+        {{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}
+    </span>
+
+    <div
+        class="custom-time-picker"
+        data-time-picker
+        data-time-start="{{ start|default:'10:00' }}"
+        data-time-end="{{ end|default:'22:00' }}"
+        data-time-step="{{ step|default:'30' }}"
+        data-time-optional="{% if field.field.required %}false{% else %}true{% endif %}"
+        data-placeholder="{{ placeholder|default:'Choose a time' }}"
+    >
+        {{ field }}
+
+        <div
+            class="custom-control-trigger"
+            id="{{ field.id_for_label }}_trigger"
+            role="combobox"
+            tabindex="0"
+            aria-expanded="false"
+            aria-haspopup="listbox"
+            aria-controls="{{ field.id_for_label }}_time_options"
+            aria-labelledby="{{ field.id_for_label }}_label {{ field.id_for_label }}_display"
+            aria-describedby="{{ field.id_for_label }}_help {{ field.id_for_label }}_error"
+            {% if field.errors %}aria-invalid="true"{% endif %}
+            data-time-trigger
+        >
+            <span id="{{ field.id_for_label }}_display" data-time-display>
+                {{ placeholder|default:"Choose a time" }}
+            </span>
+            <span class="custom-clock-icon" aria-hidden="true"></span>
+        </div>
+
+        <div
+            class="custom-control-popover custom-time-options"
+            id="{{ field.id_for_label }}_time_options"
+            role="listbox"
+            aria-labelledby="{{ field.id_for_label }}_label"
+            hidden
+            data-time-options
+        ></div>
+    </div>
+
+    <p class="form-help" id="{{ field.id_for_label }}_help">
+        {{ help_text|default:field.help_text }}
+    </p>
+    <div class="form-error" id="{{ field.id_for_label }}_error" aria-live="polite">
+        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+        {% for error in field.errors %}<p role="alert">{{ error }}</p>{% endfor %}
+    </div>
+</div>

@@ -1,0 +1,16 @@
+{# This management template presents the form field screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+<div class="management-form-field{% if field.errors %} has-error{% endif %}{% if field.field.widget.input_type == 'checkbox' %} management-form-check{% endif %}">
+    {% if field.field.widget.input_type == 'checkbox' %}
+        {{ field }}
+        <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}</label>
+    {% else %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}</label>
+        {{ field }}
+    {% endif %}
+    {% if field.help_text %}<p class="management-form-help" id="{{ field.id_for_label }}_help">{{ field.help_text }}</p>{% endif %}
+    <div class="management-form-error" id="{{ field.id_for_label }}_error"{% if field.errors %} role="alert"{% endif %}>
+        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+        {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+</div>

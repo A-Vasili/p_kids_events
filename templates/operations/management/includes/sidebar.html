@@ -1,0 +1,66 @@
+{# This reusable management sidebar reveals only the sections allowed by the visitor’s current full or delegated permissions. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+{# The sidebar keeps the existing logo but labels the hosted management area as P Kids Events. #}
+<aside id="management-sidebar" class="management-sidebar" data-management-sidebar>
+    <div class="management-brand">
+        <img src="{% static 'assets/svg/popadoo-logo.svg' %}" alt="" width="48" height="48">
+        <div><strong>P Kids Events</strong><span>Management panel</span></div>
+    </div>
+
+    {# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+    <nav class="management-navigation" aria-label="Management navigation">
+        {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+        {% if nav_can_access_full_management %}
+            <a class="{% if management_active_section == 'dashboard' %}active{% endif %}" href="{% url 'management:management_dashboard' %}" {% if management_active_section == 'dashboard' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▦</span> Dashboard
+            </a>
+        {% endif %}
+
+        {% if nav_can_manage_pricing %}
+            <a class="{% if management_active_section == 'catalogue' %}active{% endif %}" href="{% url 'management:management_catalogue' %}" {% if management_active_section == 'catalogue' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">◫</span> Catalogue
+            </a>
+            <a class="{% if management_active_section == 'categories' %}active{% endif %}" href="{% url 'management:management_category_list' %}" {% if management_active_section == 'categories' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">⌘</span> Categories
+            </a>
+        {% endif %}
+
+        {% if nav_can_respond_to_chat %}
+            <a class="{% if management_active_section == 'messages' %}active{% endif %}" href="{% url 'communications:management_inbox' %}" {% if management_active_section == 'messages' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">✉</span> Messages
+                {% if chat_has_unread %}<span class="management-badge warning" aria-label="{{ chat_unread_count }} unread messages">{{ chat_unread_count }}</span>{% endif %}
+            </a>
+        {% endif %}
+
+        {% if nav_can_access_full_management %}
+            <a class="{% if management_active_section == 'bookings' %}active{% endif %}" href="{% url 'management:management_booking_list' %}" {% if management_active_section == 'bookings' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▣</span> Bookings
+            </a>
+            <a class="{% if management_active_section == 'users' %}active{% endif %}" href="{% url 'management:management_user_list' %}" {% if management_active_section == 'users' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">◎</span> Users &amp; roles
+            </a>
+            <a class="{% if management_active_section == 'schedules' %}active{% endif %}" href="{% url 'management:management_schedule' %}" {% if management_active_section == 'schedules' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▤</span> Schedules
+            </a>
+            <a class="{% if management_active_section == 'audit' %}active{% endif %}" href="{% url 'management:management_audit' %}" {% if management_active_section == 'audit' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">◷</span> Audit history
+            </a>
+            <a class="{% if management_active_section == 'analytics' %}active{% endif %}" href="{% url 'management:management_analytics' %}" {% if management_active_section == 'analytics' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">◩</span> Analytics
+            </a>
+        {% endif %}
+    </nav>
+
+    {% if not nav_can_access_full_management %}
+        <p class="management-sidebar-note">
+            {% if nav_can_manage_pricing and nav_can_respond_to_chat %}
+                Your delegated access is limited to catalogue, pricing, and customer messages.
+            {% elif nav_can_respond_to_chat %}
+                Your delegated access is limited to customer messages.
+            {% else %}
+                Your delegated access is limited to catalogue and pricing management.
+            {% endif %}
+        </p>
+    {% endif %}
+</aside>

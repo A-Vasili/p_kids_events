@@ -1,0 +1,320 @@
+/*
+ * This stylesheet presents sign-in, registration, profile, and customer dashboard pages while keeping forms readable on small screens and in both themes.
+ * Its rules are grouped around page components, responsive layouts, theme support, and visible keyboard focus.
+ * The comments explain those relationships without changing selectors, spacing, colours, or behaviour.
+ */
+/*
+ * This stylesheet presents sign-in, sign-up, profile, and customer dashboard pages.
+ * The comments explain visual sections without changing the styles applied by the browser.
+ */
+.account-page {
+    padding: clamp(3rem, 7vw, 6rem) 0;
+}
+
+/* These rules style this group of related page elements. */
+.account-shell {
+    max-width: 960px;
+}
+
+/* These rules style this group of related page elements. */
+.account-shell-small {
+    max-width: 640px;
+}
+
+/* These rules style the page introduction and its main heading. */
+.account-heading {
+    margin-bottom: 2rem;
+}
+
+/* These rules style the page introduction and its main heading. */
+.account-heading-row {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* These rules present each item as a clear, reusable content card. */
+/*
+ * This section presents summary figures as distinct cards that remain readable when the grid wraps.
+ */
+.account-card, .booking-card, .empty-state {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border-color, #ded7e3);
+    border-radius: 1.25rem;
+    box-shadow: 0 1rem 2.4rem rgba(35, 20, 45, 0.08);
+    padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+/*
+ * This section keeps labels, fields, help text, errors, and actions visually connected so forms remain understandable.
+ */
+.account-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.form-field {
+    display: grid;
+    gap: 0.4rem;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.form-field:has(textarea), .form-field:has(.form-check-input) {
+    grid-column: 1 / -1;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.form-field label {
+    font-weight: 700;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.form-help, .form-error, .account-switch {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.form-error {
+    color: #9b1c31;
+    min-height: 0.25rem;
+}
+
+/* These rules make form fields and validation feedback clear and consistent. */
+.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* These rules style this group of related page elements. */
+.account-switch {
+    margin-top: 1rem;
+}
+
+/* These rules style this group of related page elements. */
+.booking-list {
+    display: grid;
+    gap: 1rem;
+}
+
+/* These rules arrange and style the site navigation area. */
+.booking-card header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 1rem;
+}
+
+/* These rules present each item as a clear, reusable content card. */
+.booking-card dl {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+/* These rules present each item as a clear, reusable content card. */
+.booking-card dt {
+    color: var(--muted-text, #665d6c);
+    font-size: 0.85rem;
+}
+
+/* These rules present each item as a clear, reusable content card. */
+.booking-card dd {
+    margin: 0.2rem 0 0;
+    font-weight: 700;
+}
+
+/* These rules make status and validation messages easy to notice and understand. */
+.status-pill {
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    background: #eee8f1;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+/* These rules make status and validation messages easy to notice and understand. */
+.status-assigned {
+    background: #dff5e7;
+    color: #145c34;
+}
+
+/* These rules make status and validation messages easy to notice and understand. */
+/*
+ * This section presents ratings and testimonial choices with visible labels, feedback, and keyboard focus.
+ */
+.status-manual_review {
+    background: #fff0cf;
+    color: #714c00;
+}
+
+/* The following rules adjust the layout for this screen size. */
+/*
+ * This responsive section rearranges the component for narrower or wider screens without removing important actions.
+ */
+@media (max-width: 720px) {
+    /* These rules make form fields and validation feedback clear and consistent. */
+    .account-form-grid, .booking-card dl {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+/*
+ * Account form colour fixes.
+ * Explicit theme-aware colours prevent browser defaults, placeholders, and
+ * help descriptions from fading into the dark card background.
+ */
+.account-card .form-control {
+    width: 100%;
+    min-height: 2.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    caret-color: var(--color-text);
+}
+
+.account-card textarea.form-control {
+    min-height: 7rem;
+}
+
+.account-card .form-control::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+}
+
+.account-card .form-help,
+.account-card .form-help ul,
+.account-card .account-switch {
+    color: var(--color-muted);
+}
+
+.account-card .form-help ul {
+    margin: 0.35rem 0 0;
+    padding-left: 1.2rem;
+}
+
+/*
+ * These focus styles make keyboard position visible without relying on hover or colour alone.
+ */
+.account-card .form-control:focus {
+    border-color: var(--color-primary);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    box-shadow: 0 0 0 0.22rem var(--color-primary-soft);
+}
+
+/* Browser autofill can otherwise force a bright field with unreadable text. */
+.account-card input:-webkit-autofill,
+.account-card input:-webkit-autofill:hover,
+.account-card input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--color-text);
+    box-shadow: 0 0 0 1000px var(--color-surface-raised) inset;
+    transition: background-color 9999s ease-out 0s;
+}
+
+html[data-theme="dark"] .account-card,
+html[data-theme="dark"] .booking-card,
+/*
+ * These rules adapt the same components for dark mode while preserving readable contrast and familiar structure.
+ */
+html[data-theme="dark"] .empty-state {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+}
+
+html[data-theme="dark"] .account-card .form-error {
+    color: #ff9daf;
+}
+
+/*
+ * Registration-grid alignment
+ *
+ * Named field classes keep related fields in predictable rows. This avoids a
+ * long password-help block shifting unrelated fields into visually mismatched
+ * cells, while preserving a single-column layout on small screens.
+ */
+.account-form-grid {
+    align-items: start;
+}
+
+.account-form-grid .form-field {
+    min-width: 0;
+    align-content: start;
+}
+
+.account-form-grid .form-field--username,
+.account-form-grid .form-field--privacy_consent {
+    grid-column: 1 / -1;
+}
+
+.account-form-grid .form-field--first_name,
+.account-form-grid .form-field--last_name,
+.account-form-grid .form-field--email,
+.account-form-grid .form-field--phone,
+.account-form-grid .form-field--password1,
+.account-form-grid .form-field--password2 {
+    grid-column: auto;
+}
+
+.form-check-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 0.7rem;
+}
+
+.form-check-row label {
+    margin: 0;
+    line-height: 1.45;
+}
+
+.form-field--checkbox .form-help,
+.form-field--checkbox .form-error {
+    margin-inline-start: 2rem;
+}
+
+.account-card .form-control {
+    display: block;
+    padding: 0.7rem 0.8rem;
+    font: inherit;
+}
+
+.account-card .form-help {
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+}
+
+.account-card .form-error p {
+    margin: 0.2rem 0 0;
+}
+
+/* All visible text in dark account cards uses theme-aware tokens. */
+html[data-theme="dark"] .account-card,
+html[data-theme="dark"] .account-card label,
+html[data-theme="dark"] .account-card .form-check-row,
+html[data-theme="dark"] .account-switch {
+    color: var(--color-text);
+}
+
+@media (max-width: 720px) {
+    .account-form-grid .form-field {
+        grid-column: 1;
+    }
+
+    .form-field--checkbox .form-help,
+    .form-field--checkbox .form-error {
+        margin-inline-start: 0;
+    }
+}
+
+.booking-feedback-state { margin-block: .9rem; padding: .85rem; border-radius: .8rem; background: var(--color-surface-raised); }
+.booking-feedback-state p { margin: 0 0 .4rem; }
+.review-code-display strong { letter-spacing: .06em; }

@@ -1,0 +1,17 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the index screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div><p class="management-eyebrow">Catalogue</p><h2>Capacity-based packages and experiences</h2><p>Packages now combine capacity and fixed pricing. Historical guest tiers remain stored only for old bookings.</p></div>
+    </div>
+    <div class="management-module-grid">
+        <a href="{% url 'management:management_package_list' %}"><span>Packages</span><strong>{{ package_count }}</strong><small>Descriptions, prices, duration, images, and availability.</small></a>
+        <a href="{% url 'management:management_addon_list' %}"><span>Add-ons</span><strong>{{ addon_count }}</strong><small>Optional experiences, prices, timing, and images.</small></a>
+        <a href="{% url 'management:management_category_list' %}"><span>Categories</span><strong>{{ category_count }}</strong><small>Main categories and subcategories used by the catalogue.</small></a>
+    </div>
+</section>
+{% endblock %}

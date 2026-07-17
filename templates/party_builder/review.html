@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{# This template presents review within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+{% block title %}Review Your Party | P Kids Events{% endblock %}
+{% block meta_robots %}noindex,nofollow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/reviews.css' %}">{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="review-page" aria-labelledby="review-heading">
+    <div class="container review-shell">
+        <header class="review-heading">
+            <p class="section-kicker">Verified completed party</p>
+            <h1 id="review-heading">Rate your {{ booking.package.name }}</h1>
+            <p>{{ booking.event_date|date:"j F Y" }} · Booking {{ booking.public_id }}</p>
+            <p class="review-privacy-intro">
+                Star ratings contribute to the overall P Kids Events statistics. Your written
+                comment stays private unless you explicitly choose to publish it as a testimonial.
+            </p>
+        </header>
+
+        {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+        <form
+            method="post"
+            action="{% url 'party_builder:party_builder_review_submit' booking.public_id %}"
+            class="review-form"
+            data-review-form
+            novalidate
+        >
+            {% csrf_token %}
+            <div class="review-alert" data-review-status role="status" aria-live="polite" tabindex="-1" hidden></div>
+            {% if review_form.non_field_errors %}
+                <div class="review-alert error" role="alert">{{ review_form.non_field_errors }}</div>
+            {% endif %}
+
+            <fieldset class="review-rating-card" aria-describedby="id_package_score_help id_package_score_error">
+                <legend>Rate the booked package</legend>
+                <p id="id_package_score_help" class="visually-hidden">Choose one to five stars.</p>
+                <p>{{ booking.package.short_description }}</p>
+                <div class="star-rating" role="radiogroup" aria-label="Package score">
+                    {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                    {% for choice in review_form.package_score %}
+                        <label class="star-choice">
+                            {{ choice.tag }}
+                            <span aria-hidden="true">★</span>
+                            <span class="visually-hidden">{{ choice.choice_label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+                <div id="id_package_score_error" class="field-errors" data-error-for="package_score" role="alert">{{ review_form.package_score.errors }}</div>
+                <p class="review-average" data-package-rating-summary>
+                    {% if review_stats.package.count %}
+                        Community average: {{ review_stats.package.average|floatformat:1 }} / 5 from {{ review_stats.package.count }} review{{ review_stats.package.count|pluralize }}.
+                    {% else %}
+                        No verified package ratings yet.
+                    {% endif %}
+                </p>
+            </fieldset>
+
+            {% for build_addon, score_field in review_form.addon_rating_rows %}
+                <fieldset class="review-rating-card" aria-describedby="id_{{ score_field.name }}_help id_{{ score_field.name }}_error">
+                    <legend>Rate {{ build_addon.addon.name }}</legend>
+                    <p id="id_{{ score_field.name }}_help" class="visually-hidden">Choose one to five stars.</p>
+                    <p>{{ build_addon.addon.short_description }}</p>
+                    <div class="star-rating" role="radiogroup" aria-label="{{ score_field.label }}">
+                        {% for choice in score_field %}
+                            <label class="star-choice">
+                                {{ choice.tag }}
+                                <span aria-hidden="true">★</span>
+                                <span class="visually-hidden">{{ choice.choice_label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <div id="id_{{ score_field.name }}_error" class="field-errors" data-error-for="{{ score_field.name }}" role="alert">{{ score_field.errors }}</div>
+                    <p class="review-average" data-addon-rating-summary="{{ build_addon.addon_id }}">
+                        {% if build_addon.rating_summary.count %}
+                            Community average: {{ build_addon.rating_summary.average|floatformat:1 }} / 5 from {{ build_addon.rating_summary.count }} review{{ build_addon.rating_summary.count|pluralize }}.
+                        {% else %}
+                            No verified ratings yet.
+                        {% endif %}
+                    </p>
+                </fieldset>
+            {% endfor %}
+
+            <div class="review-field">
+                <label for="{{ review_form.comment.id_for_label }}">{{ review_form.comment.label }}</label>
+                {{ review_form.comment }}
+                <p id="{{ review_form.comment.id_for_label }}_help" class="field-help">{{ review_form.comment.help_text }}</p>
+                <div id="{{ review_form.comment.id_for_label }}_error" class="field-errors" data-error-for="comment" role="alert">{{ review_form.comment.errors }}</div>
+            </div>
+
+            <fieldset class="review-choice-group" aria-describedby="id_visibility_help id_visibility_error">
+                <legend>{{ review_form.visibility.label }}</legend>
+                <p id="id_visibility_help" class="field-help">{{ review_form.visibility.help_text }}</p>
+                <div class="review-choice-grid" data-visibility-options>
+                    {% for choice in review_form.visibility %}
+                        <label class="review-choice-card">
+                            {{ choice.tag }}
+                            <span class="review-choice-copy">
+                                <strong>{{ choice.choice_label }}</strong>
+                                {% if choice.data.value == "private" %}
+                                    <span>Only P Kids Events staff can view this written comment.</span>
+                                {% else %}
+                                    <span>I give P Kids Events permission to publish this comment on the public Testimonials page.</span>
+                                {% endif %}
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+                <div id="id_visibility_error" class="field-errors" data-error-for="visibility" role="alert">{{ review_form.visibility.errors }}</div>
+            </fieldset>
+
+            <fieldset
+                class="review-choice-group review-name-display"
+                data-testimonial-name-section
+                aria-describedby="id_testimonial_name_display_help id_testimonial_name_display_error"
+                {% if review_form.visibility.value != "testimonial" %}hidden{% endif %}
+            >
+                <legend>{{ review_form.testimonial_name_display.label }}</legend>
+                <p id="id_testimonial_name_display_help" class="field-help">{{ review_form.testimonial_name_display.help_text }}</p>
+                <div class="review-choice-grid review-choice-grid-compact">
+                    {% for choice in review_form.testimonial_name_display %}
+                        <label class="review-choice-card">
+                            {{ choice.tag }}
+                            <span class="review-choice-copy">
+                                <strong>{{ choice.choice_label }}</strong>
+                                {% if choice.data.value == "anonymous" %}
+                                    <span>Your testimonial will say “Verified customer”.</span>
+                                {% else %}
+                                    <span>Only your first name will be shown. If it is unavailable, “Verified customer” is used.</span>
+                                {% endif %}
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+                <div id="id_testimonial_name_display_error" class="field-errors" data-error-for="testimonial_name_display" role="alert">{{ review_form.testimonial_name_display.errors }}</div>
+            </fieldset>
+
+            <aside class="review-consent-note" aria-label="Feedback visibility information">
+                <p><strong>You remain in control.</strong></p>
+                <p>
+                    Public testimonials appear after saving. You can return through the
+                    verified review-code process and change a testimonial back to private feedback at any time.
+                </p>
+            </aside>
+
+            <div class="review-actions">
+                <button class="button" type="submit" data-review-submit>Save review</button>
+                <a class="button button-outline" href="{% url 'accounts:accounts_customer_dashboard' %}">Back to bookings</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/reviews.js' %}" defer></script>{% endblock %}

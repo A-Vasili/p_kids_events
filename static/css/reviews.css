@@ -1,0 +1,141 @@
+/*
+ * This stylesheet presents customer rating controls, testimonial choices, status messages, and public review displays with accessible focus states.
+ * Its rules are grouped around page components, responsive layouts, theme support, and visible keyboard focus.
+ * The comments explain those relationships without changing selectors, spacing, colours, or behaviour.
+ */
+.review-page { padding: clamp(2.5rem, 7vw, 5rem) 0; }
+.review-shell { max-width: 54rem; display: grid; gap: 1.5rem; }
+.review-shell-narrow { max-width: 36rem; }
+.review-heading { text-align: center; }
+.review-code-panel,
+.review-form,
+/*
+ * This section presents ratings and testimonial choices with visible labels, feedback, and keyboard focus.
+ */
+.review-rating-card {
+    border: 1px solid var(--color-border);
+    border-radius: 1.25rem;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+}
+.review-code-panel,
+.review-form { padding: clamp(1.25rem, 4vw, 2rem); }
+.review-form { display: grid; gap: 1rem; }
+.review-rating-card { margin: 0; padding: 1.25rem; }
+.review-rating-card legend { padding-inline: .35rem; font-weight: 800; color: var(--color-heading); }
+.review-field { display: grid; gap: .45rem; }
+.review-code-input { text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+.star-rating { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .75rem; }
+.star-choice { position: relative; cursor: pointer; }
+.star-choice input { position: absolute; opacity: 0; pointer-events: none; }
+.star-choice span[aria-hidden="true"] {
+    display: grid; place-items: center; width: 2.8rem; height: 2.8rem;
+    border: 2px solid var(--color-border); border-radius: .75rem;
+    color: var(--color-muted); background: var(--color-surface-raised); font-size: 1.45rem;
+}
+.star-choice input:checked + span,
+.star-choice:has(input:checked) span[aria-hidden="true"] { color: #7a5200; background: #ffe7a0; border-color: #b17a00; }
+.star-choice input:focus-visible + span { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+.review-alert { padding: .8rem 1rem; border-radius: .8rem; background: var(--color-surface-raised); }
+.review-alert.success { border: 1px solid #2f8154; }
+.review-alert.error { border: 1px solid #a22945; }
+.review-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.review-recommendations { margin-top: 1.25rem; }
+.recommendation-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.recommendation-card { padding: 1rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface-raised); }
+/*
+ * This responsive section rearranges the component for narrower or wider screens without removing important actions.
+ */
+@media (max-width: 48rem) { .recommendation-grid { grid-template-columns: 1fr; } }
+.review-average { margin: .75rem 0 0; color: var(--color-muted); font-size: .9rem; }
+
+/* Written-feedback visibility is presented as a clear consent decision. */
+.review-privacy-intro {
+    max-width: 46rem;
+    margin-inline: auto;
+    color: var(--color-muted);
+}
+
+.review-choice-group {
+    margin: 0;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1.25rem;
+    background: var(--color-surface-raised);
+}
+
+.review-choice-group legend {
+    padding-inline: 0.35rem;
+    color: var(--color-heading);
+    font-weight: 800;
+}
+
+.review-choice-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+}
+
+.review-choice-card {
+    position: relative;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    min-height: 100%;
+    padding: 1rem;
+    border: 2px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.review-choice-card:hover,
+.review-choice-card:has(input:checked) {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+}
+
+.review-choice-card input {
+    flex: 0 0 auto;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.18rem;
+    accent-color: var(--color-primary);
+}
+
+/*
+ * These focus styles make keyboard position visible without relying on hover or colour alone.
+ */
+.review-choice-card input:focus-visible {
+    outline: 3px solid var(--color-focus, var(--color-primary));
+    outline-offset: 3px;
+}
+
+.review-choice-copy {
+    display: grid;
+    gap: 0.3rem;
+}
+
+.review-choice-copy span {
+    color: var(--color-muted);
+    font-size: 0.92rem;
+}
+
+.review-consent-note {
+    padding: 1rem;
+    border-inline-start: 0.3rem solid var(--color-primary);
+    border-radius: 0.75rem;
+    background: var(--color-surface-raised);
+}
+
+.review-consent-note p:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 40rem) {
+    .review-choice-grid {
+        grid-template-columns: 1fr;
+    }
+}

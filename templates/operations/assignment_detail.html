@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{# This worker template presents assignment detail for active staff using the operations area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+{% block title %}
+    Assignment Details | P Kids Events
+{% endblock %}
+{% block meta_robots %}
+    noindex,nofollow
+{% endblock %}
+{% block page_name %}
+    operationsAssignmentDetail
+{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/operations.css' %}">
+{% endblock %}
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+        {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+        <section class="operations-page" aria-labelledby="assignment-heading">
+        <div class="container">
+            {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+            {% include "operations/includes/nav.html" %}
+            {# This article represents one self-contained item that can be understood on its own. #}
+            <article class="operations-panel assignment-detail">
+                {# This header introduces the page and gives visitors the main context before they continue. #}
+                <header>
+                    <div>
+                        <p class="section-kicker">
+                            {{ assignment.get_assignment_source_display }}
+                        </p>
+                        <h1 id="assignment-heading">
+                            Party for
+                            {{ assignment.party_build.contact_name }}
+                        </h1>
+                    </div>
+                    <span class="status-pill status-{{ assignment.status }}">
+                        {{ assignment.get_status_display }}
+                    </span>
+                </header>
+                <dl class="detail-grid">
+                    <div>
+                        <dt>
+                            Date
+                        </dt>
+                        <dd>
+                            {{ assignment.party_build.event_date|date:"j F Y" }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>
+                            Time
+                        </dt>
+                        <dd>
+                            {{ assignment.party_build.event_time|time:"H:i"|default:"To confirm" }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>
+                            Children
+                        </dt>
+                        <dd>
+                            {{ assignment.party_build.guest_count }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>
+                            Package
+                        </dt>
+                        <dd>
+                            {{ assignment.party_build.package.name }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>
+                            Booking status
+                        </dt>
+                        <dd>
+                            {{ assignment.party_build.get_status_display }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>
+                            Phone
+                        </dt>
+                        <dd>
+                            <a href="tel:{{ assignment.party_build.contact_phone }}">
+                                {{ assignment.party_build.contact_phone }}
+                            </a>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>
+                            Email
+                        </dt>
+                        <dd>
+                            <a href="mailto:{{ assignment.party_build.contact_email }}">
+                                {{ assignment.party_build.contact_email }}
+                            </a>
+                        </dd>
+                    </div>
+                    <div class="detail-wide">
+                        <dt>
+                            Venue
+                        </dt>
+                        <dd>
+                            {{ assignment.party_build.event_address }},
+                            {{ assignment.party_build.postal_code }}
+                        </dd>
+                    </div>
+                    <div class="detail-wide">
+                        <dt>
+                            Notes
+                        </dt>
+                        <dd>
+                            {{ assignment.party_build.notes|default:"No extra notes." }}
+                        </dd>
+                    </div>
+                </dl>
+                                <section>
+                    <h2>
+                        Optional experiences
+                    </h2>
+                    <ul>
+                        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                        {% for item in assignment.party_build.addon_items.all %}
+                            <li>
+                                {{ item.addon.name }}
+                            </li>
+                        {% empty %}
+                            <li>
+                                None selected.
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </section>
+                {# This section explains the final delivery step to the accepted worker. The view decides whether the action is eligible, and the service checks the live booking and assignment again after submission. #}
+                {% if assignment.party_build.status == 'completed' %}
+                    <section class="assignment-completion" aria-labelledby="party-completion-heading">
+                        <h2 id="party-completion-heading">Party completion</h2>
+                        <p><strong>Party completed</strong></p>
+                        <p>Completed {{ assignment.party_build.completed_at|date:"j F Y, H:i" }}. Customer review access is now available.</p>
+                    </section>
+                {% elif assignment.status == 'accepted' %}
+                    <section class="assignment-completion" aria-labelledby="party-completion-heading">
+                        <h2 id="party-completion-heading">Party completion</h2>
+                        <p>Use this after the party has taken place. Marking it as done allows the customer to rate the party and leave feedback.</p>
+                        {% if can_mark_party_done %}
+                            {# This POST form contains no booking status or completion time. Django resolves those trusted values from the current assignment when the worker submits the action. #}
+                            <form method="post" action="{% url 'operations:operations_worker_assignment_complete' assignment.pk %}">
+                                {% csrf_token %}
+                                <button class="button" type="submit">Mark party as done</button>
+                            </form>
+                        {% elif completion_block_reason %}
+                            <p>{{ completion_block_reason }}</p>
+                        {% endif %}
+                    </section>
+                {% endif %}
+                {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+                {% if assignment.status == 'pending' and assignment.worker.user == request.user %}
+                    <div class="assignment-actions">
+                        {# This form sends the visitor’s choices to Django, where the information is checked again on the server. #}
+                        {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+                        <form method="post" action="{% url 'operations:operations_worker_assignment_accept' assignment.pk %}">
+                            {% csrf_token %}
+                            <button class="button" type="submit">
+                                Accept assignment
+                            </button>
+                        </form>
+                        {# This form sends the visitor’s choices to Django, where the information is checked again on the server. #}
+                        <form class="decline-form" method="post" action="{% url 'operations:operations_worker_assignment_decline' assignment.pk %}" novalidate>
+                            {% csrf_token %}
+                                                        {% if decline_form.non_field_errors %}
+                                <div role="alert">
+                                    {{ decline_form.non_field_errors }}
+                                </div>
+                            {% endif %}
+                            <label for="{{ decline_form.reason.id_for_label }}">
+                                {{ decline_form.reason.label }}
+                            </label>
+                            {{ decline_form.reason }}
+                            <p class="form-help">
+                                {{ decline_form.reason.help_text }}
+                            </p>
+                            {% for error in decline_form.reason.errors %}
+                                <p class="form-error" role="alert">
+                                    {{ error }}
+                                </p>
+                            {% endfor %}
+                            <button class="button button-danger" type="submit">
+                                Decline assignment
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </article>
+        </div>
+    </section>
+{% endblock %}

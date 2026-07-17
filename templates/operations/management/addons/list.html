@@ -1,0 +1,34 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the list screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    {% url 'management:management_addon_create' as page_action_url %}
+    {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+    {% include "operations/management/includes/page_header.html" with eyebrow="Catalogue" title="Add-ons and experiences" description="Manage optional experiences customers can add to a package." action_url=page_action_url action_label="Create add-on" only %}
+
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form class="management-filter-toolbar" method="get" role="search">
+        <label><span>Search</span><input class="form-control" type="search" name="q" value="{{ request.GET.q }}" placeholder="Name, slug, or description"></label>
+        <label><span>Category</span><select class="form-select" name="category"><option value="">All</option>{% for category in category_options %}<option value="{{ category.pk }}" {% if request.GET.category == category.pk|stringformat:'s' %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></label>
+        <label><span>Status</span><select class="form-select" name="status"><option value="">All</option><option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option><option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option></select></label>
+        <label><span>Featured</span><select class="form-select" name="featured"><option value="">All</option><option value="yes" {% if request.GET.featured == 'yes' %}selected{% endif %}>Featured</option><option value="no" {% if request.GET.featured == 'no' %}selected{% endif %}>Not featured</option></select></label>
+        <label><span>Sort</span><select class="form-select" name="ordering"><option value="order">Display order</option><option value="name" {% if request.GET.ordering == 'name' %}selected{% endif %}>Name A–Z</option><option value="-name" {% if request.GET.ordering == '-name' %}selected{% endif %}>Name Z–A</option><option value="price" {% if request.GET.ordering == 'price' %}selected{% endif %}>Price low–high</option><option value="-price" {% if request.GET.ordering == '-price' %}selected{% endif %}>Price high–low</option></select></label>
+        <button class="management-button" type="submit">Apply</button><a class="management-button secondary" href="{% url 'management:management_addon_list' %}">Clear</a>
+    </form>
+
+    {% if addons %}
+        <div class="management-result-summary">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</div>
+        <div class="management-table-wrap"><table class="management-table"><caption class="visually-hidden">Add-ons</caption><thead><tr><th>Add-on</th><th>Category</th><th>Price</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+        {% for addon in addons %}<tr>{# Table thumbnails use the same upload-first fallback without repeating the add-on name to screen readers. #}<td data-label="Add-on"><div class="management-record-cell">{% if addon.has_custom_image %}<img src="{{ addon.image.url }}" alt="" width="54" height="54">{% elif addon.default_static_image_path %}<img src="{% static addon.default_static_image_path %}" alt="" width="54" height="54">{% else %}<span class="management-thumbnail-placeholder" aria-hidden="true">{{ addon.icon }}</span>{% endif %}<span><a href="{% url 'management:management_addon_detail' addon.pk %}"><strong>{{ addon.name }}</strong></a><small>{{ addon.slug }}{% if addon.is_featured %} · Featured{% endif %}</small></span></div></td><td data-label="Category">{{ addon.category|default:"Uncategorised" }}</td><td data-label="Price">€{{ addon.price }}</td><td data-label="Duration">{{ addon.duration_minutes }} min</td><td data-label="Status">{% if addon.is_active %}{% include "operations/management/includes/status_badge.html" with value="active" label="Active" %}{% else %}{% include "operations/management/includes/status_badge.html" with value="inactive" label="Archived" %}{% endif %}</td><td data-label="Actions"><div class="management-row-actions"><a href="{% url 'management:management_addon_update' addon.pk %}">Edit</a><a class="danger-link" href="{% url 'management:management_addon_remove' addon.pk %}">Delete/Archive</a></div></td></tr>{% endfor %}
+        </tbody></table></div>
+        {% include "operations/management/includes/pagination.html" %}
+    {% else %}
+        {% url 'management:management_addon_create' as create_url %}{% include "operations/management/includes/empty_state.html" with empty_title="No add-ons found" empty_message="Create an add-on or clear the current filters." empty_action_url=create_url empty_action_label="Create add-on" %}
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the schedules screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header"><div><p class="management-eyebrow">Staff operations</p><h2>Worker schedules</h2><p>Pending offers remain separate from accepted schedule entries. Filter by worker or date range to resolve conflicts.</p></div></div>
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form class="management-filter-toolbar" method="get">
+        <label><span>Worker</span><select class="form-select" name="worker"><option value="">All workers</option>{% for worker in workers %}<option value="{{ worker.pk }}" {% if request.GET.worker == worker.pk|stringformat:'s' %}selected{% endif %}>{{ worker }}</option>{% endfor %}</select></label>
+        <label><span>From</span><input class="form-control" type="date" name="date_from" value="{{ date_from }}"></label>
+        <label><span>To</span><input class="form-control" type="date" name="date_to" value="{{ date_to }}"></label>
+        <button class="management-button" type="submit">Apply</button><a class="management-button secondary" href="{% url 'management:management_schedule' %}">Reset</a>
+    </form>
+
+    <div class="management-detail-grid">
+        <section class="management-panel management-panel-wide"><h3>Assignments</h3>{% if assignments %}<div class="management-table-wrap"><table class="management-table"><thead><tr><th>Date and time</th><th>Worker</th><th>Client</th><th>Package</th><th>Status</th></tr></thead><tbody>{% for assignment in assignments %}<tr><td><a href="{% url 'management:management_booking_detail' assignment.party_build.public_id %}">{{ assignment.party_build.event_date }} {{ assignment.party_build.event_time|time:"H:i" }}</a></td><td>{{ assignment.worker }}</td><td>{{ assignment.party_build.contact_name }}</td><td>{{ assignment.party_build.package.name }}</td><td>{% include "operations/management/includes/status_badge.html" with value=assignment.status label=assignment.get_status_display %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>No assignments match this period.</p>{% endif %}</section>
+        <section class="management-panel management-panel-wide"><h3>Availability periods</h3>{% if availability_periods %}<div class="management-table-wrap"><table class="management-table"><thead><tr><th>Worker</th><th>Starts</th><th>Ends</th><th>Type</th><th>Notes</th></tr></thead><tbody>{% for period in availability_periods %}<tr><td>{{ period.worker }}</td><td>{{ period.start_at|date:"d M Y H:i" }}</td><td>{{ period.end_at|date:"d M Y H:i" }}</td><td>{{ period.get_availability_type_display }}</td><td>{{ period.notes|default:"—" }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>No availability periods match this range.</p>{% endif %}</section>
+    </div>
+</section>
+{% endblock %}

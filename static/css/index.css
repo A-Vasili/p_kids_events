@@ -1,0 +1,547 @@
+/*
+ * This stylesheet shapes the home page’s introductory content, pathways, and promotional cards without affecting internal staff pages.
+ * Its rules are grouped around page components, responsive layouts, theme support, and visible keyboard focus.
+ * The comments explain those relationships without changing selectors, spacing, colours, or behaviour.
+ */
+/*
+ * This stylesheet controls the appearance of the index page or component.
+ * The comments explain visual sections without changing the styles applied by the browser.
+ */
+/* Page-specific styles for index.html. */
+/* Home page */
+.hero-carousel {
+    position: relative;
+    min-height: clamp(34rem, calc(100vh - 5rem), 52rem);
+    overflow: hidden;
+    background: #37233f;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-slides, .hero-carousel-slide, .hero-carousel-slide img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-slide {
+    margin: 0;
+    opacity: 0;
+    animation: hero-slide-cycle 20s infinite;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-slide img {
+    object-fit: cover;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-slide-one {
+    animation-delay: 0s;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-slide-two {
+    animation-delay: 5s;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-slide-three {
+    animation-delay: 10s;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-slide-four {
+    animation-delay: 15s;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-overlay {
+    position: relative;
+    z-index: 2;
+    min-height: inherit;
+    display: grid;
+    align-items: center;
+    background: linear-gradient(90deg, rgba(37, 24, 48, 0.88) 0%, rgba(62, 40, 77, 0.64) 50%, rgba(62, 40, 77, 0.16) 100%);
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-content {
+    max-width: 48rem;
+    padding-block: 5rem;
+    color: #ffffff;
+    text-shadow: 0 0.15rem 0.8rem rgba(0, 0, 0, 0.38);
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-content h1 {
+    margin-bottom: 1.25rem;
+    color: #ffffff;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-content p {
+    max-width: 43rem;
+    margin-bottom: 0;
+    font-size: clamp(1.1rem, 2.3vw, 1.5rem);
+}
+
+.hero-primary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1.5rem;
+}
+
+.party-booking-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.25rem;
+    padding: 0.85rem 1.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 999px;
+    background: var(--color-button-background);
+    color: var(--color-button-text);
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    text-shadow: none;
+    box-shadow: 0 0.75rem 1.75rem rgba(35, 18, 46, 0.3);
+    transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.party-booking-button-secondary {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+/*
+ * These focus styles make keyboard position visible without relying on hover or colour alone.
+ */
+.party-booking-button:hover, .party-booking-button:focus-visible {
+    background: var(--color-button-background-hover);
+    color: var(--color-button-text);
+    transform: translateY(-0.12rem);
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+/*
+ * These rules adapt the same components for dark mode while preserving readable contrast and familiar structure.
+ */
+html[data-theme="dark"] .hero-carousel-slide img {
+    filter: brightness(0.78) saturate(0.9);
+}
+
+/* This animation describes how the visual effect changes over time. */
+/*
+ * This named motion supports a small visual transition; reduced-motion rules elsewhere keep the interface comfortable when animation is disabled.
+ */
+@keyframes hero-slide-cycle {
+    /* These rules style this group of related page elements. */
+    0%, 20% {
+        opacity: 1;
+    }
+
+    /* These rules style this group of related page elements. */
+    25%, 95% {
+        opacity: 0;
+    }
+
+    /* These rules style this group of related page elements. */
+    100% {
+        opacity: 1;
+    }
+
+}
+
+/* The following rules adjust the layout for this screen size. */
+/*
+ * This responsive section rearranges the component for narrower or wider screens without removing important actions.
+ */
+@media (max-width: 42rem) {
+    /* These rules style the page introduction and its main heading. */
+    .hero-carousel-overlay {
+        background: rgba(37, 24, 48, 0.72);
+    }
+
+
+}
+
+/* The following rules adjust the layout for this screen size. */
+@media (prefers-reduced-motion: reduce) {
+    /* These rules style the page introduction and its main heading. */
+    .hero-carousel-slide {
+        display: none;
+        opacity: 1;
+    }
+
+    /* These rules style the page introduction and its main heading. */
+    .hero-carousel-slide-one {
+        display: block;
+    }
+
+}
+
+/* JavaScript-enhanced carousel state for icon controls and keyboard use. */
+.hero-carousel.is-carousel-enhanced .hero-carousel-slide {
+    opacity: 0;
+    animation: none;
+    transition: opacity 520ms ease;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel.is-carousel-enhanced .hero-carousel-slide.is-active {
+    opacity: 1;
+}
+
+/* The following rules adjust the layout for this screen size. */
+@media (prefers-reduced-motion: reduce) {
+    /* These rules style the page introduction and its main heading. */
+    .hero-carousel.is-carousel-enhanced .hero-carousel-slide {
+        display: block;
+        transition: none;
+    }
+
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-controls {
+    display: none;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel.is-carousel-enhanced .hero-carousel-controls {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: block;
+    pointer-events: none;
+}
+
+/* Shared control styling keeps arrow and indicator opacity behaviour consistent. */
+.hero-carousel-arrow, .hero-carousel-indicators {
+    opacity: 0.18;
+    transition: opacity 220ms ease, transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+    pointer-events: auto;
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.hero-carousel-arrow:hover, .hero-carousel-arrow:focus-visible, .hero-carousel-indicators:hover, .hero-carousel-indicators:focus-within {
+    opacity: 1;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-arrow {
+    position: absolute;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: clamp(3.1rem, 6vw, 4.25rem);
+    height: clamp(3.1rem, 6vw, 4.25rem);
+    padding: 0;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    background: rgba(42, 42, 48, 0.92);
+    color: #ffffff;
+    box-shadow: 0 0.8rem 1.8rem rgba(0, 0, 0, 0.28);
+    transform: translateY(-50%);
+}
+
+/* CSS-drawn arrows stay perfectly centered inside the circular button. */
+.hero-carousel-arrow-icon {
+    display: block;
+    width: clamp(0.82rem, 1.8vw, 1.1rem);
+    height: clamp(0.82rem, 1.8vw, 1.1rem);
+    border-color: currentColor;
+    border-style: solid;
+    border-width: 0 0 0.2rem 0.2rem;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-arrow-previous .hero-carousel-arrow-icon {
+    transform: translateX(0.12rem) rotate(45deg);
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-arrow-next .hero-carousel-arrow-icon {
+    transform: translateX(-0.12rem) rotate(-135deg);
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-arrow-previous {
+    left: clamp(0.75rem, 3vw, 2.4rem);
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-arrow-next {
+    right: clamp(0.75rem, 3vw, 2.4rem);
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.hero-carousel-arrow:hover, .hero-carousel-arrow:focus-visible {
+    background: rgba(42, 42, 48, 0.98);
+    color: #ffffff;
+    box-shadow: 0 1rem 2.1rem rgba(0, 0, 0, 0.34);
+    transform: translateY(-50%) scale(1.05);
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.hero-carousel-arrow:focus-visible, .hero-carousel-indicator:focus-visible {
+    outline: 0.2rem solid var(--pastel-butter);
+    outline-offset: 0.18rem;
+}
+
+/* Bottom-center dots show the active slide while remaining visually quiet until hover/focus. */
+.hero-carousel-indicators {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1.1rem, 3vw, 2rem);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(42, 42, 48, 0.9);
+    box-shadow: 0 0.8rem 1.8rem rgba(0, 0, 0, 0.24);
+    transform: translateX(-50%);
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-indicator {
+    width: 0.78rem;
+    height: 0.78rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    transition: background-color 180ms ease, transform 180ms ease, width 180ms ease;
+}
+
+/* These rules style the page introduction and its main heading. */
+.hero-carousel-indicator.is-active, .hero-carousel-indicator[aria-current="true"] {
+    width: 1.85rem;
+    background: #ffffff;
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.hero-carousel-indicator:hover, .hero-carousel-indicator:focus-visible {
+    background: #ffffff;
+    transform: scale(1.08);
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.hero-carousel:focus-visible {
+    outline: 0.25rem solid var(--pastel-butter);
+    outline-offset: -0.45rem;
+}
+
+/* The following rules adjust the layout for this screen size. */
+@media (max-width: 42rem) {
+    /* These rules style the page introduction and its main heading. */
+    .hero-carousel-arrow {
+        top: auto;
+        bottom: 1.2rem;
+        transform: none;
+    }
+
+    /* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+    .hero-carousel-arrow:hover, .hero-carousel-arrow:focus-visible {
+        transform: scale(1.05);
+    }
+
+    /* These rules style the page introduction and its main heading. */
+    .hero-carousel-indicators {
+        bottom: 5rem;
+    }
+
+}
+
+/* Prominent landing-page pathway cards link users directly to key sections. */
+.home-pathways {
+    padding-block: clamp(3rem, 7vw, 5.5rem);
+    background: linear-gradient(135deg, var(--surface-sky), var(--surface-lavender));
+}
+
+/* These rules style the page introduction and its main heading. */
+.home-pathways-heading {
+    max-width: 54rem;
+    margin-bottom: 1.8rem;
+}
+
+/* These rules control spacing and the page layout for this group of content. */
+.home-pathway-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+/* These rules present each item as a clear, reusable content card. */
+.home-pathway-card {
+    min-width: 0;
+}
+
+/* These rules style this group of related page elements. */
+.home-pathway-link {
+    position: relative;
+    display: grid;
+    min-height: clamp(24rem, 34vw, 32rem);
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid rgba(255, 255, 255, 0.56);
+    border-radius: 1.5rem;
+    color: #ffffff;
+    text-decoration: none;
+    box-shadow: var(--shadow-card);
+    transform: translateY(0);
+    transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.home-pathway-link:hover, .home-pathway-link:focus-visible {
+    box-shadow: var(--shadow-soft);
+    transform: translateY(-0.18rem);
+}
+
+/* These rules style this group of related page elements. */
+.home-pathway-link img, .home-pathway-overlay, .home-pathway-content {
+    grid-area: 1 / 1;
+}
+
+/* These rules style this group of related page elements. */
+.home-pathway-link img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 500ms ease, filter 180ms ease;
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.home-pathway-link:hover img, .home-pathway-link:focus-visible img {
+    transform: scale(1.04);
+}
+
+/* These rules style this group of related page elements. */
+.home-pathway-overlay {
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(37, 24, 48, 0.08) 0%, rgba(37, 24, 48, 0.86) 100%), linear-gradient(135deg, rgba(111, 74, 142, 0.48), rgba(168, 68, 115, 0.32));
+}
+
+/* These rules style this group of related page elements. */
+.home-pathway-content {
+    z-index: 2;
+    align-self: end;
+    display: grid;
+    gap: 0.65rem;
+    padding: clamp(1.2rem, 3vw, 1.7rem);
+    text-shadow: 0 0.18rem 0.75rem rgba(0, 0, 0, 0.34);
+}
+
+/* These rules style this group of related page elements. */
+.home-pathway-label {
+    width: fit-content;
+    padding: 0.38rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    color: #3e2d50;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-shadow: none;
+    text-transform: uppercase;
+}
+
+/* These rules style the page introduction and its main heading. */
+.home-pathway-title {
+    color: #ffffff;
+    font-size: clamp(1.7rem, 3vw, 2.35rem);
+    font-weight: 900;
+    line-height: 1.05;
+}
+
+/* These rules style this group of related page elements. */
+.home-pathway-text {
+    max-width: 22rem;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 1.02rem;
+}
+
+/* These rules style this group of related page elements. */
+.home-pathway-cta {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 0.35rem;
+    padding: 0.65rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 999px;
+    background: var(--color-button-background);
+    color: var(--color-button-text);
+    font-weight: 900;
+    text-shadow: none;
+}
+
+/* These rules style this group of related page elements. */
+.home-pathway-cta::after {
+    content: "→";
+    margin-left: 0.55rem;
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+html[data-theme="dark"] .home-pathways {
+    background: linear-gradient(135deg, var(--surface-sky), var(--surface-lavender));
+}
+
+/* These reusable values define the colours and measurements used by the selected theme. */
+html[data-theme="dark"] .home-pathway-link img {
+    filter: brightness(0.78) saturate(0.92);
+}
+
+/* The following rules adjust the layout for this screen size. */
+@media (max-width: 64rem) {
+    /* These rules control spacing and the page layout for this group of content. */
+    .home-pathway-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* These rules style this group of related page elements. */
+    .home-pathway-link {
+        min-height: 23rem;
+    }
+
+}
+
+/* The following rules adjust the layout for this screen size. */
+@media (prefers-reduced-motion: reduce) {
+    /* These rules style the page introduction and its main heading. */
+    .hero-carousel.is-carousel-enhanced .hero-carousel-slide, .home-pathway-link, .home-pathway-link img, .hero-carousel-arrow, .hero-carousel-indicators, .hero-carousel-indicator {
+        transition: none;
+    }
+
+    /* These rules style the page introduction and its main heading. */
+    .hero-carousel.is-carousel-enhanced .hero-carousel-slide {
+        display: block;
+    }
+
+    /* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+    .home-pathway-link:hover img, .home-pathway-link:focus-visible img {
+        transform: none;
+    }
+
+}
+
+/* These rules style the page introduction and its main heading. */
+.home-pathway-title {
+    margin-bottom: 0;
+}
+
+.party-booking-intro { max-width: 42rem; margin: 0 auto 1.25rem; }
+.party-booking-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; }
+.party-booking-button-secondary { background: rgba(255, 255, 255, .94); color: #542d58; }
+@media (max-width: 600px) {
+    .party-booking-actions, .party-booking-actions a { width: 100%; }
+}

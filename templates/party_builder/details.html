@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{# This template presents details within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+
+{% block title %}Event Details | P Kids Events{% endblock %}
+{% block meta_description %}Provide the personal and venue details required for your customised P Kids Events party request.{% endblock %}
+{% block meta_robots %}noindex,follow{% endblock %}
+{% block page_name %}partyBuilder{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/party-builder.css' %}">
+{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+    {# This header introduces the page and gives visitors the main context before they continue. #}
+    <header class="checkout-hero" aria-labelledby="party-details-heading">
+        <div class="container narrow-content">
+            <p class="section-kicker">Step two</p>
+            <h1 id="party-details-heading">Tell us about your event</h1>
+            <p class="lead">Your selections are saved in this browser while you complete the checkout.</p>
+            {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+            {% include "party_builder/includes/progress.html" %}
+        </div>
+    </header>
+
+    {# This form sends the visitor’s choices to Django, where the information is checked again on the server. #}
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form
+        class="checkout-form"
+        method="post"
+        action="{% url 'party_builder:party_builder_customer_details' %}"
+        novalidate
+    >
+        {% csrf_token %}
+        <div class="container checkout-layout">
+                        {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+                        <section class="checkout-panel" aria-labelledby="details-form-heading">
+                <div class="panel-heading">
+                    <span class="panel-step" aria-hidden="true">2</span>
+                    <div>
+                        <p class="section-kicker">Personal and venue information</p>
+                        <h2 id="details-form-heading">Booking details</h2>
+                        <p>Fields marked by the browser as required must be completed.</p>
+                    </div>
+                </div>
+
+                                {% if form.non_field_errors %}
+                    <div class="form-alert" role="alert">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="builder-form-grid">
+                    {% include "party_builder/includes/form_field.html" with field=form.contact_name only %}
+                    {% include "party_builder/includes/form_field.html" with field=form.contact_email only %}
+                    {% include "party_builder/includes/form_field.html" with field=form.contact_phone only %}
+                    {% include "includes/custom_date_field.html" with field=form.event_date placeholder="Choose a date" only %}
+                    {% include "includes/custom_time_field.html" with field=form.event_time placeholder="To be confirmed" help_text="Optional. The final time is confirmed after availability review." start="10:00" end="22:00" step="30" only %}
+                    {% include "party_builder/includes/form_field.html" with field=form.event_address wide=True only %}
+                    {% include "party_builder/includes/form_field.html" with field=form.postal_code only %}
+                    {% include "party_builder/includes/form_field.html" with field=form.notes wide=True only %}
+                    {% if form.save_profile %}
+                        {% include "party_builder/includes/form_field.html" with field=form.save_profile wide=True only %}
+                    {% endif %}
+                </div>
+
+                {# This navigation groups related links so users can move through this part of the website. #}
+                {# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+                <nav class="checkout-actions" aria-label="Event details actions">
+                    <a class="button button-outline" href="{% url 'party_builder:party_builder_package_options' %}">
+                        Back to package
+                    </a>
+                    <button class="button" type="submit">Review and checkout</button>
+                </nav>
+            </section>
+
+            {% include "party_builder/includes/order_summary.html" %}
+        </div>
+    </form>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/party-builder.js' %}" defer></script>
+{% endblock %}

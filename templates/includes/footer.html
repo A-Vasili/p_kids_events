@@ -1,0 +1,55 @@
+{# This reusable template presents footer wherever the shared site layout includes it. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+
+{# This shared footer provides contact details and the site closing information on every page. #}
+{# The footer now identifies P Kids Events and keeps contact inside the website rather than linking to the original company. #}
+
+<footer class="site-footer">
+    <div class="container site-footer-grid">
+        <div class="site-footer-brand">
+            <a
+                class="site-footer-logo"
+                href="{% url 'core:core_home' %}"
+                aria-label="P Kids Events home"
+            >
+                <img
+                    src="{% static 'assets/svg/popadoo-logo.svg' %}"
+                    alt=""
+                    width="96"
+                    height="96"
+                >
+                <strong>P Kids Events</strong>
+            </a>
+
+            <p data-i18n="footer.tagline">
+                Joyful children’s events, brought to your chosen venue.
+            </p>
+
+            <p
+                class="site-footer-copyright"
+                data-i18n="footer.copyright"
+            >
+                © 2026 P Kids Events
+            </p>
+        </div>
+
+        <div
+            class="site-footer-contact"
+            aria-labelledby="footer-contact-heading"
+        >
+            <h2
+                id="footer-contact-heading"
+                class="site-footer-heading"
+                data-i18n="footer.contactHeading"
+            >
+                Contact
+            </h2>
+
+            {# The hosted project uses its private message area instead of sending visitors to the real company’s email or Instagram account. #}
+            <a href="{% url 'communications:customer_chat' %}" data-i18n="chat.messages">
+                Messages
+            </a>
+        </div>
+    </div>
+</footer>

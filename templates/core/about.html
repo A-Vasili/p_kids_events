@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{# This public template presents the about page as part of the Popadoo customer website. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+
+{% block title %}About Us | P Kids Events{% endblock %}
+{% block page_name %}about{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/content-pages.css' %}">
+{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+    Page introduction: explains the real service rather than a software concept.
+    {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+    <section aria-labelledby="about-heading" class="content-section">
+        <div class="container narrow-content">
+            <p class="section-kicker" data-i18n="about.kicker">Mobile children’s event planning</p>
+            <h1 data-i18n="about.heading" id="about-heading">About P Kids Events</h1>
+            <p class="lead" data-i18n="about.lead">P Kids Events creates playful, well-organized celebrations for children and families. We help shape the theme, activities, timing, and practical details so hosts can enjoy the day with their guests.</p>
+        </div>
+    </section>
+    The service model is made explicit because P Kids Events has no fixed party venue.
+    <section aria-labelledby="mobile-service-heading" class="content-section section-surface">
+        <div class="container">
+            <div class="row g-4 align-items-center mobile-service-layout">
+                <div class="col-lg-7">
+                    <p class="section-kicker" data-i18n="about.mobileKicker">Your venue, our team</p>
+                    <h2 data-i18n="about.mobileHeading" id="mobile-service-heading">We bring the celebration to you</h2>
+                    <p data-i18n="about.mobileText">P Kids Events does not operate from a fixed party location. Our organizers travel to the home, school, event hall, garden, or other client-specified venue listed in the booking request. We confirm access, travel arrangements, setup needs, and availability before the event.</p>
+                </div>
+                {# This supporting area summarizes useful information without interrupting the main task. #}
+                <aside aria-label="Mobile service highlights" class="col-lg-5" data-i18n-aria-label="about.mobileHighlightsLabel">
+                    <div class="service-model-card card h-100">
+                        <div class="card-body">
+                            <h3 class="h4" data-i18n="about.mobileCardHeading">A flexible setup for every celebration</h3>
+                            <ul class="service-model-list">
+                                <li data-i18n="about.mobilePointOne">You choose the venue and share the full address.</li>
+                                <li data-i18n="about.mobilePointTwo">We adapt the plan to the available indoor or outdoor space.</li>
+                                <li data-i18n="about.mobilePointThree">Travel requirements are agreed before a booking is confirmed.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </section>
+    Bootstrap grid classes work alongside the existing custom card styling.
+    <section aria-labelledby="team-heading" class="content-section">
+        <div class="container">
+            <div class="section-heading-group">
+                <p class="section-kicker" data-i18n="about.teamKicker">People behind the party</p>
+                <h2 data-i18n="about.teamHeading" id="team-heading">Meet the team</h2>
+                <p data-i18n="about.teamIntro">Every event is supported by clear planning, creative activity design, and calm on-site coordination.</p>
+            </div>
+            <div class="row g-4 team-grid">
+                <div class="col-md-6 col-lg-4">
+                    {# This article represents one self-contained item that can be understood on its own. #}
+                    <article class="team-card card h-100">
+                        <img alt="Illustrated avatar representing the planning and family liaison role" class="card-img-top" data-i18n-alt="about.memberOneAlt" height="900" src="{% static 'assets/images/team-member-1.jpg' %}" width="900"/>
+                        <div class="team-card-content card-body">
+                            <h3 data-i18n="about.memberOneName">Planning &amp; Family Liaison</h3>
+                            <p class="team-role" data-i18n="about.memberOneRole">Before the event</p>
+                            <p data-i18n="about.memberOneText">Gathers the brief, confirms the schedule and venue details, and keeps communication clear from the first enquiry to the final plan.</p>
+                        </div>
+                    </article>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    {# This article represents one self-contained item that can be understood on its own. #}
+                    <article class="team-card card h-100">
+                        <img alt="Illustrated avatar representing the creative activities role" class="card-img-top" data-i18n-alt="about.memberTwoAlt" height="900" src="{% static 'assets/images/team-member-2.jpg' %}" width="900"/>
+                        <div class="team-card-content card-body">
+                            <h3 data-i18n="about.memberTwoName">Creative Activities</h3>
+                            <p class="team-role" data-i18n="about.memberTwoRole">Ideas and engagement</p>
+                            <p data-i18n="about.memberTwoText">Develops age-appropriate games, themed activities, and playful moments that suit the group, venue, and event style.</p>
+                        </div>
+                    </article>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    {# This article represents one self-contained item that can be understood on its own. #}
+                    <article class="team-card card h-100">
+                        <img alt="Illustrated avatar representing the on-site coordination role" class="card-img-top" data-i18n-alt="about.memberThreeAlt" height="900" src="{% static 'assets/images/team-member-3.jpg' %}" width="900"/>
+                        <div class="team-card-content card-body">
+                            <h3 data-i18n="about.memberThreeName">On-site Coordination</h3>
+                            <p class="team-role" data-i18n="about.memberThreeRole">On the day</p>
+                            <p data-i18n="about.memberThreeText">Manages setup, activity flow, and practical changes at the venue so the celebration stays welcoming and organized.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section aria-labelledby="process-heading" class="content-section section-surface">
+        <div class="container">
+            <div class="section-heading-group">
+                <p class="section-kicker" data-i18n="about.processKicker">Simple and transparent</p>
+                <h2 data-i18n="about.processHeading" id="process-heading">How a booking works</h2>
+            </div>
+            <ol class="row g-4 process-grid">
+                <li class="col-md-4">
+                    <div class="process-card card h-100">
+                        <div class="card-body">
+                            <span aria-hidden="true" class="process-number">1</span>
+                            <h3 data-i18n="about.processOneHeading">Share the details</h3>
+                            <p data-i18n="about.processOneText">Tell us the date, guest ages, event type, venue address, and the ideas you already have.</p>
+                        </div>
+                    </div>
+                </li>
+                <li class="col-md-4">
+                    <div class="process-card card h-100">
+                        <div class="card-body">
+                            <span aria-hidden="true" class="process-number">2</span>
+                            <h3 data-i18n="about.processTwoHeading">Confirm the plan</h3>
+                            <p data-i18n="about.processTwoText">We discuss availability, the package, activities, access, travel, and any venue limitations.</p>
+                        </div>
+                    </div>
+                </li>
+                <li class="col-md-4">
+                    <div class="process-card card h-100">
+                        <div class="card-body">
+                            <span aria-hidden="true" class="process-number">3</span>
+                            <h3 data-i18n="about.processThreeHeading">Celebrate</h3>
+                            <p data-i18n="about.processThreeText">Our team arrives at the agreed location, prepares the experience, and coordinates the event plan.</p>
+                        </div>
+                    </div>
+                </li>
+            </ol>
+            {# The external Instagram promotion was removed so the hosted project does not direct visitors to the real company’s account. #}
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{# This template presents review code within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+{% block title %}Verify Party Code | P Kids Events{% endblock %}
+{% block meta_robots %}noindex,nofollow{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/reviews.css' %}">{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="review-page" aria-labelledby="review-code-heading">
+    <div class="container review-shell review-shell-narrow">
+        <header class="review-heading">
+            <p class="section-kicker">Verified feedback</p>
+            <h1 id="review-code-heading">Enter your party review code</h1>
+            <p>The code confirms which completed package and experiences you can rate. You must also be signed in to the account that made the booking.</p>
+        </header>
+        {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+        <form method="post" class="review-code-panel" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="review-alert error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="review-field">
+                <label for="{{ form.review_code.id_for_label }}">{{ form.review_code.label }}</label>
+                {{ form.review_code }}
+                <p id="{{ form.review_code.id_for_label }}_help" class="field-help">{{ form.review_code.help_text }}</p>
+                <div id="{{ form.review_code.id_for_label }}_error" class="field-errors" role="alert">{{ form.review_code.errors }}</div>
+            </div>
+            <button class="button" type="submit">Verify code</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

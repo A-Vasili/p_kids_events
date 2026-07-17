@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{# This template presents list within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+{% block title %}{% if current_category %}{{ current_category.name }} Party Ideas{% else %}Party Ideas{% endif %} | P Kids Events{% endblock %}
+{% block meta_description %}Browse, search and filter P Kids Events starting packages and party experiences, then make the celebration your own.{% endblock %}
+{% block page_name %}partyIdeas{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/party-ideas.css' %}">{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+<header class="party-ideas-hero" aria-labelledby="party-ideas-heading">
+    <div class="container narrow-content">
+        {% if current_category %}
+            {# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+            <nav aria-label="Breadcrumb" class="party-ideas-breadcrumbs">
+                <a href="{% url 'party_ideas:list' %}">Party Ideas</a>
+                {% if current_category.parent %}<a href="{% url 'party_ideas:category_detail' current_category.parent.slug %}">{{ current_category.parent.name }}</a>{% endif %}
+                <span aria-current="page">{{ current_category.name }}</span>
+            </nav>
+            {% if current_category.image %}
+                <img
+                    class="party-category-hero-image"
+                    src="{{ current_category.image.url }}"
+                    alt="{{ current_category.image_alt_text }}"
+                >
+            {% endif %}
+            <p class="section-kicker">Browse by category</p>
+            <h1 id="party-ideas-heading">{{ current_category.name }}</h1>
+            {% if current_category.description %}<p class="lead">{{ current_category.description }}</p>{% endif %}
+        {% else %}
+            <p class="section-kicker">Discover your starting point</p>
+            <h1 id="party-ideas-heading" data-i18n="partyIdeas.heading">Find your perfect party idea</h1>
+            <p class="lead" data-i18n="partyIdeas.lead">Browse for inspiration, then make it your own.</p>
+        {% endif %}
+    </div>
+</header>
+
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="party-ideas-section" aria-labelledby="party-ideas-results-heading">
+    <div class="container">
+        <nav class="party-idea-tabs" aria-label="Party idea types">
+            {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+            {% for tab in type_tabs %}
+                <a href="?{{ tab.query }}" class="party-idea-tab{% if tab.active %} active{% endif %}" {% if tab.active %}aria-current="page"{% endif %} data-i18n="{{ tab.translation_key }}">{{ tab.label }}</a>
+            {% endfor %}
+        </nav>
+
+        {% if not current_category %}
+            <section class="party-category-browser" aria-labelledby="category-browser-heading">
+                <div class="party-section-heading">
+                    <div><p class="section-kicker">Browse by interest</p><h2 id="category-browser-heading">Categories and subcategories</h2></div>
+                </div>
+                <div class="party-category-grid">
+                    {% for category in main_categories %}
+                        <article class="party-category-card">
+                            <a href="{% url 'party_ideas:category_detail' category.slug %}">
+                                {% if category.image %}<img src="{{ category.image.url }}" alt="{{ category.image_alt_text }}" loading="lazy">{% else %}<span class="party-category-placeholder" aria-hidden="true">✦</span>{% endif %}
+                                <h3>{{ category.name }}</h3>
+                                {% if category.description %}<p>{{ category.description|truncatechars:120 }}</p>{% endif %}
+                            </a>
+                            {% if category.active_children %}
+                                <ul aria-label="Subcategories in {{ category.name }}">
+                                    {% for child in category.active_children %}<li><a href="{% url 'party_ideas:category_detail' child.slug %}">{{ child.name }}</a></li>{% endfor %}
+                                </ul>
+                            {% endif %}
+                        </article>
+                    {% empty %}
+                        <p>Categories will appear here as soon as active ideas are organised in the management panel.</p>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {% if current_category_children %}
+            <section class="party-category-children" aria-labelledby="subcategory-heading">
+                <div class="party-section-heading">
+                    <p class="section-kicker">Narrow your choice</p>
+                    <h2 id="subcategory-heading">Explore subcategories</h2>
+                </div>
+                <div class="party-subcategory-links">
+                    {% for child in current_category_children %}
+                        <a href="{% url 'party_ideas:category_detail' child.slug %}">
+                            {{ child.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        <div class="party-ideas-layout">
+            <aside class="party-ideas-filters" aria-labelledby="advanced-filters-heading">
+                {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+                <form method="get" action="{% url 'party_ideas:list' %}" novalidate>
+                    <input type="hidden" name="type" value="{{ filters.type|default:'all' }}">
+                    <h2 id="advanced-filters-heading" data-i18n="partyIdeas.search">Search party ideas</h2>
+                    {% if filter_form.non_field_errors %}<div class="form-alert" role="alert">{{ filter_form.non_field_errors }}</div>{% endif %}
+                    <div class="filter-field">
+                        <label for="{{ filter_form.q.id_for_label }}">{{ filter_form.q.label }}</label>
+                        {{ filter_form.q }}
+                        {% if filter_form.q.errors %}<div id="id_q_error" class="field-errors" role="alert">{{ filter_form.q.errors }}</div>{% else %}<span id="id_q_error" class="visually-hidden"></span>{% endif %}
+                        <span id="id_q_help" class="visually-hidden">Search names, descriptions and categories.</span>
+                    </div>
+                    <details class="advanced-filter-details" open>
+                        <summary data-i18n="partyIdeas.advancedFilters">Advanced filters</summary>
+                        <fieldset class="advanced-filter-fields">
+                            <legend class="visually-hidden">Advanced catalogue filters</legend>
+                            <div class="filter-field"><label for="{{ filter_form.category.id_for_label }}">{{ filter_form.category.label }}</label>{{ filter_form.category }}<span id="id_category_help" class="visually-hidden">Choose a main category or subcategory.</span><div id="id_category_error" class="field-errors" role="alert">{{ filter_form.category.errors }}</div></div>
+                            <fieldset class="filter-price-row">
+                                <legend class="visually-hidden">Price range</legend>
+                                <div class="filter-field"><label for="{{ filter_form.min_price.id_for_label }}">{{ filter_form.min_price.label }}</label>{{ filter_form.min_price }}<span id="id_min_price_help" class="visually-hidden">Enter zero or a positive price.</span><div id="id_min_price_error" class="field-errors" role="alert">{{ filter_form.min_price.errors }}</div></div>
+                                <div class="filter-field"><label for="{{ filter_form.max_price.id_for_label }}">{{ filter_form.max_price.label }}</label>{{ filter_form.max_price }}<span id="id_max_price_help" class="visually-hidden">Must not be lower than the minimum.</span><div id="id_max_price_error" class="field-errors" role="alert">{{ filter_form.max_price.errors }}</div></div>
+                            </fieldset>
+                            <div class="filter-field"><label for="{{ filter_form.capacity.id_for_label }}">{{ filter_form.capacity.label }}</label>{{ filter_form.capacity }}<span id="id_capacity_help">{{ filter_form.capacity.help_text }}</span><div id="id_capacity_error" class="field-errors" role="alert">{{ filter_form.capacity.errors }}</div></div>
+                            <div class="filter-field"><label for="{{ filter_form.duration.id_for_label }}">{{ filter_form.duration.label }}</label>{{ filter_form.duration }}<span id="id_duration_help" class="visually-hidden"></span><div id="id_duration_error" class="field-errors" role="alert">{{ filter_form.duration.errors }}</div></div>
+                            <div class="filter-field"><label for="{{ filter_form.min_rating.id_for_label }}">{{ filter_form.min_rating.label }}</label>{{ filter_form.min_rating }}<span id="id_min_rating_help" class="visually-hidden"></span><div id="id_min_rating_error" class="field-errors" role="alert">{{ filter_form.min_rating.errors }}</div></div>
+                            <div class="filter-checkbox">{{ filter_form.featured }}<label for="{{ filter_form.featured.id_for_label }}">{{ filter_form.featured.label }}</label><span id="id_featured_help" class="visually-hidden">This returns experiences only.</span><div id="id_featured_error" class="field-errors" role="alert">{{ filter_form.featured.errors }}</div></div>
+                            <div class="filter-field"><label for="{{ filter_form.sort.id_for_label }}">{{ filter_form.sort.label }}</label>{{ filter_form.sort }}<span id="id_sort_help" class="visually-hidden"></span><div id="id_sort_error" class="field-errors" role="alert">{{ filter_form.sort.errors }}</div></div>
+                        </fieldset>
+                    </details>
+                    <div class="filter-actions"><button class="button" type="submit" data-i18n="partyIdeas.showIdeas">Show ideas</button><a class="button button-outline" href="{% if current_category %}{% url 'party_ideas:category_detail' current_category.slug %}{% else %}{% url 'party_ideas:list' %}{% endif %}" data-i18n="partyIdeas.clear">Clear filters</a></div>
+                </form>
+            </aside>
+
+            <div class="party-ideas-results">
+                <div class="party-results-header">
+                    <div><p class="section-kicker">Available ideas</p><h2 id="party-ideas-results-heading">{{ result_count }} result{{ result_count|pluralize }}</h2></div>
+                    <p class="party-results-status" role="status" aria-live="polite">Showing page {{ page_obj.number }} of {{ paginator.num_pages|default:1 }}</p>
+                </div>
+                {% if active_filters %}<ul class="active-filter-list" aria-label="Active filters">{% for item in active_filters %}<li><a href="?{{ item.remove_query }}">{{ item.label }} <span aria-hidden="true">×</span><span class="visually-hidden">Remove filter</span></a></li>{% endfor %}</ul>{% endif %}
+                <div class="party-idea-grid">
+                    {% for card in page_obj %}{% include "party_builder/party_ideas/includes/idea_card.html" with card=card %}{% empty %}<div class="party-ideas-empty"><h3>No ideas matched those choices</h3><p>Try a broader search, remove a filter, or start building directly.</p><a class="button" href="{% url 'party_builder:party_builder_package_options' %}">Make Your Own Party</a></div>{% endfor %}
+                </div>
+                {% if paginator.num_pages > 1 %}
+                    <nav class="party-pagination" aria-label="Party Ideas pages">
+                        {% if page_obj.has_previous %}<a rel="prev" href="?{% if base_query %}{{ base_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+                        <span aria-current="page">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+                        {% if page_obj.has_next %}<a rel="next" href="?{% if base_query %}{{ base_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+                    </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

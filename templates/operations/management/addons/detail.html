@@ -1,0 +1,19 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the detail screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div><p class="management-eyebrow">Add-on details</p><h2>{{ addon.name }}</h2><p>{{ addon.short_description }}</p></div>
+        <div class="management-quick-actions">{% if addon.is_active and addon.category.is_active %}{% if not addon.category.parent or addon.category.parent.is_active %}<a class="management-button secondary" href="{% url 'party_ideas:addon_detail' addon.slug %}">View on website</a>{% endif %}{% endif %}<a class="management-button" href="{% url 'management:management_addon_update' addon.pk %}">Edit add-on</a><a class="management-button danger" href="{% url 'management:management_addon_remove' addon.pk %}">Delete/Archive</a></div>
+    </div>
+    <section class="management-panel">
+        {# The management view mirrors the customer site: an uploaded replacement wins, then the bundled default is used. #}
+        {% if addon.has_custom_image %}<img class="management-detail-image" src="{{ addon.image.url }}" alt="{{ addon.display_image_alt_text }}">{% elif addon.default_static_image_path %}<img class="management-detail-image" src="{% static addon.default_static_image_path %}" alt="{{ addon.display_image_alt_text }}">{% endif %}
+        <dl class="management-definition-grid"><div><dt>Category</dt><dd>{{ addon.category|default:"Uncategorised" }}</dd></div><div><dt>Price</dt><dd>€{{ addon.price }}</dd></div><div><dt>Duration</dt><dd>{{ addon.duration_minutes }} minutes</dd></div><div><dt>Icon</dt><dd>{{ addon.icon }}</dd></div><div><dt>Featured</dt><dd>{{ addon.is_featured|yesno:"Yes,No" }}</dd></div><div><dt>Status</dt><dd>{{ addon.is_active|yesno:"Active,Archived" }}</dd></div><div><dt>Display order</dt><dd>{{ addon.display_order }}</dd></div><div><dt>Slug</dt><dd>{{ addon.slug }}</dd></div></dl>
+    </section>
+</section>
+{% endblock %}

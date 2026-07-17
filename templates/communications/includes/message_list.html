@@ -1,0 +1,28 @@
+{# This reusable chat template presents message list consistently in the floating panel and full-page conversation. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# Staff replies use the hosted brand name without revealing internal staff roles or changing message history. #}
+{% if thread_messages %}
+<ol class="popadoo-chat-thread" data-chat-thread aria-label="Message history" data-i18n-aria-label="chat.messageHistory">
+    {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+    {% for chat_message in thread_messages %}
+        <li class="popadoo-chat-message {% if chat_message.sender_role == 'customer' %}popadoo-chat-message-customer{% else %}popadoo-chat-message-staff{% endif %}">
+            <div class="popadoo-chat-message-meta">
+                <strong>
+                    {% if customer_view %}
+                        {% if chat_message.sender_role == 'customer' %}<span data-i18n="chat.you">You</span>{% else %}<span data-i18n="chat.team">P Kids Events Team</span>{% endif %}
+                    {% else %}
+                        {{ chat_message.sender_name }} · {{ chat_message.get_sender_role_display }}
+                    {% endif %}
+                </strong>
+                <time datetime="{{ chat_message.created_at|date:'c' }}">{{ chat_message.created_at|date:"d M Y H:i" }}</time>
+            </div>
+            <p>{{ chat_message.body }}</p>
+        </li>
+    {% endfor %}
+</ol>
+{% else %}
+<div class="popadoo-chat-empty" role="status">
+    <strong data-i18n="chat.noMessages">No messages yet</strong>
+    <p data-i18n="chat.startConversation">Start the conversation and the P Kids Events team will reply here.</p>
+</div>
+{% endif %}

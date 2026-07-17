@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{# This account template presents sign up for sign-in, registration, profile, or the customer dashboard. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+
+{% block title %}Create Account | P Kids Events{% endblock %}
+{% block meta_description %}Create a P Kids Events account to save your details and view your party bookings.{% endblock %}
+{% block page_name %}accountSignUp{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/accounts.css' %}">{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="account-page" aria-labelledby="sign-up-heading">
+    <div class="container account-shell">
+        {# This header introduces the page and gives visitors the main context before they continue. #}
+        <header class="account-heading">
+            <p class="section-kicker">A faster next booking</p>
+            <h1 id="sign-up-heading">Create your P Kids Events account</h1>
+            <p>Save your contact details and keep your party history in one secure place.</p>
+        </header>
+        {# This form sends the visitor’s choices to Django, where the information is checked again on the server. #}
+        {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+        <form method="post" class="account-card" novalidate>
+            {% csrf_token %}
+                        {% if form.non_field_errors %}<div class="form-alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="account-form-grid">
+                                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                                {% for field in form %}{% include "accounts/form_field.html" with field=field %}{% endfor %}
+            </div>
+            <button class="button" type="submit">Create account</button>
+            <p class="account-switch">Already registered? <a href="{% url 'accounts:accounts_sign_in' %}">Sign in</a>.</p>
+        </form>
+    </div>
+</section>
+{% endblock %}

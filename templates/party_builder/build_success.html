@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{# This template presents build success within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+{# This template confirms that the simulated checkout was completed and summarizes the booking. #}
+
+{% block title %}Simulated Purchase Complete | P Kids Events{% endblock %}
+{% block meta_description %}Your customised P Kids Events party request and simulated checkout have been completed.{% endblock %}
+{% block meta_robots %}noindex,nofollow{% endblock %}
+{% block page_name %}partyBuilderSuccess{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/party-builder.css' %}">
+{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+        {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+        <section class="checkout-success" aria-labelledby="success-heading">
+        <div class="container narrow-content">
+            <p class="success-icon" aria-hidden="true">✓</p>
+            <p class="section-kicker">Simulation completed</p>
+            <h1 id="success-heading">Your party request has been saved</h1>
+            <p class="lead">
+                Thank you, {{ party_build.contact_name }}. No money was charged.
+                P Kids Events can now review the date, location, and final availability with you.
+            </p>
+
+            {# This article represents one self-contained item that can be understood on its own. #}
+            <article class="saved-build-card" aria-labelledby="saved-order-heading">
+                {# This header introduces the page and gives visitors the main context before they continue. #}
+                <header>
+                    <h2 id="saved-order-heading">{{ party_build.package.name }}</h2>
+                    <p>Reference: <strong>{{ party_build.public_id }}</strong></p>
+                </header>
+
+                <dl class="saved-build-details">
+                    <div><dt>Package capacity</dt><dd>{{ party_build.party_size_display }}</dd></div>
+                    <div><dt>Preferred date</dt><dd>{{ party_build.event_date|date:"j F Y" }}</dd></div>
+                    <div><dt>Preferred time</dt><dd>{{ party_build.event_time|time:"H:i"|default:"To be confirmed" }}</dd></div>
+                    <div><dt>Contact email</dt><dd>{{ party_build.contact_email }}</dd></div>
+                    <div><dt>Contact phone</dt><dd>{{ party_build.contact_phone }}</dd></div>
+                    <div class="review-detail-wide"><dt>Venue</dt><dd>{{ party_build.event_address }}, {{ party_build.postal_code }}</dd></div>
+                </dl>
+
+                                <section aria-labelledby="saved-addons-heading">
+                    <h3 id="saved-addons-heading">Optional experiences</h3>
+                    <ul class="saved-addon-list">
+                                                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                                                {% for item in party_build.addon_items.all %}
+                            <li><span>{{ item.addon.name }}</span><strong>€{{ item.unit_price|floatformat:2 }}</strong></li>
+                        {% empty %}
+                            <li>No optional experiences selected.</li>
+                        {% endfor %}
+                    </ul>
+                </section>
+
+                <dl class="saved-price-breakdown">
+                    <div><dt>Package and guest bracket</dt><dd>€{{ party_build.package_price|floatformat:2 }}</dd></div>
+                    <div><dt>Add-ons</dt><dd>€{{ party_build.addon_price|floatformat:2 }}</dd></div>
+                    <div class="saved-price-total"><dt>Simulated total</dt><dd>€{{ party_build.total_price|floatformat:2 }}</dd></div>
+                </dl>
+
+                {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+                {% if request.user.is_authenticated and party_build.customer_id == request.user.id %}
+                    <aside class="review-code-panel" role="note" aria-labelledby="review-code-success-heading">
+                        <h3 id="review-code-success-heading">Your private party review code</h3>
+                        <p><strong>{{ party_build.review_code }}</strong></p>
+                        <p>Keep this code with your booking. Feedback becomes available after an owner marks the party completed.</p>
+                    </aside>
+                {% endif %}
+
+                <div class="simulated-payment-result" role="note">
+                    <strong>Payment simulation:</strong>
+                    {{ party_build.card_brand }} ending {{ party_build.card_last_four }} —
+                    reference {{ party_build.payment_reference }}. No financial transaction took place.
+                </div>
+            </article>
+
+            {% if request.user.is_authenticated %}
+                {# This supporting area summarizes useful information without interrupting the main task. #}
+                <aside class="guest-account-invitation" aria-labelledby="saved-account-heading">
+                    <h2 id="saved-account-heading">This booking is saved to your account</h2>
+                    <p>You can follow its assignment status from your personal dashboard.</p>
+                    <a class="button button-outline" href="{% url 'accounts:accounts_customer_dashboard' %}">View my bookings</a>
+                </aside>
+            {% else %}
+                {# This supporting area summarizes useful information without interrupting the main task. #}
+                <aside class="guest-account-invitation" aria-labelledby="create-account-heading">
+                    <h2 id="create-account-heading">Make your next booking faster</h2>
+                    <p>Create an optional account to save contact details and keep future booking history.</p>
+                    <a class="button button-outline" href="{% url 'accounts:accounts_sign_up' %}">Create an account</a>
+                </aside>
+            {% endif %}
+
+            {# This navigation groups related links so users can move through this part of the website. #}
+            {# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+            <nav class="success-actions" aria-label="Completed checkout actions">
+                <a class="button" href="{% url 'party_builder:party_builder_package_options' %}">Plan another party</a>
+                <a class="button button-outline" href="{% url 'core:core_home' %}">Return home</a>
+            </nav>
+        </div>
+    </section>
+{% endblock %}

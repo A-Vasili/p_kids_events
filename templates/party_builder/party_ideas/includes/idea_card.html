@@ -1,0 +1,116 @@
+{# This template presents idea card within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+<article class="party-idea-card">
+    <div class="party-idea-card-media">
+        {# Uploaded catalogue images take priority, while the original seeded items fall back to their bundled artwork. #}
+        {% if card.object.has_custom_image %}
+            <img
+                src="{{ card.object.image.url }}"
+                alt="{{ card.object.display_image_alt_text }}"
+                loading="lazy"
+            >
+        {% elif card.object.default_static_image_path %}
+            <img
+                src="{% static card.object.default_static_image_path %}"
+                alt="{{ card.object.display_image_alt_text }}"
+                loading="lazy"
+            >
+        {% else %}
+            <span class="party-idea-placeholder" aria-hidden="true">
+                {{ card.object.icon|default:"✦" }}
+            </span>
+        {% endif %}
+
+        {% if card.kind == "package" %}
+            <span class="party-idea-type" data-i18n="partyIdeas.startingPackages">
+                Starting package
+            </span>
+        {% else %}
+            <span class="party-idea-type" data-i18n="partyIdeas.experiences">
+                Experience
+            </span>
+        {% endif %}
+    </div>
+
+    <div class="party-idea-card-body">
+        {% if card.category %}
+            <a
+                class="party-idea-category"
+                href="{% url 'party_ideas:category_detail' card.category.slug %}"
+            >
+                {{ card.category }}
+            </a>
+        {% endif %}
+
+        <h2 class="party-idea-card-title">
+            {% if card.kind == "package" %}
+                <a href="{% url 'party_ideas:package_detail' card.object.slug %}">
+                    {{ card.name }}
+                </a>
+            {% else %}
+                <a href="{% url 'party_ideas:addon_detail' card.object.slug %}">
+                    {{ card.name }}
+                </a>
+            {% endif %}
+        </h2>
+
+        <p>{{ card.description }}</p>
+
+        <div class="party-idea-meta">
+            <strong>
+                {% if card.kind == "experience" %}+{% endif %}€{{ card.price|floatformat:2 }}
+            </strong>
+            <span>{{ card.duration_minutes }} minutes</span>
+            {% if card.kind == "package" %}
+                <span data-i18n-template="builder.upToChildren" data-i18n-value-count="{{ card.object.included_guest_count }}">Up to {{ card.object.included_guest_count }} children</span>
+            {% endif %}
+        </div>
+
+        <p
+            class="party-idea-rating"
+            aria-label="{% if card.rating_count %}Average rating {{ card.average_rating|floatformat:1 }} out of 5 from {{ card.rating_count }} verified parties{% else %}No ratings yet{% endif %}"
+        >
+            {% if card.rating_count %}
+                <span aria-hidden="true">★</span>
+                {{ card.average_rating|floatformat:1 }} ·
+                {{ card.rating_count }} verified part{{ card.rating_count|pluralize:"y,ies" }}
+            {% else %}
+                <span data-i18n="partyIdeas.noRatings">No ratings yet</span>
+            {% endif %}
+        </p>
+
+        <div class="party-idea-actions">
+            {% if card.kind == "package" %}
+                <a
+                    class="button button-outline"
+                    href="{% url 'party_ideas:package_detail' card.object.slug %}"
+                    data-i18n="partyIdeas.details"
+                >
+                    View details
+                </a>
+                {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+                <form method="post" action="{% url 'party_ideas:start_package' card.object.slug %}">
+                    {% csrf_token %}
+                    <button class="button" type="submit" data-i18n="partyIdeas.start">
+                        Start with this
+                    </button>
+                </form>
+            {% else %}
+                <a
+                    class="button button-outline"
+                    href="{% url 'party_ideas:addon_detail' card.object.slug %}"
+                    data-i18n="partyIdeas.details"
+                >
+                    View details
+                </a>
+                <form method="post" action="{% url 'party_ideas:add_addon' card.object.slug %}">
+                    {% csrf_token %}
+                    <button class="button" type="submit" data-i18n="partyIdeas.add">
+                        Add to my party
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</article>

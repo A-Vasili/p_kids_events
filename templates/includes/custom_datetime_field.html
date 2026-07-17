@@ -1,0 +1,95 @@
+{# This reusable template presents custom datetime field wherever the shared site layout includes it. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% comment %}
+Reusable date-and-time control for worker availability.
+  The two custom controls combine their values into the single hidden
+  DateTimeField expected by Django.
+{% endcomment %}
+<div class="form-field custom-field custom-datetime-field" data-custom-datetime>
+    <span class="form-label" id="{{ field.id_for_label }}_label">
+        {{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}
+    </span>
+
+    {{ field }}
+
+    <div class="custom-datetime-layout">
+        <div
+            class="custom-date-picker custom-subcontrol"
+            data-date-picker
+            data-placeholder="Choose a date"
+        >
+            <input type="hidden" id="{{ field.id_for_label }}_date" data-datetime-date>
+            <span class="custom-subcontrol-label" id="{{ field.id_for_label }}_date_label">Date</span>
+            <div
+                class="custom-control-trigger"
+                role="combobox"
+                tabindex="0"
+                aria-expanded="false"
+                aria-haspopup="dialog"
+                aria-controls="{{ field.id_for_label }}_date_calendar"
+                aria-labelledby="{{ field.id_for_label }}_date_label {{ field.id_for_label }}_date_display"
+                data-date-trigger
+            >
+                <span id="{{ field.id_for_label }}_date_display" data-date-display>Choose a date</span>
+                <span class="custom-calendar-icon" aria-hidden="true"></span>
+            </div>
+            <div
+                class="custom-control-popover custom-date-popover"
+                id="{{ field.id_for_label }}_date_calendar"
+                role="dialog"
+                aria-modal="false"
+                aria-labelledby="{{ field.id_for_label }}_date_month_label"
+                hidden
+                data-date-panel
+            >
+                <div class="custom-date-header">
+                    <div class="custom-icon-action" role="button" tabindex="0" aria-label="Previous month" data-date-previous><span aria-hidden="true">‹</span></div>
+                    <strong id="{{ field.id_for_label }}_date_month_label" data-date-month-label></strong>
+                    <div class="custom-icon-action" role="button" tabindex="0" aria-label="Next month" data-date-next><span aria-hidden="true">›</span></div>
+                </div>
+                <div class="custom-date-weekdays" aria-hidden="true" data-date-weekdays></div>
+                <div class="custom-date-grid" role="grid" aria-labelledby="{{ field.id_for_label }}_date_month_label" data-date-grid></div>
+            </div>
+        </div>
+
+        <div
+            class="custom-time-picker custom-subcontrol"
+            data-time-picker
+            data-time-start="08:00"
+            data-time-end="23:30"
+            data-time-step="30"
+            data-time-optional="false"
+            data-placeholder="Choose a time"
+        >
+            <input type="hidden" id="{{ field.id_for_label }}_time" data-datetime-time>
+            <span class="custom-subcontrol-label" id="{{ field.id_for_label }}_time_label">Time</span>
+            <div
+                class="custom-control-trigger"
+                role="combobox"
+                tabindex="0"
+                aria-expanded="false"
+                aria-haspopup="listbox"
+                aria-controls="{{ field.id_for_label }}_time_options"
+                aria-labelledby="{{ field.id_for_label }}_time_label {{ field.id_for_label }}_time_display"
+                data-time-trigger
+            >
+                <span id="{{ field.id_for_label }}_time_display" data-time-display>Choose a time</span>
+                <span class="custom-clock-icon" aria-hidden="true"></span>
+            </div>
+            <div
+                class="custom-control-popover custom-time-options"
+                id="{{ field.id_for_label }}_time_options"
+                role="listbox"
+                aria-labelledby="{{ field.id_for_label }}_time_label"
+                hidden
+                data-time-options
+            ></div>
+        </div>
+    </div>
+
+    <p class="form-help" id="{{ field.id_for_label }}_help">{{ field.help_text }}</p>
+    <div class="form-error" id="{{ field.id_for_label }}_error" aria-live="polite">
+        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+        {% for error in field.errors %}<p role="alert">{{ error }}</p>{% endfor %}
+    </div>
+</div>

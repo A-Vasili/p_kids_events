@@ -1,0 +1,26 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the chat screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/chat.css' %}?v=1">{% endblock %}
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section support-management-chat">
+    <div class="management-page-header">
+        <div>
+            <p class="management-eyebrow">Customer conversation</p>
+            <h2>{{ chat.customer.get_full_name|default:chat.customer.username }}</h2>
+            <p>{{ chat.customer.email|default:"No email supplied" }} · {{ chat.get_status_display }}</p>
+        </div>
+        <a class="management-button secondary" href="{% url 'communications:management_inbox' %}">Back to messages</a>
+    </div>
+
+    <div class="management-panel support-management-thread">
+        {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+        {% include "communications/includes/message_list.html" with customer_view=False %}
+        {% url 'communications:management_reply' chat.public_id as management_reply_url %}
+        {% include "communications/includes/message_form.html" with form_action=management_reply_url %}
+    </div>
+</section>
+{% endblock %}

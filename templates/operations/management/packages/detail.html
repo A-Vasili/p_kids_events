@@ -1,0 +1,28 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the detail screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div><p class="management-eyebrow">Package details</p><h2>{{ package.name }}</h2><p>{{ package.short_description }}</p></div>
+        <div class="management-quick-actions">{% if package.is_active and package.category.is_active %}{% if not package.category.parent or package.category.parent.is_active %}<a class="management-button secondary" href="{% url 'party_ideas:package_detail' package.slug %}">View on website</a>{% endif %}{% endif %}<a class="management-button" href="{% url 'management:management_package_update' package.pk %}">Edit package</a><a class="management-button danger" href="{% url 'management:management_package_remove' package.pk %}">Delete/Archive</a></div>
+    </div>
+    <div class="management-detail-grid">
+        <section class="management-panel">
+            {# The management view mirrors the customer site: an uploaded replacement wins, then the bundled default is used. #}
+            {% if package.has_custom_image %}<img class="management-detail-image" src="{{ package.image.url }}" alt="{{ package.display_image_alt_text }}">{% elif package.default_static_image_path %}<img class="management-detail-image" src="{% static package.default_static_image_path %}" alt="{{ package.display_image_alt_text }}">{% endif %}
+            <dl class="management-definition-grid">
+                <div><dt>Category</dt><dd>{{ package.category|default:"Uncategorised" }}</dd></div><div><dt>Fixed package price</dt><dd>€{{ package.base_price }}</dd></div><div><dt>Duration</dt><dd>{{ package.duration_minutes }} minutes</dd></div><div><dt>Package capacity</dt><dd>Up to {{ package.included_guest_count }} children</dd></div><div><dt>Status</dt><dd>{% if package.is_active %}Active{% else %}Archived{% endif %}</dd></div><div><dt>Default</dt><dd>{{ package.is_default|yesno:"Yes,No" }}</dd></div><div><dt>Display order</dt><dd>{{ package.display_order }}</dd></div><div><dt>Slug</dt><dd>{{ package.slug }}</dd></div>
+            </dl>
+            <h3>Included experiences</h3><ul>{% for item in package.included_experiences_list %}<li>{{ item }}</li>{% empty %}<li>No included experiences listed.</li>{% endfor %}</ul>
+        </section>
+        <section class="management-panel management-panel-wide">
+            <h3>Historical pricing compatibility</h3>
+            <p>Older bookings may still reference guest-price tiers. Those records are kept read-only so historical totals remain accurate, while all new bookings use this package’s fixed price and capacity.</p>
+        </section>
+    </div>
+</section>
+{% endblock %}

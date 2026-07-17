@@ -1,0 +1,33 @@
+{# This account template presents form field for sign-in, registration, profile, or the customer dashboard. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% comment %}
+This reusable field layout keeps labels, controls, help text, and errors aligned.
+Checkboxes use a horizontal layout because their label describes the control
+beside it rather than a text box below it.
+{% endcomment %}
+<div class="form-field form-field--{{ field.name }}{% if field.field.widget.input_type == 'checkbox' %} form-field--checkbox{% endif %}{% if field.errors %} has-error{% endif %}">
+    {% if field.field.widget.input_type == "checkbox" %}
+        <div class="form-check-row">
+            {{ field }}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        </div>
+    {% else %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+    {% endif %}
+
+    {% if field.help_text %}
+        <div class="form-help" id="{{ field.id_for_label }}_help">
+            {{ field.help_text }}
+        </div>
+    {% else %}
+        <span id="{{ field.id_for_label }}_help"></span>
+    {% endif %}
+
+    <div class="form-error" id="{{ field.id_for_label }}_error" role="alert">
+        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+        {% for error in field.errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+</div>

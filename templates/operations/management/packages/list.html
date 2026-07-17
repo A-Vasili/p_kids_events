@@ -1,0 +1,45 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the list screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load static %}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    {% url 'management:management_package_create' as page_action_url %}
+    {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+    {% include "operations/management/includes/page_header.html" with eyebrow="Catalogue" title="Party packages" description="Manage the packages customers can select during checkout." action_url=page_action_url action_label="Create package" only %}
+
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form class="management-filter-toolbar" method="get" role="search">
+        <label><span>Search</span><input class="form-control" type="search" name="q" value="{{ request.GET.q }}" placeholder="Name, slug, or description"></label>
+        <label><span>Category</span><select class="form-select" name="category"><option value="">All</option>{% for category in category_options %}<option value="{{ category.pk }}" {% if request.GET.category == category.pk|stringformat:'s' %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></label>
+        <label><span>Status</span><select class="form-select" name="status"><option value="">All</option><option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option><option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option></select></label>
+        <label><span>Default</span><select class="form-select" name="default"><option value="">All</option><option value="yes" {% if request.GET.default == 'yes' %}selected{% endif %}>Default only</option><option value="no" {% if request.GET.default == 'no' %}selected{% endif %}>Non-default</option></select></label>
+        <label><span>Sort</span><select class="form-select" name="ordering"><option value="order">Display order</option><option value="name" {% if request.GET.ordering == 'name' %}selected{% endif %}>Name A–Z</option><option value="-name" {% if request.GET.ordering == '-name' %}selected{% endif %}>Name Z–A</option><option value="price" {% if request.GET.ordering == 'price' %}selected{% endif %}>Price low–high</option><option value="-price" {% if request.GET.ordering == '-price' %}selected{% endif %}>Price high–low</option></select></label>
+        <button class="management-button" type="submit">Apply</button><a class="management-button secondary" href="{% url 'management:management_package_list' %}">Clear</a>
+    </form>
+
+    {% if packages %}
+        <div class="management-result-summary">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</div>
+        <div class="management-table-wrap"><table class="management-table"><caption class="visually-hidden">Party packages</caption><thead><tr><th>Package</th><th>Category</th><th>Fixed price</th><th>Capacity</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+        {% for package in packages %}
+            <tr>
+                {# Table thumbnails use the same upload-first fallback without repeating the package name to screen readers. #}
+                <td data-label="Package"><div class="management-record-cell">{% if package.has_custom_image %}<img src="{{ package.image.url }}" alt="" width="54" height="54">{% elif package.default_static_image_path %}<img src="{% static package.default_static_image_path %}" alt="" width="54" height="54">{% else %}<span class="management-thumbnail-placeholder" aria-hidden="true">★</span>{% endif %}<span><a href="{% url 'management:management_package_detail' package.pk %}"><strong>{{ package.name }}</strong></a><small>{{ package.slug }} {% if package.is_default %}· Default{% endif %}</small></span></div></td>
+                <td data-label="Category">{{ package.category|default:"Uncategorised" }}</td>
+                <td data-label="Fixed price">€{{ package.base_price }}</td>
+                <td data-label="Capacity">Up to {{ package.included_guest_count }} children</td>
+                <td data-label="Duration">{{ package.duration_minutes }} min</td>
+                <td data-label="Status">{% if package.is_active %}{% include "operations/management/includes/status_badge.html" with value="active" label="Active" %}{% else %}{% include "operations/management/includes/status_badge.html" with value="inactive" label="Archived" %}{% endif %}</td>
+                <td data-label="Actions"><div class="management-row-actions"><a href="{% url 'management:management_package_update' package.pk %}">Edit</a><a class="danger-link" href="{% url 'management:management_package_remove' package.pk %}">Delete/Archive</a></div></td>
+            </tr>
+        {% endfor %}
+        </tbody></table></div>
+        {% include "operations/management/includes/pagination.html" %}
+    {% else %}
+        {% url 'management:management_package_create' as create_url %}{% include "operations/management/includes/empty_state.html" with empty_title="No packages found" empty_message="Create a package or clear the current filters." empty_action_url=create_url empty_action_label="Create package" %}
+    {% endif %}
+</section>
+{% endblock %}

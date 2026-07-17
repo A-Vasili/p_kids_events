@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{# This worker template presents dashboard for active staff using the operations area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+{% block title %}Staff portal | P Kids Events{% endblock %}
+{% block meta_robots %}noindex,nofollow{% endblock %}
+{% block page_name %}operationsDashboard{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/operations.css' %}">
+{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="operations-page" aria-labelledby="operations-heading">
+    <div class="container">
+        <header class="operations-heading">
+            <p class="section-kicker">Private staff area</p>
+            <h1 id="operations-heading">Staff portal</h1>
+            <p>Respond to party offers and maintain your availability.</p>
+        </header>
+
+        {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+        {% include "operations/includes/nav.html" %}
+
+        <div class="operations-stats" aria-label="Assignment summary">
+            <article>
+                <strong>{{ pending_assignments|length }}</strong>
+                <span>Awaiting response</span>
+            </article>
+            <article>
+                <strong>{{ upcoming_assignments|length }}</strong>
+                <span>Upcoming confirmed</span>
+            </article>
+        </div>
+
+        <section class="operations-panel" aria-labelledby="pending-heading">
+            <h2 id="pending-heading">Pending assignment offers</h2>
+            <div class="operations-list">
+                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                {% for assignment in pending_assignments %}
+                    <article class="operations-row">
+                        <div>
+                            <strong>{{ assignment.party_build.contact_name }}</strong>
+                            <span>{{ assignment.party_build.event_date|date:"j M Y" }}</span>
+                        </div>
+                        <a href="{% url 'operations:operations_worker_assignment_detail' assignment.pk %}">
+                            View details
+                        </a>
+                    </article>
+                {% empty %}
+                    <p>No pending offers.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</section>
+{% endblock %}

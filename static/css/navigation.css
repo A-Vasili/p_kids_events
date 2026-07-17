@@ -1,0 +1,513 @@
+/*
+ * This stylesheet controls the shared public header, account menu, language and theme controls, and responsive primary navigation.
+ * Its rules are grouped around page components, responsive layouts, theme support, and visible keyboard focus.
+ * The comments explain those relationships without changing selectors, spacing, colours, or behaviour.
+ */
+/* Shared public header, utility stripe, and account navigation. */
+
+/*
+ * This stylesheet presents the signed-in profile menu in the shared header.
+ * The comments explain visual sections without changing the styles applied by the browser.
+ */
+.account-link {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* These rules present content that opens, closes, or appears above the main page. */
+.account-menu {
+    position: relative;
+}
+
+/* These rules make this action look and behave like an interactive control. */
+.account-menu-button {
+    width: 2.65rem;
+    height: 2.65rem;
+    border: 0;
+    border-radius: 50%;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+}
+
+/* These rules style this group of related page elements. */
+.account-avatar {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #f3c4dd, #c9dafb);
+    color: #302035;
+    font-weight: 800;
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+/*
+ * These focus styles make keyboard position visible without relying on hover or colour alone.
+ */
+.account-menu-button:focus-visible {
+    outline: .2rem solid #7b2869;
+    outline-offset: .2rem;
+}
+
+/* These rules present each item as a clear, reusable content card. */
+/*
+ * This section shapes the chat panel and keeps its header, history, and composer usable within the available screen height.
+ */
+.account-menu-panel {
+    position: absolute;
+    z-index: 40;
+    right: 0;
+    top: calc(100% + .6rem);
+    min-width: 220px;
+    padding: .6rem;
+    border: 1px solid var(--border-color, #ded7e3);
+    border-radius: .9rem;
+    background: var(--surface, #fff);
+    box-shadow: 0 1rem 2.5rem rgba(30,15,40,.18);
+}
+
+/* These rules make this action look and behave like an interactive control. */
+.account-menu-panel a, .account-menu-panel button {
+    display: block;
+    width: 100%;
+    padding: .65rem .75rem;
+    border: 0;
+    border-radius: .6rem;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* These rules make keyboard focus visible so controls are easier to use without a mouse. */
+.account-menu-panel a:hover, .account-menu-panel button:hover, .account-menu-panel a:focus-visible, .account-menu-panel button:focus-visible {
+    background: #f4edf6;
+}
+
+/* These rules present content that opens, closes, or appears above the main page. */
+.account-menu-name {
+    margin: 0;
+    padding: .55rem .75rem;
+    font-weight: 800;
+    border-bottom: 1px solid var(--border-color, #ded7e3);
+}
+
+/* These rules make status and validation messages easy to notice and understand. */
+.site-messages {
+    padding-top: .75rem;
+}
+
+/* These rules make status and validation messages easy to notice and understand. */
+.site-message {
+    max-width: 1120px;
+    margin: 0 auto .5rem;
+    padding: .8rem 1rem;
+    border-radius: .7rem;
+    background: #e7f4ec;
+    color: #174f30;
+}
+
+/* These rules make status and validation messages easy to notice and understand. */
+.site-message.error {
+    background: #fde5e8;
+    color: #821b2d;
+}
+
+/* The following rules adjust the layout for this screen size. */
+/*
+ * This responsive section rearranges the component for narrower or wider screens without removing important actions.
+ */
+@media (max-width: 72rem) {
+    .account-menu-panel {
+        position: static;
+        margin-top: .5rem;
+    }
+
+}
+
+/* Keep guest account links grouped and keep the signed-in bubble after the party-builder action. */
+.account-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.account-menu {
+    flex: 0 0 auto;
+    order: 20;
+}
+
+.book-now-button {
+    order: 10;
+}
+
+.account-actions {
+    order: 20;
+}
+
+html[data-theme="dark"] .account-menu-panel a:hover,
+html[data-theme="dark"] .account-menu-panel button:hover,
+html[data-theme="dark"] .account-menu-panel a:focus-visible,
+/*
+ * These rules adapt the same components for dark mode while preserving readable contrast and familiar structure.
+ */
+html[data-theme="dark"] .account-menu-panel button:focus-visible {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-strong);
+}
+
+@media (max-width: 72rem) {
+    .account-actions {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/*
+ * Utility stripe and account selector
+ *
+ * This file is intentionally separate from the main stylesheet so the upper
+ * stripe can be redesigned or removed without affecting the rest of the site.
+ */
+
+.header-main-row {
+    background: var(--header-background);
+    backdrop-filter: blur(0.85rem);
+}
+
+.header-utility-stripe {
+    color: #fff;
+    background: linear-gradient(90deg, #4f276f 0%, #6f3d8d 52%, #43225e 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+html[data-theme="dark"] .header-utility-stripe {
+    background: linear-gradient(90deg, #1d1125 0%, #2c1937 52%, #170d1e 100%);
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.header-utility-inner {
+    min-height: 2.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.header-utility-message {
+    margin: 0;
+    color: inherit;
+    font-size: 0.82rem;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    opacity: 0.9;
+}
+
+.header-utility-controls {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.header-utility-separator {
+    width: 1px;
+    height: 1.35rem;
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.header-utility-language,
+.header-account-selector {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+/* Restyle the existing custom language component for the darker stripe. */
+.header-utility-language .custom-control-trigger {
+    min-width: 7.8rem;
+    min-height: 2.15rem;
+    padding: 0.35rem 0.68rem;
+    border-color: rgba(255, 255, 255, 0.26);
+    border-radius: 0.6rem;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    box-shadow: none;
+    font-size: 0.84rem;
+}
+
+.header-utility-language .custom-control-trigger:hover,
+.header-utility-language .custom-control-trigger[aria-expanded="true"] {
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.15);
+    transform: none;
+}
+
+.header-utility-language .custom-control-trigger:focus-visible {
+    border-color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.24);
+}
+
+.header-utility-language .custom-control-popover {
+    left: auto;
+    right: 0;
+    min-width: 10rem;
+}
+
+.header-account-trigger {
+    min-height: 2.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    border-radius: 0.6rem;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.header-account-trigger:hover,
+.header-account-trigger[aria-expanded="true"] {
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.header-account-trigger:focus-visible {
+    outline: 0.2rem solid rgba(255, 255, 255, 0.95);
+    outline-offset: 0.15rem;
+}
+
+.header-account-avatar {
+    width: 1.55rem;
+    height: 1.55rem;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f7d575, #f0b6d5);
+    color: #33203a;
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.header-account-icon {
+    position: relative;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 0.12rem solid currentColor;
+    border-radius: 50%;
+}
+
+.header-account-icon::after {
+    content: "";
+    position: absolute;
+    width: 1.15rem;
+    height: 0.58rem;
+    left: 50%;
+    top: 0.78rem;
+    border: 0.12rem solid currentColor;
+    border-bottom: 0;
+    border-radius: 999px 999px 0 0;
+    transform: translateX(-50%);
+}
+
+.header-account-chevron {
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-left: 0.1rem;
+    border-right: 0.1rem solid currentColor;
+    border-bottom: 0.1rem solid currentColor;
+    transform: rotate(45deg) translateY(-0.12rem);
+    transition: transform 160ms ease;
+}
+
+.header-account-trigger[aria-expanded="true"] .header-account-chevron {
+    transform: rotate(225deg) translate(-0.08rem, -0.08rem);
+}
+
+/* The menu remains attached to the stripe on desktop and mobile. */
+.header-account-selector .account-menu-panel {
+    position: absolute;
+    top: calc(100% + 0.55rem);
+    right: 0;
+    z-index: 90;
+    width: max-content;
+    min-width: 15rem;
+    max-width: min(21rem, calc(100vw - 1rem));
+    margin: 0;
+    padding: 0.5rem;
+    color: var(--color-text);
+    background: var(--color-surface-raised);
+    border-color: var(--color-border);
+}
+
+.header-account-identity {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.65rem 0.75rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.header-account-identity span,
+.header-account-action span {
+    color: var(--color-muted);
+    font-size: 0.78rem;
+}
+
+.header-account-action {
+    display: grid !important;
+    gap: 0.15rem;
+}
+
+/*
+ * This section keeps labels, fields, help text, errors, and actions visually connected so forms remain understandable.
+ */
+.header-account-signout-form {
+    margin: 0.35rem 0 0;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.header-account-signout-form button {
+    color: #a42749;
+    font-weight: 800;
+}
+
+html[data-theme="dark"] .header-account-signout-form button {
+    color: #ff9ab4;
+}
+
+/* The lower row uses the existing navigation layout and tokens. */
+/*
+ * This section arranges the shared navigation controls and adapts them when the available width changes.
+ */
+.header-main-row .site-navigation {
+    min-height: 4.9rem;
+}
+
+.header-main-row .site-controls {
+    gap: 0.65rem;
+}
+
+@media (max-width: 72rem) {
+    .header-main-row .site-navigation-menu {
+        top: calc(100% + 0.65rem);
+    }
+
+    .header-main-row .site-controls {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+    }
+
+    .header-main-row .book-now-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 48rem) {
+    .header-utility-message {
+        display: none;
+    }
+
+    .header-utility-inner {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 34rem) {
+    .header-utility-inner {
+        min-height: 3.1rem;
+    }
+
+    .header-utility-controls {
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.45rem;
+    }
+
+    .header-utility-language,
+    .header-account-selector {
+        min-width: 0;
+    }
+
+    .header-utility-language .custom-control-trigger {
+        min-width: 0;
+        width: auto;
+    }
+
+    .header-account-label {
+        max-width: 8.8rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .header-account-selector .account-menu-panel,
+    .header-utility-language .custom-control-popover {
+        max-width: calc(100vw - 1rem);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .header-account-chevron,
+    .header-account-trigger {
+        transition: none;
+    }
+}
+
+/* Header-specific language colours load after the generic custom-control CSS.
+ * This avoids the light theme combining a pale trigger with pale text. */
+html[data-theme="light"] .header-utility-language .custom-control-trigger,
+html[data-theme="dark"] .header-utility-language .custom-control-trigger {
+    color: #ffffff;
+    background: #56306d;
+    border-color: rgba(255, 255, 255, 0.62);
+}
+
+html[data-theme="light"] .header-utility-language .custom-control-trigger:hover,
+html[data-theme="light"] .header-utility-language .custom-control-trigger[aria-expanded="true"],
+html[data-theme="dark"] .header-utility-language .custom-control-trigger:hover,
+html[data-theme="dark"] .header-utility-language .custom-control-trigger[aria-expanded="true"] {
+    color: #ffffff;
+    background: #6d3b89;
+    border-color: #ffffff;
+}
+
+.header-utility-language .custom-control-chevron {
+    color: currentColor;
+}
+
+html[data-theme="light"] .header-utility-language .custom-control-popover {
+    color: #2d1838;
+    background: #ffffff;
+    border-color: #bba9c3;
+}
+
+html[data-theme="dark"] .header-utility-language .custom-control-popover {
+    color: #fffaff;
+    background: #24182c;
+    border-color: #6f5b79;
+}
+
+html[data-theme="light"] .header-utility-language .custom-select-option:hover,
+html[data-theme="light"] .header-utility-language .custom-select-option:focus-visible,
+html[data-theme="light"] .header-utility-language .custom-select-option[aria-selected="true"] {
+    color: #351744;
+    background: #ead9f2;
+}
+
+html[data-theme="dark"] .header-utility-language .custom-select-option:hover,
+html[data-theme="dark"] .header-utility-language .custom-select-option:focus-visible,
+html[data-theme="dark"] .header-utility-language .custom-select-option[aria-selected="true"] {
+    color: #1b1021;
+    background: #d6b4eb;
+}

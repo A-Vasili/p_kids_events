@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{# This template presents checkout within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+
+{% block title %}Simulated Checkout | P Kids Events{% endblock %}
+{% block meta_description %}Review your customised party and complete a clearly labelled simulated card checkout.{% endblock %}
+{% block meta_robots %}noindex,nofollow{% endblock %}
+{% block page_name %}partyBuilder{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/party-builder.css' %}">
+{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+    {# This header introduces the page and gives visitors the main context before they continue. #}
+    <header class="checkout-hero" aria-labelledby="checkout-heading">
+        <div class="container narrow-content">
+            <p class="section-kicker">Final step</p>
+            <h1 id="checkout-heading">Review and simulate checkout</h1>
+            <p class="lead">
+                No real transaction occurs. Card details are validated for demonstration
+                and discarded immediately after submission.
+            </p>
+            {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+            {% include "party_builder/includes/progress.html" %}
+        </div>
+    </header>
+
+    {# This form sends the visitor’s choices to Django, where the information is checked again on the server. #}
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form
+        class="checkout-form"
+        id="simulated-payment-form"
+        method="post"
+        action="{% url 'party_builder:party_builder_simulated_checkout' %}"
+        data-payment-form
+        novalidate
+    >
+        {% csrf_token %}
+        <div class="container checkout-layout">
+            <div class="checkout-main-column">
+                                {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+                                <section class="checkout-panel" aria-labelledby="review-heading">
+                    <div class="panel-heading">
+                        <span class="panel-step" aria-hidden="true">3A</span>
+                        <div>
+                            <p class="section-kicker">Confirm the request</p>
+                            <h2 id="review-heading">Event review</h2>
+                        </div>
+                    </div>
+                    <dl class="review-details">
+                        <div><dt>Contact</dt><dd>{{ details.contact_name }}</dd></div>
+                        <div><dt>Email</dt><dd>{{ details.contact_email }}</dd></div>
+                        <div><dt>Phone</dt><dd>{{ details.contact_phone }}</dd></div>
+                        <div><dt data-i18n="builder.packageCapacity">Package capacity</dt><dd data-i18n-template="builder.upToChildren" data-i18n-value-count="{{ package.included_guest_count }}">Up to {{ package.included_guest_count }} children</dd></div>
+                        <div><dt>Date</dt><dd>{{ details.event_date }}</dd></div>
+                        <div><dt>Time</dt><dd>{{ details.event_time|default:"To be confirmed" }}</dd></div>
+                        <div class="review-detail-wide"><dt>Venue</dt><dd>{{ details.event_address }}, {{ details.postal_code }}</dd></div>
+                        {% if details.notes %}<div class="review-detail-wide"><dt>Notes</dt><dd>{{ details.notes }}</dd></div>{% endif %}
+                    </dl>
+                    <a class="text-link" href="{% url 'party_builder:party_builder_customer_details' %}">Edit event details</a>
+                </section>
+
+                                <section class="checkout-panel" aria-labelledby="payment-heading">
+                    <div class="panel-heading">
+                        <span class="panel-step" aria-hidden="true">3B</span>
+                        <div>
+                            <p class="section-kicker">Demonstration payment</p>
+                            <h2 id="payment-heading">Simulated card details</h2>
+                            <p id="payment-notice">
+                                Do not enter a real card. Use the displayed test number.
+                                The full number and security code are never stored.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="simulation-banner" role="note" aria-labelledby="simulation-banner-heading">
+                        <strong id="simulation-banner-heading">Simulation only</strong>
+                        <span>No payment gateway is contacted and no funds are moved.</span>
+                    </div>
+
+                                        {% if form.non_field_errors %}<div class="form-alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+
+                    <div class="builder-form-grid">
+                        {% include "party_builder/includes/form_field.html" with field=form.cardholder_name wide=True only %}
+                        {% include "party_builder/includes/form_field.html" with field=form.card_number wide=True only %}
+                        {% include "party_builder/includes/form_field.html" with field=form.expiry_month only %}
+                        {% include "party_builder/includes/form_field.html" with field=form.expiry_year only %}
+                        {% include "party_builder/includes/form_field.html" with field=form.security_code only %}
+                        {% include "party_builder/includes/form_field.html" with field=form.billing_postal_code only %}
+                    </div>
+
+                    <div class="consent-field checkout-consent">
+                        {{ form.simulation_consent }}
+                        <label for="{{ form.simulation_consent.id_for_label }}">{{ form.simulation_consent.label }}</label>
+                        <span class="field-help" id="{{ form.simulation_consent.id_for_label }}_help">Required to complete the demonstration.</span>
+                                                {% if form.simulation_consent.errors %}
+                            <ul class="field-errors" id="{{ form.simulation_consent.id_for_label }}_error" role="alert">
+                                                                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                                                                {% for error in form.simulation_consent.errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        {% else %}
+                            <span class="visually-hidden" id="{{ form.simulation_consent.id_for_label }}_error"></span>
+                        {% endif %}
+                    </div>
+
+                    {# This navigation groups related links so users can move through this part of the website. #}
+                    {# This navigation gives the current visitor the routes appropriate to this page and their signed-in role. #}
+                    <nav class="checkout-actions" aria-label="Simulated checkout actions">
+                        <a class="button button-outline" href="{% url 'party_builder:party_builder_customer_details' %}">Back</a>
+                        <button class="button" type="submit" data-checkout-submit>
+                            Complete simulated purchase — €{{ quote.total_price|floatformat:2 }}
+                        </button>
+                    </nav>
+                </section>
+            </div>
+
+            {% include "party_builder/includes/order_summary.html" %}
+        </div>
+    </form>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/party-builder.js' %}" defer></script>
+{% endblock %}

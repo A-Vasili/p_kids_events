@@ -1,0 +1,70 @@
+{# This reusable template presents language picker wherever the shared site layout includes it. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% comment %}
+Custom language picker.
+  A hidden input keeps the selected value available to the existing language
+  code, while the visible interface is built from fully styleable divs.
+{% endcomment %}
+<div
+    class="custom-select custom-language-picker"
+    data-custom-select
+    data-select-placeholder="Language"
+>
+    <span class="visually-hidden" id="language-selector-label" data-i18n="language.label">
+        Language
+    </span>
+
+    <input
+        type="hidden"
+        id="language-selector"
+        value="en"
+        data-custom-select-input
+    >
+
+    <div
+        class="custom-control-trigger custom-select-trigger"
+        id="language-selector-trigger"
+        role="combobox"
+        tabindex="0"
+        aria-expanded="false"
+        aria-haspopup="listbox"
+        aria-controls="language-selector-options"
+        aria-labelledby="language-selector-label language-selector-value"
+        data-custom-select-trigger
+    >
+        <span id="language-selector-value" data-custom-select-value>English</span>
+        <span class="custom-control-chevron" aria-hidden="true"></span>
+    </div>
+
+    <div
+        class="custom-control-popover custom-select-options"
+        id="language-selector-options"
+        role="listbox"
+        aria-labelledby="language-selector-label"
+        hidden
+        data-custom-select-options
+    >
+        <div
+            class="custom-select-option"
+            role="option"
+            tabindex="-1"
+            aria-selected="true"
+            data-value="en"
+            data-label="English"
+            lang="en"
+        >
+            English
+        </div>
+        <div
+            class="custom-select-option"
+            role="option"
+            tabindex="-1"
+            aria-selected="false"
+            data-value="el"
+            data-label="Ελληνικά"
+            lang="el"
+        >
+            Ελληνικά
+        </div>
+    </div>
+</div>

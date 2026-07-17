@@ -1,0 +1,26 @@
+{# This template presents order summary within the customer party-building, checkout, ideas, or review journey. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+<aside class="checkout-summary" aria-labelledby="checkout-summary-heading">
+    <div class="checkout-summary-inner">
+        <p class="section-kicker">Your cart</p>
+        <h2 id="checkout-summary-heading">Party summary</h2>
+        <dl class="price-breakdown">
+            <div>
+                <dt>{{ package.name }}</dt>
+                <dd>€{{ quote.package_price|floatformat:2 }}</dd>
+            </div>
+            <div class="summary-subline">
+                <dt data-i18n="builder.packageCapacity">Package capacity</dt>
+                <dd data-i18n-template="builder.upToChildren" data-i18n-value-count="{{ package.included_guest_count }}">Up to {{ package.included_guest_count }} children</dd>
+            </div>
+            {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+            {% for addon in selected_addons %}
+                <div><dt>{{ addon.name }}</dt><dd>€{{ addon.price|floatformat:2 }}</dd></div>
+            {% empty %}
+                <div class="summary-subline"><dt>Add-ons</dt><dd>None</dd></div>
+            {% endfor %}
+        </dl>
+        <div class="price-total"><span>Estimated total</span><strong>€{{ quote.total_price|floatformat:2 }}</strong></div>
+        <p class="price-note">Simulated checkout only. No card charge or financial transaction occurs.</p>
+    </div>
+</aside>

@@ -1,0 +1,7 @@
+{# This management template presents the empty state screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+<div class="management-empty-state">
+    <h2>{{ empty_title|default:"Nothing to show yet" }}</h2>
+    <p>{{ empty_message|default:"Records will appear here when they are available." }}</p>
+    {% if empty_action_url %}<a class="management-button" href="{{ empty_action_url }}">{{ empty_action_label }}</a>{% endif %}
+</div>

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{# This account template presents dashboard for sign-in, registration, profile, or the customer dashboard. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+
+{% block title %}My Bookings | P Kids Events{% endblock %}
+{% block meta_description %}View your saved P Kids Events party bookings and assignment status.{% endblock %}
+{% block meta_robots %}noindex,nofollow{% endblock %}
+{% block page_name %}accountDashboard{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/accounts.css' %}">{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="account-page" aria-labelledby="dashboard-heading">
+    <div class="container account-shell">
+        {# This header introduces the page and gives visitors the main context before they continue. #}
+        <header class="account-heading account-heading-row">
+            <div>
+                <p class="section-kicker">Personal dashboard</p>
+                <h1 id="dashboard-heading">My bookings</h1>
+            </div>
+            <a class="button" href="{% url 'party_builder:party_builder_package_options' %}">Build another party</a>
+        </header>
+        <div class="booking-list">
+                        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                        {% for booking in bookings %}
+                {# This article represents one self-contained item that can be understood on its own. #}
+                <article class="booking-card">
+                    {# This header introduces the page and gives visitors the main context before they continue. #}
+                    <header>
+                        <h2>{{ booking.package.name }}</h2>
+                        <span class="status-pill status-{{ booking.assignment_state }}">{{ booking.get_assignment_state_display }}</span>
+                    </header>
+                    <dl>
+                        <div><dt>Date</dt><dd>{{ booking.event_date|date:"j F Y" }}</dd></div>
+                        <div><dt>Package capacity</dt><dd>{{ booking.party_size_display }}</dd></div>
+                        <div><dt>Total</dt><dd>€{{ booking.total_price|floatformat:2 }}</dd></div>
+                        <div><dt>Booking status</dt><dd>{{ booking.get_status_display }}</dd></div>
+                    </dl>
+                    <div class="booking-feedback-state">
+                        {% if booking.status == "cancelled" %}
+                            <p>Feedback is not available for a cancelled booking.</p>
+                        {% elif booking.status != "completed" %}
+                            <p>Feedback becomes available after the party is completed.</p>
+                        {% elif booking.review %}
+                            {% if booking.review.visibility == "testimonial" and booking.review.testimonial_consent_at %}
+                                <p><strong>Review submitted — Published testimonial</strong></p>
+                                <p><a href="{% url 'core:core_testimonials' %}">View public testimonials</a></p>
+                            {% else %}
+                                <p><strong>Review submitted — Private feedback</strong></p>
+                            {% endif %}
+                            <p class="review-code-display">Party code: <strong>{{ booking.review_code }}</strong></p>
+                            <a href="{% url 'party_builder:party_builder_review_code' %}">Update review</a>
+                        {% else %}
+                            <p class="review-code-display">Party code: <strong>{{ booking.review_code }}</strong></p>
+                            <a href="{% url 'party_builder:party_builder_review_code' %}">Rate this party</a>
+                        {% endif %}
+                    </div>
+                    <a href="{{ booking.get_absolute_url }}">View booking summary</a>
+                </article>
+            {% empty %}
+                <div class="empty-state">
+                    <h2>No saved bookings yet</h2>
+                    <p>Your completed bookings will appear here when you book while signed in.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

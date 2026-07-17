@@ -1,0 +1,4 @@
+{# This management template presents the status badge screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load management_tags %}
+<span class="management-badge {{ value|status_css }}">{{ label|default:value }}</span>

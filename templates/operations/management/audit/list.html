@@ -1,0 +1,29 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the list screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{% load management_tags %}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+    {% include "operations/management/includes/page_header.html" with eyebrow="Read-only security record" title="Audit history" description="Important catalogue, role, booking, and assignment changes are listed newest first." only %}
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form class="management-filter-toolbar" method="get" role="search">
+        <label><span>Search</span><input class="form-control" type="search" name="q" value="{{ request.GET.q }}" placeholder="Summary, object type, or ID"></label>
+        <label><span>Action</span><select class="form-select" name="event_type"><option value="">All</option>{% for event_type in event_type_options %}<option value="{{ event_type }}" {% if request.GET.event_type == event_type %}selected{% endif %}>{{ event_type|audit_event_label }}</option>{% endfor %}</select></label>
+        <label><span>Actor</span><select class="form-select" name="actor"><option value="">All</option>{% for actor in actor_options %}<option value="{{ actor.pk }}" {% if request.GET.actor == actor.pk|stringformat:'s' %}selected{% endif %}>{{ actor.username }}</option>{% endfor %}</select></label>
+        <label><span>From</span><input class="form-control" type="date" name="date_from" value="{{ request.GET.date_from }}"></label>
+        <label><span>To</span><input class="form-control" type="date" name="date_to" value="{{ request.GET.date_to }}"></label>
+        <button class="management-button" type="submit">Apply</button><a class="management-button secondary" href="{% url 'management:management_audit' %}">Clear</a>
+    </form>
+
+    {% if events %}
+        <div class="management-result-summary">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</div>
+        <div class="management-table-wrap"><table class="management-table"><caption class="visually-hidden">Audit events</caption><thead><tr><th>When</th><th>Action</th><th>Actor</th><th>Target</th><th>Description</th></tr></thead><tbody>{% for event in events %}<tr><td data-label="When">{{ event.created_at|date:"d M Y H:i" }}</td><td data-label="Action"><span class="management-badge info">{{ event.event_type|audit_event_label }}</span></td><td data-label="Actor">{{ event.actor.username|default:"System" }}</td><td data-label="Target">{{ event.object_type }} {{ event.object_id }}</td><td data-label="Description">{{ event.summary }}</td></tr>{% endfor %}</tbody></table></div>
+        {% include "operations/management/includes/pagination.html" %}
+    {% else %}
+        {% include "operations/management/includes/empty_state.html" with empty_title="No audit events found" empty_message="Try clearing the current filters." %}
+    {% endif %}
+</section>
+{% endblock %}

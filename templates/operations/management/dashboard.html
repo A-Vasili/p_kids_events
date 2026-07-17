@@ -1,0 +1,99 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the dashboard screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div>
+            <p class="management-eyebrow">Operational overview</p>
+            <h2>What needs attention today</h2>
+            <p>Totals use complete database counts; recent lists are limited separately for a fast dashboard.</p>
+        </div>
+        <div class="management-quick-actions" aria-label="Quick actions">
+            <a class="management-button" href="{% url 'management:management_package_create' %}">Add package</a>
+            <a class="management-button secondary" href="{% url 'management:management_addon_create' %}">Add add-on</a>
+            <a class="management-button secondary" href="{% url 'management:management_category_create' %}">Add category</a>
+            <a class="management-button secondary" href="{% url 'management:management_user_create_worker' %}">Create worker</a>
+        </div>
+    </div>
+
+    <div class="management-stat-grid">
+        {% url 'management:management_package_list' as packages_url %}
+        {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+        {% include "operations/management/includes/stat_card.html" with url=packages_url|add:"?status=active" label="Active packages" value=stats.active_packages only %}
+        {% url 'management:management_addon_list' as addons_url %}
+        {% include "operations/management/includes/stat_card.html" with url=addons_url|add:"?status=active" label="Active add-ons" value=stats.active_addons only %}
+        {% url 'management:management_category_list' as categories_url %}
+        {% include "operations/management/includes/stat_card.html" with url=categories_url|add:"?status=active" label="Active categories" value=stats.active_categories only %}
+        {% url 'management:management_booking_list' as bookings_url %}
+        {% include "operations/management/includes/stat_card.html" with url=bookings_url label="Events this week" value=stats.upcoming_week only %}
+        {% include "operations/management/includes/stat_card.html" with url=bookings_url|add:"?assignment=unassigned" label="Unassigned" value=stats.unassigned only %}
+        {% include "operations/management/includes/stat_card.html" with url=bookings_url|add:"?assignment=manual_review" label="Manual review" value=stats.manual_review only %}
+        {% url 'management:management_user_list' as users_url %}
+        {% include "operations/management/includes/stat_card.html" with url=users_url|add:"?role=worker&status=active" label="Active workers" value=stats.active_workers only %}
+        {% url 'management:management_schedule' as schedule_url %}
+        {% include "operations/management/includes/stat_card.html" with url=schedule_url label="Pending offers" value=stats.pending_offers only %}
+        {% url 'communications:management_inbox' as messages_url %}
+        {% include "operations/management/includes/stat_card.html" with url=messages_url|add:"?unread_only=1" label="Unread messages" value=stats.unread_customer_chats only %}
+    </div>
+</section>
+
+<div class="management-dashboard-grid">
+    <section class="management-panel">
+        <div class="management-panel-header"><h2>Bookings needing attention</h2><a href="{% url 'management:management_booking_list' %}?assignment=manual_review">View filtered list</a></div>
+        {% if attention_bookings %}
+            <div class="management-compact-list">
+                {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                {% for booking in attention_bookings %}
+                    <a href="{% url 'management:management_booking_detail' booking.public_id %}">
+                        <span><strong>{{ booking.contact_name }}</strong><small>{{ booking.event_date }} · {{ booking.package.name }}</small></span>
+                        {% include "operations/management/includes/status_badge.html" with value=booking.assignment_state label=booking.get_assignment_state_display %}
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            {% include "operations/management/includes/empty_state.html" with empty_title="No urgent bookings" empty_message="There are no unassigned or manual-review bookings right now." %}
+        {% endif %}
+    </section>
+
+    <section class="management-panel">
+        <div class="management-panel-header"><h2>Upcoming events</h2><a href="{% url 'management:management_booking_list' %}">All bookings</a></div>
+        {% if upcoming_bookings %}
+            <div class="management-compact-list">
+                {% for booking in upcoming_bookings %}
+                    <a href="{% url 'management:management_booking_detail' booking.public_id %}">
+                        <span><strong>{{ booking.event_date }}{% if booking.event_time %} · {{ booking.event_time|time:"H:i" }}{% endif %}</strong><small>{{ booking.contact_name }} · {{ booking.package.name }}</small></span>
+                        {% include "operations/management/includes/status_badge.html" with value=booking.status label=booking.get_status_display %}
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            {% include "operations/management/includes/empty_state.html" with empty_title="No events this week" empty_message="Upcoming bookings will appear here." %}
+        {% endif %}
+    </section>
+
+    <section class="management-panel">
+        <div class="management-panel-header"><h2>Recent catalogue changes</h2><a href="{% url 'management:management_audit' %}">Audit history</a></div>
+        {% if recent_catalogue_events %}
+            <ul class="management-timeline">
+                {% for event in recent_catalogue_events %}<li><strong>{{ event.summary }}</strong><span>{{ event.created_at|date:"d M Y H:i" }}{% if event.actor %} · {{ event.actor.username }}{% endif %}</span></li>{% endfor %}
+            </ul>
+        {% else %}
+            {% include "operations/management/includes/empty_state.html" with empty_title="No catalogue activity" %}
+        {% endif %}
+    </section>
+
+    <section class="management-panel">
+        <div class="management-panel-header"><h2>Recent audit activity</h2><a href="{% url 'management:management_audit' %}">View all</a></div>
+        {% if recent_audit_events %}
+            <ul class="management-timeline">
+                {% for event in recent_audit_events %}<li><strong>{{ event.summary }}</strong><span>{{ event.created_at|date:"d M Y H:i" }}</span></li>{% endfor %}
+            </ul>
+        {% else %}
+            {% include "operations/management/includes/empty_state.html" with empty_title="No audit activity" %}
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

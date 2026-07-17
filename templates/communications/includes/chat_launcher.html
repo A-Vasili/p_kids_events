@@ -1,0 +1,57 @@
+{# This reusable chat template presents chat launcher consistently in the floating panel and full-page conversation. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The chat keeps its existing behaviour but presents the hosted P Kids Events identity to customers. #}
+<div
+    class="popadoo-chat-widget"
+    data-chat-widget
+    data-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}"
+    data-panel-url="{% url 'communications:customer_panel' %}"
+    data-refresh-url="{% url 'communications:customer_refresh' %}"
+    data-send-url="{% url 'communications:customer_widget_send' %}"
+>
+    <a
+        class="popadoo-chat-launcher"
+        href="{% url 'communications:customer_chat' %}"
+        aria-label="Open P Kids Events chat"
+        data-i18n-aria-label="chat.open"
+        aria-controls="popadoo-chat-panel"
+        aria-expanded="false"
+        data-chat-launcher
+    >
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M4 4h16v12H8l-4 4V4Zm3 4h10v2H7V8Zm0 4h7v2H7v-2Z"/></svg>
+        <span class="popadoo-chat-badge" data-chat-badge {% if not chat_has_unread %}hidden{% endif %}>
+            <span aria-hidden="true">{{ chat_unread_count }}</span>
+            <span class="visually-hidden">{{ chat_unread_count }} <span data-i18n="chat.unreadMessages">unread messages</span></span>
+        </span>
+    </a>
+
+    {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+    <section
+        class="popadoo-chat-panel"
+        id="popadoo-chat-panel"
+        aria-labelledby="popadoo-chat-title"
+        hidden
+        data-chat-panel
+    >
+        <header class="popadoo-chat-header">
+            <div>
+                <strong id="popadoo-chat-title" data-i18n="chat.heading">Chat with P Kids Events</strong>
+                <span data-i18n="chat.shortHelp">Ask us anything about your P Kids Events experience.</span>
+            </div>
+            <button type="button" class="popadoo-chat-close" aria-label="Close chat" data-i18n-aria-label="chat.close" data-chat-close>×</button>
+        </header>
+        <div class="popadoo-chat-live" aria-live="polite" data-chat-live></div>
+        <div class="popadoo-chat-panel-body" data-chat-panel-body>
+            {# This conditional changes what is shown for the current role; the corresponding view still enforces access even when a link is hidden. #}
+            {% if request.user.is_authenticated %}
+                <p data-i18n="chat.loading">Loading your messages…</p>
+            {% else %}
+                <div class="popadoo-chat-auth-prompt">
+                    <p data-i18n="chat.signInPrompt">Sign in to chat with P Kids Events.</p>
+                    <a class="button" href="{% url 'accounts:accounts_sign_in' %}?next={% url 'communications:customer_chat' %}" data-i18n="account.signIn">Sign in</a>
+                    <a class="button secondary" href="{% url 'accounts:accounts_sign_up' %}?next={% url 'communications:customer_chat' %}" data-i18n="chat.createAccount">Create an account</a>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</div>

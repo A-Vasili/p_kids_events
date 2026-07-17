@@ -1,0 +1,42 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the list screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+    {% include "operations/management/includes/page_header.html" with eyebrow="Bookings" title="Party bookings" description="Search customer requests, review assignment states, and open a booking without exposing unrelated data to workers." only %}
+
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form class="management-filter-toolbar" method="get" role="search">
+        <label><span>Search</span><input class="form-control" type="search" name="q" value="{{ request.GET.q }}" placeholder="Name, email, ID, or address"></label>
+        <label><span>Booking status</span><select class="form-select" name="status"><option value="">All</option>{% for value, label in booking_status_choices %}<option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <label><span>Assignment</span><select class="form-select" name="assignment"><option value="">All</option>{% for value, label in assignment_state_choices %}<option value="{{ value }}" {% if request.GET.assignment == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <label><span>Package</span><select class="form-select" name="package"><option value="">All</option>{% for package in package_options %}<option value="{{ package.pk }}" {% if request.GET.package == package.pk|stringformat:'s' %}selected{% endif %}>{{ package.name }}</option>{% endfor %}</select></label>
+        <label><span>Assigned worker</span><select class="form-select" name="worker"><option value="">All</option>{% for worker in worker_options %}<option value="{{ worker.pk }}" {% if request.GET.worker == worker.pk|stringformat:'s' %}selected{% endif %}>{{ worker }}</option>{% endfor %}</select></label>
+        <label><span>From</span><input class="form-control" type="date" name="date_from" value="{{ request.GET.date_from }}"></label>
+        <label><span>To</span><input class="form-control" type="date" name="date_to" value="{{ request.GET.date_to }}"></label>
+        <button class="management-button" type="submit">Apply</button><a class="management-button secondary" href="{% url 'management:management_booking_list' %}">Clear</a>
+    </form>
+
+    {% if bookings %}
+        <div class="management-result-summary">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</div>
+        <div class="management-table-wrap"><table class="management-table"><caption class="visually-hidden">Party bookings</caption><thead><tr><th>Event</th><th>Customer</th><th>Package</th><th>Total</th><th>Status</th><th>Assignment</th><th>Worker</th></tr></thead><tbody>
+        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+        {% for booking in bookings %}<tr>
+            <td data-label="Event"><a href="{% url 'management:management_booking_detail' booking.public_id %}"><strong>{{ booking.event_date }}</strong></a><small class="management-table-subtext">{% if booking.event_time %}{{ booking.event_time|time:"H:i" }} · {% endif %}{{ booking.public_id }}</small></td>
+            <td data-label="Customer"><strong>{{ booking.contact_name }}</strong><small class="management-table-subtext">{{ booking.contact_email }}</small></td>
+            <td data-label="Package">{{ booking.package.name }}</td>
+            <td data-label="Total">€{{ booking.total_price }}</td>
+            <td data-label="Status">{% include "operations/management/includes/status_badge.html" with value=booking.status label=booking.get_status_display %}</td>
+            <td data-label="Assignment">{% include "operations/management/includes/status_badge.html" with value=booking.assignment_state label=booking.get_assignment_state_display %}</td>
+            <td data-label="Worker">{% if booking.accepted_assignments %}{{ booking.accepted_assignments.0.worker }}{% else %}—{% endif %}</td>
+        </tr>{% endfor %}
+        </tbody></table></div>
+        {% include "operations/management/includes/pagination.html" %}
+    {% else %}
+        {% include "operations/management/includes/empty_state.html" with empty_title="No bookings found" empty_message="Try clearing or changing the current filters." %}
+    {% endif %}
+</section>
+{% endblock %}

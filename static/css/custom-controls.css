@@ -1,0 +1,316 @@
+/*
+ * This stylesheet presents the custom date and time controls while preserving visible labels, keyboard focus, and touch-friendly targets.
+ * Its rules are grouped around page components, responsive layouts, theme support, and visible keyboard focus.
+ * The comments explain those relationships without changing selectors, spacing, colours, or behaviour.
+ */
+/*
+ * Shared presentation for the custom language, date, and time controls.
+ * The colours use the same design tokens as the rest of Popadoo, so these
+ * components remain readable in both light and dark modes.
+ */
+.custom-select,
+.custom-date-picker,
+.custom-time-picker,
+.custom-datetime-field {
+    position: relative;
+}
+
+.form-label,
+.custom-subcontrol-label {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: var(--color-heading);
+    font-weight: 800;
+}
+
+.custom-subcontrol-label {
+    font-size: 0.86rem;
+}
+
+.custom-control-trigger {
+    min-height: 2.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.68rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.85rem;
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    box-shadow: 0 0.3rem 0.9rem rgba(63, 42, 79, 0.07);
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.custom-language-picker .custom-control-trigger {
+    min-width: 8.4rem;
+    min-height: 2.65rem;
+    border-radius: 999px;
+    padding-inline: 0.95rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--surface-lavender), var(--surface-pink));
+}
+
+.custom-control-trigger:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-0.04rem);
+}
+
+.custom-control-trigger:focus-visible,
+.custom-control-trigger[aria-expanded="true"] {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.22rem var(--color-primary-soft);
+}
+
+.custom-control-trigger[aria-invalid="true"] {
+    border-color: #b3233d;
+    box-shadow: 0 0 0 0.18rem rgba(179, 35, 61, 0.16);
+}
+
+.custom-control-chevron {
+    width: 0.55rem;
+    height: 0.55rem;
+    flex: 0 0 auto;
+    border-right: 0.13rem solid currentColor;
+    border-bottom: 0.13rem solid currentColor;
+    transform: rotate(45deg) translateY(-0.12rem);
+    transition: transform 160ms ease;
+}
+
+.custom-control-trigger[aria-expanded="true"] .custom-control-chevron {
+    transform: rotate(225deg) translate(-0.1rem, -0.1rem);
+}
+
+.custom-control-popover {
+    position: absolute;
+    z-index: 80;
+    top: calc(100% + 0.45rem);
+    left: 0;
+    width: max-content;
+    min-width: 100%;
+    max-width: min(24rem, calc(100vw - 2rem));
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    box-shadow: var(--shadow-soft);
+}
+
+.custom-control-popover[hidden] {
+    display: none;
+}
+
+.custom-select-options,
+.custom-time-options {
+    max-height: 18rem;
+    overflow-y: auto;
+    padding: 0.45rem;
+}
+
+.custom-select-option {
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.65rem;
+    cursor: pointer;
+}
+
+.custom-select-option:hover,
+.custom-select-option:focus-visible,
+.custom-select-option.is-selected,
+.custom-select-option[aria-selected="true"] {
+    outline: none;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-strong);
+}
+
+.custom-calendar-icon,
+.custom-clock-icon {
+    position: relative;
+    width: 1.15rem;
+    height: 1.15rem;
+    flex: 0 0 auto;
+    color: var(--color-primary-strong);
+}
+
+.custom-calendar-icon {
+    border: 0.12rem solid currentColor;
+    border-radius: 0.2rem;
+}
+
+.custom-calendar-icon::before {
+    content: "";
+    position: absolute;
+    top: 0.2rem;
+    left: 0;
+    right: 0;
+    border-top: 0.12rem solid currentColor;
+}
+
+.custom-clock-icon {
+    border: 0.12rem solid currentColor;
+    border-radius: 50%;
+}
+
+.custom-clock-icon::before,
+.custom-clock-icon::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0.1rem;
+    border-radius: 999px;
+    background: currentColor;
+    transform-origin: bottom center;
+}
+
+.custom-clock-icon::before {
+    height: 0.33rem;
+    transform: translate(-50%, -100%);
+}
+
+.custom-clock-icon::after {
+    height: 0.28rem;
+    transform: translate(-50%, -100%) rotate(125deg);
+}
+
+.custom-date-popover {
+    width: min(22rem, calc(100vw - 2rem));
+    padding: 0.8rem;
+}
+
+.custom-date-header {
+    display: grid;
+    grid-template-columns: 2.4rem 1fr 2.4rem;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+    text-align: center;
+}
+
+.custom-icon-action {
+    min-height: 2.35rem;
+    display: grid;
+    place-items: center;
+    border-radius: 0.65rem;
+    color: var(--color-primary-strong);
+    font-size: 1.55rem;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.custom-icon-action:hover,
+/*
+ * These focus styles make keyboard position visible without relying on hover or colour alone.
+ */
+.custom-icon-action:focus-visible {
+    outline: none;
+    background: var(--color-primary-soft);
+}
+
+.custom-date-weekdays,
+.custom-date-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.2rem;
+}
+
+.custom-date-weekdays {
+    margin-bottom: 0.25rem;
+    color: var(--color-muted);
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.custom-date-day {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 0.55rem;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.custom-date-day:hover,
+.custom-date-day:focus-visible {
+    outline: none;
+    background: var(--color-primary-soft);
+}
+
+.custom-date-day.is-selected {
+    background: var(--color-button-background);
+    color: var(--color-button-text);
+}
+
+.custom-date-day.is-today:not(.is-selected) {
+    box-shadow: inset 0 0 0 0.12rem var(--color-primary);
+}
+
+.custom-date-day.is-other-month {
+    color: var(--color-muted);
+    opacity: 0.62;
+}
+
+.custom-date-day.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.32;
+    text-decoration: line-through;
+}
+
+.custom-datetime-layout {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.custom-subcontrol {
+    min-width: 0;
+}
+
+html[data-theme="dark"] .custom-control-trigger,
+/*
+ * These rules adapt the same components for dark mode while preserving readable contrast and familiar structure.
+ */
+html[data-theme="dark"] .custom-control-popover {
+    background-color: var(--color-surface-raised);
+    color: var(--color-text);
+}
+
+html[data-theme="dark"] .custom-language-picker .custom-control-trigger {
+    background: linear-gradient(135deg, var(--surface-lavender), var(--surface-pink));
+}
+
+/*
+ * This responsive section rearranges the component for narrower or wider screens without removing important actions.
+ */
+@media (max-width: 72rem) {
+    .custom-language-picker,
+    .custom-language-picker .custom-control-trigger {
+        width: 100%;
+    }
+
+    .custom-language-picker .custom-control-popover {
+        width: 100%;
+    }
+}
+
+@media (max-width: 560px) {
+    .custom-datetime-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .custom-date-popover {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .custom-control-trigger,
+    .custom-control-chevron {
+        transition: none;
+    }
+}

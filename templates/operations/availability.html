@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{# This worker template presents availability for active staff using the operations area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+{% block title %}
+    My Availability | P Kids Events
+{% endblock %}
+{% block meta_robots %}
+    noindex,nofollow
+{% endblock %}
+{% block page_name %}
+    operationsAvailability
+{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/operations.css' %}">
+{% endblock %}
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+    {# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+    <section class="operations-page" aria-labelledby="availability-heading">
+        <div class="container">
+            {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+            {% include "operations/includes/nav.html" %}
+            <div class="operations-two-column">
+                <section class="operations-panel">
+                    <h1 id="availability-heading">
+                        Update availability
+                    </h1>
+                    <p>
+                        Add the full periods when you can work. Use unavailable periods for exceptions.
+                    </p>
+                    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                        {% for field in form %}
+                            {% if field.name == "start_at" or field.name == "end_at" %}
+                                {% include "includes/custom_datetime_field.html" with field=field only %}
+                            {% else %}
+                                <div class="form-field">
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}<p class="form-help" id="{{ field.id_for_label }}_help">{{ field.help_text }}</p>{% endif %}
+                                    <div class="form-error" id="{{ field.id_for_label }}_error" aria-live="polite">
+                                        {% for error in field.errors %}<p role="alert">{{ error }}</p>{% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        <button class="button" type="submit">
+                            Save availability
+                        </button>
+                    </form>
+                </section>
+                                <section class="operations-panel">
+                    <h2>
+                        Upcoming periods
+                    </h2>
+                    <div class="operations-list">
+                        {% for period in availability_periods %}
+                            <article class="operations-row">
+                                <div>
+                                    <strong>
+                                        {{ period.get_availability_type_display }}
+                                    </strong>
+                                    <span>
+                                        {{ period.start_at|date:"j M Y H:i" }}
+                                        –
+                                        {{ period.end_at|date:"j M Y H:i" }}
+                                    </span>
+                                </div>
+                                <form method="post" action="{% url 'operations:operations_worker_availability_delete' period.pk %}">
+                                    {% csrf_token %}
+                                    <button class="text-button" type="submit">
+                                        Remove
+                                    </button>
+                                </form>
+                            </article>
+                        {% empty %}
+                            <p>
+                                No future availability has been added.
+                            </p>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+        </div>
+    </section>
+{% endblock %}

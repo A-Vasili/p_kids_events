@@ -1,0 +1,17 @@
+{# This reusable chat template presents chat panel content consistently in the floating panel and full-page conversation. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The customer-facing status now names P Kids Events while the stored workflow value remains unchanged. #}
+<div class="popadoo-chat-panel-content" data-chat-panel-content data-last-message-at="{% if chat %}{{ chat.last_message_at|date:'c' }}{% endif %}">
+    <p class="popadoo-chat-status" role="status">
+        {% if chat and chat.status == 'waiting_customer' %}
+            <span data-i18n="chat.waitingCustomer">Waiting for your reply</span>
+        {% else %}
+            <span data-i18n="chat.waitingPopadoo">Waiting for P Kids Events</span>
+        {% endif %}
+    </p>
+    {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+    {% include "communications/includes/message_list.html" with customer_view=True %}
+    {% url 'communications:customer_widget_send' as widget_send_url %}
+    {% include "communications/includes/message_form.html" with form_action=widget_send_url widget_form=True %}
+    <a class="popadoo-chat-full-link" href="{% url 'communications:customer_chat' %}" data-i18n="chat.viewFull">View full chat</a>
+</div>

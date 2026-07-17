@@ -1,0 +1,36 @@
+{% extends "operations/management/base.html" %}
+{# This management template presents the form screen to authorised staff inside the custom Popadoo management area. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+
+{% block management_content %}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section class="management-page-section">
+    <div class="management-page-header">
+        <div>
+            <p class="management-eyebrow">{{ form_eyebrow }}</p>
+            <h2>{{ form_title }}</h2>
+            <p>{{ form_description }}</p>
+        </div>
+    </div>
+    {# This form shows only the information the person may provide; identity, permissions, and trusted business values are resolved by the server. #}
+    <form method="post" class="management-form-card" data-prevent-double-submit novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="management-error-summary" role="alert" tabindex="-1" data-error-summary>
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+        <div class="management-form-grid">
+            {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+            {% for field in form %}
+                {# This include reuses a shared presentation so the same labels, errors, or status treatment remain consistent across pages. #}
+                {% include "operations/management/includes/form_field.html" with field=field %}
+            {% endfor %}
+        </div>
+        <div class="management-form-actions">
+            <button class="management-button" type="submit">{{ submit_label }}</button>
+            <a class="management-button secondary" href="{{ cancel_url }}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

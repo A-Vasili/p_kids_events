@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{# This public template presents the index page as part of the Popadoo customer website. #}
+{# Permission decisions and trusted values are prepared by Django before this template is rendered. #}
+{# The visible brand name is now P Kids Events; the existing logo artwork and internal route names stay unchanged. #}
+{% load static %}
+
+{% block title %}Home | P Kids Events{% endblock %}
+{% block page_name %}index{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/index.css' %}">{% endblock %}
+
+{# This block supplies the page-specific content inside the shared site or management frame. #}
+{% block content %}
+{# The opening carousel introduces the service and gives both customer journeys equal visibility. #}
+{# This main section groups the heading, guidance, and actions that belong to the current user journey. #}
+<section
+    class="hero-carousel"
+    aria-labelledby="welcome-heading"
+    aria-roledescription="carousel"
+    tabindex="0"
+    data-home-carousel
+>
+    <div class="hero-carousel-slides" id="home-carousel" aria-hidden="true">
+        <figure class="hero-carousel-slide hero-carousel-slide-one"><img src="{% static 'assets/images/carousel/party-slide-1.jpg' %}" alt=""></figure>
+        <figure class="hero-carousel-slide hero-carousel-slide-two"><img src="{% static 'assets/images/carousel/party-slide-2.jpg' %}" alt=""></figure>
+        <figure class="hero-carousel-slide hero-carousel-slide-three"><img src="{% static 'assets/images/carousel/party-slide-3.jpg' %}" alt=""></figure>
+        <figure class="hero-carousel-slide hero-carousel-slide-four"><img src="{% static 'assets/images/carousel/party-slide-4.jpg' %}" alt=""></figure>
+    </div>
+
+    <div class="hero-carousel-overlay">
+        <div class="container">
+            <div class="hero-carousel-content">
+                <h1 id="welcome-heading" data-i18n="home.welcomeHeading">Welcome to P Kids Events</h1>
+                <p data-i18n="home.welcomeText">Creative children’s parties planned around your family, your theme, and the venue you choose.</p>
+                <div class="hero-primary-actions" aria-label="Choose how to begin">
+                    <a class="party-booking-button" href="{% url 'party_builder:party_builder_package_options' %}" data-i18n="nav.bookNow">Make Your Own Party</a>
+                    <a class="party-booking-button party-booking-button-secondary" href="{% url 'party_ideas:list' %}" data-i18n="home.exploreIdeas">Explore Party Ideas</a>
+                </div>
+
+                <div class="hero-carousel-controls" aria-label="Carousel controls" data-i18n-aria-label="home.carouselControlsLabel">
+                    <button class="hero-carousel-arrow hero-carousel-arrow-previous" type="button" aria-controls="home-carousel" aria-label="Previous image" data-i18n-aria-label="home.carouselPreviousLabel" data-carousel-previous><span class="hero-carousel-arrow-icon" aria-hidden="true"></span></button>
+                    <button class="hero-carousel-arrow hero-carousel-arrow-next" type="button" aria-controls="home-carousel" aria-label="Next image" data-i18n-aria-label="home.carouselNextLabel" data-carousel-next><span class="hero-carousel-arrow-icon" aria-hidden="true"></span></button>
+                    <div class="hero-carousel-indicators" aria-label="Slide selection" data-i18n-aria-label="home.carouselIndicatorsLabel" data-carousel-indicators>
+                        {# This loop presents each permitted record using the same structure, including an empty state when no records are available. #}
+                        {% for slide_number in "1234" %}<button class="hero-carousel-indicator" type="button" aria-controls="home-carousel" aria-label="Show image {{ slide_number }}" data-carousel-indicator="{{ forloop.counter0 }}"></button>{% endfor %}
+                    </div>
+                    <span class="visually-hidden" aria-live="polite" data-carousel-status></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# These two cards explain that browsing and building are different entrances to the same custom party. #}
+<section class="home-pathways" aria-labelledby="home-pathways-heading">
+    <div class="container">
+        <div class="home-pathways-heading">
+            <p class="section-kicker" data-i18n="home.pathwaysKicker">Choose your route</p>
+            <h2 id="home-pathways-heading" data-i18n="home.pathwaysHeading">How would you like to begin?</h2>
+            <p class="lead" data-i18n="home.pathwaysLead">Choose a direct route into the builder or browse ideas first. Both paths lead to the same personalised party.</p>
+        </div>
+
+        <div class="home-pathway-grid">
+            <article class="home-pathway-card">
+                <a class="home-pathway-link" href="{% url 'party_builder:party_builder_package_options' %}" aria-labelledby="home-builder-card-title">
+                    <img src="{% static 'assets/images/party-equipment-hero.jpg' %}" alt="Colourful party supplies ready to be combined into a custom celebration" data-i18n-alt="home.builderCardAlt" width="1200" height="800">
+                    <span class="home-pathway-overlay" aria-hidden="true"></span>
+                    <span class="home-pathway-content">
+                        <span class="home-pathway-label" data-i18n="nav.buildParty">Make Your Own Party</span>
+                        <h3 class="home-pathway-title" id="home-builder-card-title" data-i18n="home.builderCardTitle">Start building freely</h3>
+                        <span class="home-pathway-text" data-i18n="home.builderCardText">Choose a package size and the experiences you love.</span>
+                        <span class="home-pathway-cta" data-i18n="home.builderCardCta">Start building</span>
+                    </span>
+                </a>
+            </article>
+
+            <article class="home-pathway-card">
+                <a class="home-pathway-link" href="{% url 'party_ideas:list' %}" aria-labelledby="home-ideas-card-title">
+                    <img src="{% static 'assets/images/carousel/party-slide-3.jpg' %}" alt="Children’s party activity setup offering inspiration for a celebration" data-i18n-alt="home.packagesCardAlt" width="1200" height="800">
+                    <span class="home-pathway-overlay" aria-hidden="true"></span>
+                    <span class="home-pathway-content">
+                        <span class="home-pathway-label" data-i18n="nav.partyIdeas">Party Ideas</span>
+                        <h3 class="home-pathway-title" id="home-ideas-card-title" data-i18n="home.packagesCardTitle">Browse for inspiration</h3>
+                        <span class="home-pathway-text" data-i18n="home.packagesCardText">Explore flexible starting packages and experiences, then make them your own.</span>
+                        <span class="home-pathway-cta" data-i18n="home.packagesCardCta">Explore ideas</span>
+                    </span>
+                </a>
+            </article>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/carousel.js' %}" defer></script>{% endblock %}
