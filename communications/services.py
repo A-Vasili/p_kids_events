@@ -146,7 +146,15 @@ def add_staff_message(*, chat_id: int, responder, body: str) -> ChatMessage:
         raise PermissionDenied("You do not have customer-chat access.")
     body = _clean_message(body)
     try:
-        chat = visible_chats_for(responder).select_for_update().get(pk=chat_id)
+        # The normal chat list also loads an optional last sender for display. That
+        # outer join cannot safely be locked by PostgreSQL, so the reply action removes
+        # display-only joins and locks only the customer chat being updated.
+        chat = (
+            visible_chats_for(responder)
+            .select_related(None)
+            .select_for_update()
+            .get(pk=chat_id)
+        )
     except CustomerChat.DoesNotExist as error:
         raise PermissionDenied("You no longer have access to this chat.") from error
     now = timezone.now()
