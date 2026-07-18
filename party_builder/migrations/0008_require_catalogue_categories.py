@@ -8,8 +8,8 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
-# This class groups the information and behaviour needed for migration.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Apply the require catalogue categories schema migration, including the fields, constraints, or
+# indexes declared below. Dependencies preserve a deterministic upgrade order.
 class Migration(migrations.Migration):
     dependencies = [
         ("party_builder", "0007_seed_catalogue_categories"),

@@ -13,9 +13,8 @@ from django.urls import reverse
 # workflow.
 # Shared setup keeps each scenario focused on the business rule being checked.
 class PublicPageTests(TestCase):
-    # This test protects the business rule described by “current public pages load”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that current public pages load. The test client sends GET to reverse(route_name); the
+    # required outcome is HTTP 200.
     def test_current_public_pages_load(self):
         route_names = [
             "core:core_home",
@@ -29,9 +28,8 @@ class PublicPageTests(TestCase):
                 response = self.client.get(reverse(route_name))
                 self.assertEqual(response.status_code, 200)
 
-    # This test protects the business rule described by “each current page has one main landmark”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that each current page has one main landmark. The test client sends GET to
+    # reverse(route_name); the required outcome is html count is 1.
     def test_each_current_page_has_one_main_landmark(self):
         route_names = [
             "core:core_home",
@@ -46,10 +44,8 @@ class PublicPageTests(TestCase):
                 html = response.content.decode("utf-8")
                 self.assertEqual(html.count('<main id="main-content">'), 1)
 
-    # This test protects the business rule described by “legacy public routes keep useful
-    # destinations”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that legacy public routes keep useful destinations. The test client sends GET to
+    # reverse(route_name); the required outcome is redirects to target.
     def test_legacy_public_routes_keep_useful_destinations(self):
         destinations = {
             "core:core_packages_redirect": reverse("party_ideas:list"),
@@ -90,10 +86,9 @@ class PublicPageTests(TestCase):
 class NavigationAndSecurityTests(TestCase):
     """Check the shared navigation order and browser security boundary."""
 
-    # This test protects the business rule described by “header has one builder cta and a separate
-    # party ideas link”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that header has one builder cta and a separate party ideas link. The test client sends
+    # GET to core:core_home; the required outcome is header includes 'Make Your Own Party', header
+    # includes party_ideas:list, and header count is 1.
     def test_header_has_one_builder_cta_and_a_separate_party_ideas_link(self):
         response = self.client.get(reverse("core:core_home"))
         html = response.content.decode("utf-8")
@@ -105,10 +100,8 @@ class NavigationAndSecurityTests(TestCase):
             1,
         )
 
-    # This test protects the business rule described by “homepage offers discovery and direct
-    # builder paths”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that the home page exposes both discovery and direct-builder journeys, with at least
+    # two links to Party Ideas and at least two links to package selection.
     def test_homepage_offers_discovery_and_direct_builder_paths(self):
         response = self.client.get(reverse("core:core_home"))
         html = response.content.decode("utf-8")
@@ -120,10 +113,8 @@ class NavigationAndSecurityTests(TestCase):
         )
         self.assertGreaterEqual(html.count(reverse("party_ideas:list")), 2)
 
-    # This test protects the business rule described by “header has separate language and account
-    # stripe”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that the header renders a separate utility stripe containing the language picker and
+    # account selector before the main navigation row.
     def test_header_has_separate_language_and_account_stripe(self):
         response = self.client.get(reverse("core:core_home"))
         html = response.content.decode("utf-8")
@@ -137,20 +128,18 @@ class NavigationAndSecurityTests(TestCase):
             header.index("header-main-row"),
         )
 
-    # This test protects the business rule described by “security headers are added to public
-    # pages”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that security headers are added to public pages. The test client sends GET to
+    # core:core_home; the required outcome is response content-security-policy includes "default-src
+    # 'self'", response cross-origin-resource-policy equals 'same-origin', and response
+    # permissions-policy includes 'payment=()'.
     def test_security_headers_are_added_to_public_pages(self):
         response = self.client.get(reverse("core:core_home"))
         self.assertIn("default-src 'self'", response["Content-Security-Policy"])
         self.assertEqual(response["Cross-Origin-Resource-Policy"], "same-origin")
         self.assertIn("payment=()", response["Permissions-Policy"])
 
-    # This test protects the business rule described by “static and media urls are absolute site
-    # paths”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that static and media URLs are absolute site paths. The required outcome is
+    # settings.STATIC_URL.startswith('/') is true and settings.MEDIA_URL.startswith('/') is true.
     def test_static_and_media_urls_are_absolute_site_paths(self):
         """Nested public pages must not resolve assets relative to their URL."""
 
@@ -163,10 +152,9 @@ class NavigationAndSecurityTests(TestCase):
 class ConsolidatedStaticAssetTests(TestCase):
     """Ensure templates reference only the surviving consolidated assets."""
 
-    # This test protects the business rule described by “public content pages use shared
-    # stylesheet”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that public content pages use shared stylesheet. The test client sends GET to
+    # reverse(route_name); the required outcome is renders '/static/css/content-pages.css', does not
+    # expose '/static/css/about.css', and does not expose '/static/css/gallery.css'.
     def test_public_content_pages_use_shared_stylesheet(self):
         for route_name in (
             "core:core_about",
@@ -180,10 +168,9 @@ class ConsolidatedStaticAssetTests(TestCase):
                 self.assertNotContains(response, "/static/css/gallery.css")
                 self.assertNotContains(response, "/static/css/testimonials.css")
 
-    # This test protects the business rule described by “base uses consolidated navigation
-    # assets”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that base uses consolidated navigation assets. The test client sends GET to
+    # core:core_home; the required outcome is renders '/static/css/navigation.css', does not expose
+    # '/static/css/account-navigation.css', and does not expose '/static/css/header-utility.css'.
     def test_base_uses_consolidated_navigation_assets(self):
         response = self.client.get(reverse("core:core_home"))
         self.assertContains(response, "/static/css/navigation.css")
@@ -192,10 +179,8 @@ class ConsolidatedStaticAssetTests(TestCase):
         self.assertNotContains(response, "/static/js/account-menu.js")
         self.assertContains(response, "/static/js/main.js")
 
-    # This test protects the business rule described by “generic custom controls load before
-    # header navigation overrides”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that custom-controls.css loads before navigation.css so header overrides remain
+    # predictable, and that the language picker retains combobox and aria-controls markup.
     def test_generic_custom_controls_load_before_header_navigation_overrides(self):
         response = self.client.get(reverse("core:core_home"))
         html = response.content.decode("utf-8")

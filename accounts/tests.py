@@ -27,10 +27,10 @@ User = get_user_model()
 # workflow.
 # Shared setup keeps each scenario focused on the business rule being checked.
 class AccountTests(TestCase):
-    # This test protects the business rule described by “sign up creates profile and signs user
-    # in”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that sign-up creates profile and signs user in. The test client sends POST to
+    # accounts:accounts_sign_up; the required outcome is redirects to
+    # accounts:accounts_customer_dashboard, CustomerProfile matching user=user exists, and the
+    # session is authenticated as the new user.
     def test_sign_up_creates_profile_and_signs_user_in(self):
         response = self.client.post(
             reverse("accounts:accounts_sign_up"),
@@ -50,25 +50,22 @@ class AccountTests(TestCase):
         self.assertTrue(CustomerProfile.objects.filter(user=user).exists())
         self.assertEqual(int(self.client.session["_auth_user_id"]), user.pk)
 
-    # This test protects the business rule described by “groups are bootstrapped”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that groups are bootstrapped. The required outcome is Group matching name='Owners'
+    # exists, Group matching name='Workers' exists, and Group matching name='Pricing Managers'
+    # exists.
     def test_groups_are_bootstrapped(self):
         self.assertTrue(Group.objects.filter(name="Owners").exists())
         self.assertTrue(Group.objects.filter(name="Workers").exists())
         self.assertTrue(Group.objects.filter(name="Pricing Managers").exists())
 
-    # This test protects the business rule described by “guest cannot open dashboard”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that guest cannot open dashboard. A guest sends GET to
+    # accounts:accounts_customer_dashboard; the required outcome is HTTP 302.
     def test_guest_cannot_open_dashboard(self):
         response = self.client.get(reverse("accounts:accounts_customer_dashboard"))
         self.assertEqual(response.status_code, 302)
 
-    # This test protects the business rule described by “signed in account selector is in upper
-    # stripe”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that the signed-in account selector appears in the utility stripe before the main
+    # header row, alongside the language picker, while the Book now button remains in the header.
     def test_signed_in_account_selector_is_in_upper_stripe(self):
         user = User.objects.create_user("nav-user", password="pass-12345")
         self.client.force_login(user)
@@ -85,10 +82,9 @@ class AccountTests(TestCase):
         self.assertIn("custom-language-picker", utility)
         self.assertIn("book-now-button", header)
 
-    # This test protects the business rule described by “account name is escaped before
-    # rendering”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that account name is escaped before rendering. The user sends GET to core:core_home;
+    # the required outcome is does not expose '<script>alert(1)</script>' and renders
+    # '&lt;script&gt;alert(1)&lt;/script&gt;'.
     def test_account_name_is_escaped_before_rendering(self):
         user = User.objects.create_user(
             "escaped-user",
@@ -100,10 +96,9 @@ class AccountTests(TestCase):
         self.assertNotContains(response, "<script>alert(1)</script>")
         self.assertContains(response, "&lt;script&gt;alert(1)&lt;/script&gt;")
 
-    # This test protects the business rule described by “sql like username does not bypass
-    # authentication”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that SQL like username does not bypass authentication. The test client sends POST to
+    # accounts:accounts_sign_in; the required outcome is HTTP 200 and self.client.session omits
+    # '_auth_user_id'.
     def test_sql_like_username_does_not_bypass_authentication(self):
         User.objects.create_user("real-user", password="safe-pass-12345")
         response = self.client.post(
@@ -113,10 +108,9 @@ class AccountTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("_auth_user_id", self.client.session)
 
-    # This test protects the business rule described by “sign up uses named grid cells for
-    # alignment”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that sign-up uses named grid cells for alignment. The test client sends GET to
+    # accounts:accounts_sign_up; the required outcome is renders 'form-field--username', renders
+    # 'form-field--first_name', and renders 'form-field--privacy_consent'.
     def test_sign_up_uses_named_grid_cells_for_alignment(self):
         response = self.client.get(reverse("accounts:accounts_sign_up"))
         self.assertContains(response, "form-field--username")
@@ -124,10 +118,9 @@ class AccountTests(TestCase):
         self.assertContains(response, "form-field--privacy_consent")
         self.assertContains(response, "form-check-row")
 
-    # This test protects the business rule described by “navigation role context reuses one group
-    # lookup for customers”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that navigation role context reuses one group lookup for customers. The required
+    # outcome is context nav is owner is false, context nav is worker is false, and len(captured)
+    # equals 1.
     def test_navigation_role_context_reuses_one_group_lookup_for_customers(self):
         user = User.objects.create_user("role-context-user", password="pass-12345")
         request = RequestFactory().get("/")
@@ -140,10 +133,9 @@ class AccountTests(TestCase):
         self.assertFalse(context["nav_is_worker"])
         self.assertEqual(len(captured), 1)
 
-    # This test protects the business rule described by “administrator and owner are separate
-    # roles”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that administrator and owner are separate roles. The required outcome is
+    # is_administrator(administrator) is true, is_owner(administrator) is false, and
+    # can_access_full_management(administrator) is true.
     def test_administrator_and_owner_are_separate_roles(self):
         administrator = User.objects.create_superuser(
             "role-admin", "role-admin@example.test", "Admin-pass-2026!"
@@ -159,10 +151,9 @@ class AccountTests(TestCase):
         self.assertTrue(is_owner(owner))
         self.assertTrue(can_access_full_management(owner))
 
-    # This test protects the business rule described by “role context exposes separate management
-    # flags”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that role context exposes separate management flags. The required outcome is context
+    # nav is administrator is true, context nav is owner is false, and context nav can access full
+    # management is true.
     def test_role_context_exposes_separate_management_flags(self):
         administrator = User.objects.create_superuser(
             "context-admin", "context-admin@example.test", "Admin-pass-2026!"

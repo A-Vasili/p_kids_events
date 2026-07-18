@@ -37,8 +37,9 @@ from .review_services import save_party_review
 User = get_user_model()
 
 
-# This class groups the information and behaviour needed for testimonial feature mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Provide shared customers, bookings, review helpers, and publication setup for testimonial
+# visibility regressions. Centralized fixtures keep each test focused on consent, privacy, or
+# authorization.
 class TestimonialFeatureMixin:
     # This setup prepares the shared accounts and business records used by the following scenarios
     # without touching real project data.
@@ -171,10 +172,10 @@ class TestimonialFeatureMixin:
 # related customer or staff workflow.
 # Shared setup keeps each scenario focused on the business rule being checked.
 class PartyReviewVisibilityModelAndFormTests(TestimonialFeatureMixin, TestCase):
-    # This test protects the business rule described by “new and existing style reviews default to
-    # private without consent”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that new and existing style reviews default to private without consent. The required
+    # outcome is review.visibility equals PartyReview.Visibility.PRIVATE,
+    # review.testimonial_name_display equals PartyReview.TestimonialNameDisplay.ANONYMOUS, and
+    # review.testimonial_consent_at remains None.
     def test_new_and_existing_style_reviews_default_to_private_without_consent(self):
         booking = self.make_booking()
         review = PartyReview.objects.create(
@@ -190,10 +191,8 @@ class PartyReviewVisibilityModelAndFormTests(TestimonialFeatureMixin, TestCase):
         )
         self.assertIsNone(review.testimonial_consent_at)
 
-    # This test protects the business rule described by “supported choices validate and
-    # unsupported values are rejected”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that supported choices validate and unsupported values are rejected. The required
+    # outcome is raises ValidationError and raises ValidationError.
     def test_supported_choices_validate_and_unsupported_values_are_rejected(self):
         booking = self.make_booking()
         valid = PartyReview(
@@ -215,10 +214,9 @@ class PartyReviewVisibilityModelAndFormTests(TestimonialFeatureMixin, TestCase):
         with self.assertRaises(ValidationError):
             valid.full_clean()
 
-    # This test protects the business rule described by “public display name never uses surname
-    # username or email”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that public display name never uses surname username or email. The required outcome is
+    # review.public_display_name equals 'Maria', review.public_display_name equals 'Verified
+    # customer', and review.public_display_name equals 'Verified customer'.
     def test_public_display_name_never_uses_surname_username_or_email(self):
         booking = self.make_booking()
         review = PartyReview.objects.create(
@@ -238,9 +236,10 @@ class PartyReviewVisibilityModelAndFormTests(TestimonialFeatureMixin, TestCase):
         review.testimonial_name_display = PartyReview.TestimonialNameDisplay.FIRST_NAME
         self.assertEqual(review.public_display_name, "Verified customer")
 
-    # This test protects the business rule described by “form defaults and private empty comment”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that form defaults and private empty comment. The required outcome is
+    # form['visibility'].value() equals PartyReview.Visibility.PRIVATE,
+    # form['testimonial_name_display'].value() equals PartyReview.TestimonialNameDisplay.ANONYMOUS,
+    # and bound.is_valid() is true.
     def test_form_defaults_and_private_empty_comment(self):
         booking = self.make_booking()
         form = PartyReviewForm(booking=booking)
@@ -258,10 +257,8 @@ class PartyReviewVisibilityModelAndFormTests(TestimonialFeatureMixin, TestCase):
         )
         self.assertTrue(bound.is_valid(), bound.errors)
 
-    # This test protects the business rule described by “testimonial requires non whitespace
-    # comment”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that testimonial requires non whitespace comment. The required outcome is
+    # form.is_valid() is false and form.errors includes 'comment'.
     def test_testimonial_requires_non_whitespace_comment(self):
         booking = self.make_booking()
         for value in ("", "   \n  "):
@@ -277,10 +274,10 @@ class PartyReviewVisibilityModelAndFormTests(TestimonialFeatureMixin, TestCase):
                 self.assertFalse(form.is_valid())
                 self.assertIn("comment", form.errors)
 
-    # This test protects the business rule described by “valid testimonial and editing initial
-    # values”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that valid testimonial and editing initial values. The required outcome is
+    # form.is_valid() is true, edit_form['visibility'].value() equals
+    # PartyReview.Visibility.TESTIMONIAL, and edit_form['testimonial_name_display'].value() equals
+    # PartyReview.TestimonialNameDisplay.FIRST_NAME.
     def test_valid_testimonial_and_editing_initial_values(self):
         booking = self.make_booking()
         form = PartyReviewForm(
@@ -311,9 +308,8 @@ class PartyReviewVisibilityModelAndFormTests(TestimonialFeatureMixin, TestCase):
             PartyReview.TestimonialNameDisplay.FIRST_NAME,
         )
 
-    # This test protects the business rule described by “manipulated visibility is rejected”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that manipulated visibility is rejected. The required outcome is form.is_valid() is
+    # false and form.errors includes 'visibility'.
     def test_manipulated_visibility_is_rejected(self):
         booking = self.make_booking()
         form = PartyReviewForm(
@@ -346,10 +342,9 @@ class PartyReviewConsentServiceTests(TestimonialFeatureMixin, TestCase):
         self.assertTrue(booking_queries)
         self.assertNotIn(" JOIN ", booking_queries[0].upper())
 
-    # This test protects the business rule described by “private feedback has no consent and
-    # normalises name choice”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that private feedback has no consent and normalises name choice. The required outcome
+    # is created is true, review.testimonial_consent_at remains None, and
+    # review.testimonial_name_display equals PartyReview.TestimonialNameDisplay.ANONYMOUS.
     def test_private_feedback_has_no_consent_and_normalises_name_choice(self):
         booking = self.make_booking()
         review, created, _stats, outcome = self.service_save(
@@ -366,10 +361,9 @@ class PartyReviewConsentServiceTests(TestimonialFeatureMixin, TestCase):
         )
         self.assertFalse(outcome["is_public_testimonial"])
 
-    # This test protects the business rule described by “testimonial consent is created and
-    # preserved during public edits”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that testimonial consent is created and preserved during public edits. The required
+    # outcome is first_consent is present, created is false, and review.testimonial_consent_at
+    # equals first_consent.
     def test_testimonial_consent_is_created_and_preserved_during_public_edits(self):
         booking = self.make_booking()
         review, _created, _stats, _outcome = self.service_save(
@@ -390,10 +384,9 @@ class PartyReviewConsentServiceTests(TestimonialFeatureMixin, TestCase):
         self.assertEqual(PartyReview.objects.filter(booking=booking).count(), 1)
         self.assertEqual(AddonRating.objects.filter(review=review).count(), 1)
 
-    # This test protects the business rule described by “withdrawing and regranting consent
-    # updates timestamp safely”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that withdrawing and regranting consent updates timestamp safely. The required outcome
+    # is review.testimonial_consent_at remains None, review.testimonial_name_display equals
+    # PartyReview.TestimonialNameDisplay.ANONYMOUS, and outcome message includes 'removed'.
     def test_withdrawing_and_regranting_consent_updates_timestamp_safely(self):
         booking = self.make_booking()
         review, _created, _stats, _outcome = self.service_save(
@@ -422,10 +415,8 @@ class PartyReviewConsentServiceTests(TestimonialFeatureMixin, TestCase):
         self.assertIsNotNone(review.testimonial_consent_at)
         self.assertGreater(review.testimonial_consent_at, original_consent)
 
-    # This test protects the business rule described by “audit records visibility but not comment
-    # or review code”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that review audit data records the private visibility choice without copying the secret
+    # comment, review code, or customer email.
     def test_audit_records_visibility_but_not_comment_or_review_code(self):
         booking = self.make_booking()
         secret_comment = "A private sentence that must not be copied into audit data."
@@ -443,10 +434,9 @@ class PartyReviewConsentServiceTests(TestimonialFeatureMixin, TestCase):
         self.assertNotIn(booking.review_code, audit_text)
         self.assertNotIn(booking.contact_email, audit_text)
 
-    # This test protects the business rule described by “visibility does not remove ratings from
-    # analytics”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that visibility does not remove ratings from analytics. The required outcome is
+    # report['summary'] reviews submitted equals 2 and
+    # float(report['summary']['average_package_score']) equals 4.0.
     def test_visibility_does_not_remove_ratings_from_analytics(self):
         private_booking = self.make_booking()
         public_booking = self.make_booking()
@@ -478,10 +468,9 @@ class TestimonialSubmissionAndAuthorizationTests(TestimonialFeatureMixin, TestCa
             args=[self.booking.public_id],
         )
 
-    # This test protects the business rule described by “ajax private and public responses are
-    # safe”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that AJAX private and public responses are safe. The test client sends POST to
+    # self.submit_url; the required outcome is HTTP 200, response.json() visibility equals
+    # PartyReview.Visibility.PRIVATE, and response.json() public testimonial is false.
     def test_ajax_private_and_public_responses_are_safe(self):
         self.authorize_review(self.booking)
         private_payload = self.payload(
@@ -522,10 +511,9 @@ class TestimonialSubmissionAndAuthorizationTests(TestimonialFeatureMixin, TestCa
         ):
             self.assertNotIn(private_value, payload_text)
 
-    # This test protects the business rule described by “review page uses accessible real radio
-    # controls”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that review page uses accessible real radio controls. The test client sends GET to
+    # party_builder:party_builder_review; the required outcome is HTTP 200, renders
+    # 'name="visibility"', and renders 'name="testimonial_name_display"'.
     def test_review_page_uses_accessible_real_radio_controls(self):
         self.authorize_review(self.booking)
         response = self.client.get(
@@ -540,10 +528,9 @@ class TestimonialSubmissionAndAuthorizationTests(TestimonialFeatureMixin, TestCa
         self.assertContains(response, "Who may see your written feedback?")
         self.assertContains(response, "How should your name appear?")
 
-    # This test protects the business rule described by “normal post publication uses equivalent
-    # success message”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that normal post publication uses equivalent success message. The test client sends
+    # POST to self.submit_url; the required outcome is HTTP 200 and renders 'Your review was saved
+    # and published on the Testimonials page.'.
     def test_normal_post_publication_uses_equivalent_success_message(self):
         self.authorize_review(self.booking)
         response = self.client.post(
@@ -560,10 +547,9 @@ class TestimonialSubmissionAndAuthorizationTests(TestimonialFeatureMixin, TestCa
             "Your review was saved and published on the Testimonials page.",
         )
 
-    # This test protects the business rule described by “blank ajax testimonial is http 400 with
-    # comment error”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that blank AJAX testimonial is HTTP 400 with comment error. The test client sends POST
+    # to self.submit_url; the required outcome is HTTP 400 and response.json() errors includes
+    # 'comment'.
     def test_blank_ajax_testimonial_is_http_400_with_comment_error(self):
         self.authorize_review(self.booking)
         response = self.client.post(
@@ -578,10 +564,9 @@ class TestimonialSubmissionAndAuthorizationTests(TestimonialFeatureMixin, TestCa
         self.assertEqual(response.status_code, 400)
         self.assertIn("comment", response.json()["errors"])
 
-    # This test protects the business rule described by “public to private ajax returns withdrawal
-    # state”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that public to private AJAX returns withdrawal state. The test client sends POST to
+    # self.submit_url; the required outcome is HTTP 200, response.json() public testimonial is
+    # false, and response.json() message includes 'removed'.
     def test_public_to_private_ajax_returns_withdrawal_state(self):
         self.authorize_review(self.booking)
         self.client.post(
@@ -603,10 +588,8 @@ class TestimonialSubmissionAndAuthorizationTests(TestimonialFeatureMixin, TestCa
         self.assertFalse(response.json()["is_public_testimonial"])
         self.assertIn("removed", response.json()["message"])
 
-    # This test protects the business rule described by “other customer and unverified direct
-    # submission remain denied”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that other customer and unverified direct submission remain denied. The customer sends
+    # POST to self.submit_url; the required outcome is HTTP 403 and HTTP 403.
     def test_other_customer_and_unverified_direct_submission_remain_denied(self):
         self.client.force_login(self.other_customer)
         response = self.client.post(
@@ -624,9 +607,8 @@ class TestimonialSubmissionAndAuthorizationTests(TestimonialFeatureMixin, TestCa
         )
         self.assertEqual(response.status_code, 403)
 
-    # This test protects the business rule described by “csrf protection still applies”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that CSRF protection still applies. The customer sends POST to self.submit_url; the
+    # required outcome is HTTP 403.
     def test_csrf_protection_still_applies(self):
         client = Client(enforce_csrf_checks=True)
         client.force_login(self.customer)
@@ -638,9 +620,7 @@ class TestimonialSubmissionAndAuthorizationTests(TestimonialFeatureMixin, TestCa
 # customer or staff workflow.
 # Shared setup keeps each scenario focused on the business rule being checked.
 class PublicTestimonialsViewTests(TestimonialFeatureMixin, TestCase):
-    # This business action carries out create review.
-    # It validates the live records and permissions before changing anything, then keeps related
-    # updates together so partial results are not left behind.
+    # Apply the create review business action to PartyReview. Updates PartyReview.
     def create_review(
         self,
         *,
@@ -667,10 +647,9 @@ class PublicTestimonialsViewTests(TestimonialFeatureMixin, TestCase):
             testimonial_consent_at=timezone.now() if consent else None,
         )
 
-    # This test protects the business rule described by “private and invalid public records do not
-    # appear”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that private and invalid public records do not appear. The test client sends GET to
+    # core:core_testimonials; the required outcome is HTTP 200, does not expose 'hidden_text', and
+    # renders 'No public testimonials have been shared yet.'.
     def test_private_and_invalid_public_records_do_not_appear(self):
         self.create_review(
             visibility=PartyReview.Visibility.PRIVATE,
@@ -693,10 +672,9 @@ class PublicTestimonialsViewTests(TestimonialFeatureMixin, TestCase):
             self.assertNotContains(response, hidden_text)
         self.assertContains(response, "No public testimonials have been shared yet.")
 
-    # This test protects the business rule described by “valid public testimonial uses approved
-    # identity only”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that valid public testimonial uses approved identity only. The test client sends GET to
+    # core:core_testimonials; the required outcome is renders 'The activities were wonderful.',
+    # renders 'Maria', and does not expose 'secret'.
     def test_valid_public_testimonial_uses_approved_identity_only(self):
         review = self.create_review(
             comment="The activities were wonderful.",
@@ -720,9 +698,9 @@ class PublicTestimonialsViewTests(TestimonialFeatureMixin, TestCase):
         ):
             self.assertNotContains(response, secret)
 
-    # This test protects the business rule described by “anonymous identity and html escaping”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that anonymous identity and HTML escaping. A guest sends GET to core:core_testimonials;
+    # the required outcome is renders 'Verified customer', renders '&lt;script&gt;', and does not
+    # expose '<script>alert'.
     def test_anonymous_identity_and_html_escaping(self):
         self.create_review(comment="<script>alert('x')</script>")
         response = self.client.get(reverse("core:core_testimonials"))
@@ -730,10 +708,9 @@ class PublicTestimonialsViewTests(TestimonialFeatureMixin, TestCase):
         self.assertContains(response, "&lt;script&gt;", html=False)
         self.assertNotContains(response, "<script>alert")
 
-    # This test protects the business rule described by “withdrawing consent removes testimonial
-    # immediately”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that withdrawing consent removes testimonial immediately. The test client sends GET to
+    # url; the required outcome is renders 'Visible then private' and does not expose 'Visible then
+    # private'.
     def test_withdrawing_consent_removes_testimonial_immediately(self):
         review = self.create_review(comment="Visible then private")
         url = reverse("core:core_testimonials")
@@ -750,10 +727,8 @@ class PublicTestimonialsViewTests(TestimonialFeatureMixin, TestCase):
         )
         self.assertNotContains(self.client.get(url), "Visible then private")
 
-    # This test protects the business rule described by “public testimonial query count remains
-    # bounded”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that public testimonial query count remains bounded. The test client sends GET to
+    # core:core_testimonials; the required outcome is HTTP 200 and len(queries) is at most 8.
     def test_public_testimonial_query_count_remains_bounded(self):
         for index in range(4):
             self.create_review(comment=f"Bounded query comment {index}")
@@ -762,10 +737,9 @@ class PublicTestimonialsViewTests(TestimonialFeatureMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertLessEqual(len(queries), 8)
 
-    # This test protects the business rule described by “ordering pagination and static
-    # placeholders are removed”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that ordering pagination and static placeholders are removed. The test client sends GET
+    # to core:core_testimonials; the required outcome is len(response.context['testimonials'])
+    # equals 9, renders 'Public comment 9', and does not expose 'Planning and communication'.
     def test_ordering_pagination_and_static_placeholders_are_removed(self):
         for index in range(10):
             review = self.create_review(comment=f"Public comment {index}")
@@ -785,10 +759,9 @@ class PublicTestimonialsViewTests(TestimonialFeatureMixin, TestCase):
 # related customer or staff workflow.
 # Shared setup keeps each scenario focused on the business rule being checked.
 class DashboardAndManagementVisibilityTests(TestimonialFeatureMixin, TestCase):
-    # This test protects the business rule described by “dashboard labels private and public
-    # reviews”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that dashboard labels private and public reviews. The customer sends GET to
+    # accounts:accounts_customer_dashboard; the required outcome is renders 'Review submitted —
+    # Private feedback' and renders 'Review submitted — Published testimonial'.
     def test_dashboard_labels_private_and_public_reviews(self):
         booking = self.make_booking(with_addon=False)
         self.service_save(
@@ -806,10 +779,9 @@ class DashboardAndManagementVisibilityTests(TestimonialFeatureMixin, TestCase):
         response = self.client.get(reverse("accounts:accounts_customer_dashboard"))
         self.assertContains(response, "Review submitted — Published testimonial")
 
-    # This test protects the business rule described by “owner analytics displays private and
-    # public feedback labels”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that owner analytics displays private and public feedback labels. The owner sends GET
+    # to management:management_analytics; the required outcome is HTTP 200, renders 'Owner-only
+    # feedback', and renders 'Public feedback'.
     def test_owner_analytics_displays_private_and_public_feedback_labels(self):
         private_booking = self.make_booking(with_addon=False)
         public_booking = self.make_booking(with_addon=False)

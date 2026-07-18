@@ -7,14 +7,12 @@ from __future__ import annotations
 from django.conf import settings
 
 
-# This class groups the information and behaviour needed for popadoo security headers middleware.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Add a strict content policy without changing page content. Wraps each request/response cycle.
 class PopadooSecurityHeadersMiddleware:
     """Add a strict content policy without changing page content."""
 
-    # This method handles init for the surrounding popadoo security headers middleware.
-    # It keeps that responsibility close to the object while relying on the existing validation
-    # and permission boundaries.
+    # Store Django’s downstream response callable when PopadooSecurityHeadersMiddleware is
+    # constructed. Each request can then add its headers after the wrapped application responds.
     def __init__(self, get_response):
         self.get_response = get_response
 

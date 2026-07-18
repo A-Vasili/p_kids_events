@@ -30,9 +30,10 @@
             return;
         }
 
-        // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+        // Run the shared activation callback when the custom div button is clicked.
         element.addEventListener("click", callback);
-        // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+        // Treat Enter and Space on the custom div button like a click, preventing the default key action before
+        // invoking the callback.
         element.addEventListener("keydown", (event) => {
             if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
@@ -114,19 +115,23 @@
         }
 
         bindEvents() {
-            // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+            // Toggle the custom select popup from its trigger while synchronizing aria-expanded, option focus, and
+            // popup visibility.
             this.trigger.addEventListener("click", () => this.toggle());
-            // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+            // Open the custom select from Enter, Space, or arrow keys and place focus on the appropriate option.
             this.trigger.addEventListener("keydown", (event) => this.onTriggerKeydown(event));
-            // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+            // Navigate, select, close, or leave the custom select listbox with the expected arrow, Home/End,
+            // Enter/Space, Escape, and Tab behavior.
             this.listbox.addEventListener("keydown", (event) => this.onListboxKeydown(event));
 
             this.options.forEach((option) => {
-                // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+                // Select the clicked custom-select option, copy its value to the native input, close the popup, and
+                // dispatch the input/change notifications.
                 option.addEventListener("click", () => this.select(option, true));
             });
 
-            // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+            // Synchronize the custom-select label, selected option, and ARIA state whenever its native input value
+            // changes.
             this.input.addEventListener("change", () => this.syncFromInput());
             // This listener responds to the popadoo:close-control event and keeps the enhanced interface aligned with the visitor’s action.
             this.root.addEventListener("popadoo:close-control", () => this.close());
@@ -273,15 +278,17 @@
         }
 
         bindEvents() {
-            // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+            // Toggle the date-picker popup from its trigger while keeping expanded state, calendar focus, and
+            // visibility synchronized.
             this.trigger.addEventListener("click", () => this.toggle());
-            // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+            // Open the date picker from Enter, Space, or ArrowDown and move focus into the calendar grid.
             this.trigger.addEventListener("keydown", (event) => this.onTriggerKeydown(event));
             activateDivButton(this.previous, () => this.changeMonth(-1));
             activateDivButton(this.next, () => this.changeMonth(1));
             // This listener responds to the popadoo:close-control event and keeps the enhanced interface aligned with the visitor’s action.
             this.root.addEventListener("popadoo:close-control", () => this.close());
-            // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+            // Parse the changed native date value, update the selected and focused day, and refresh the visible date
+            // label.
             this.input.addEventListener("change", () => {
                 this.selectedDate = parseDate(this.input.value);
                 this.focusDate = this.selectedDate || this.focusDate;
@@ -421,9 +428,11 @@
                 cell.classList.toggle("is-today", isToday);
                 cell.classList.toggle("is-disabled", !allowed);
 
-                // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+                // Select the clicked calendar day, write it to the native date input, close the picker, and return
+                // focus to the trigger.
                 cell.addEventListener("click", () => this.selectDate(date));
-                // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+                // Support arrow, Home/End, PageUp/PageDown, Enter/Space, and Escape navigation for each calendar day
+                // while preserving grid focus.
                 cell.addEventListener("keydown", (event) => this.onDayKeydown(event, date));
                 this.grid.appendChild(cell);
             }
@@ -556,7 +565,8 @@
                 option.tabIndex = -1;
                 option.dataset.value = entry.value;
                 option.textContent = entry.label;
-                // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+                // Select the clicked time option, copy it to the native input, close the listbox, and dispatch the
+                // input/change notifications.
                 option.addEventListener("click", () => this.select(option, true));
                 this.listbox.appendChild(option);
             });
@@ -565,13 +575,15 @@
         }
 
         bindEvents() {
-            // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+            // Toggle the time-picker listbox from its trigger while synchronizing expanded state, option focus, and
+            // visibility.
             this.trigger.addEventListener("click", () => this.toggle());
-            // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+            // Open the time picker from Enter, Space, or arrow keys and focus the selected or adjacent time option.
             this.trigger.addEventListener("keydown", (event) => this.onTriggerKeydown(event));
-            // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+            // Navigate, select, close, or leave the time listbox with arrow, Home/End, Enter/Space, Escape, and Tab
+            // behavior.
             this.listbox.addEventListener("keydown", (event) => this.onListboxKeydown(event));
-            // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+            // Synchronize the time-picker label and selected option whenever the native time input changes.
             this.input.addEventListener("change", () => this.syncFromInput());
             // This listener responds to the popadoo:close-control event and keeps the enhanced interface aligned with the visitor’s action.
             this.root.addEventListener("popadoo:close-control", () => this.close());
@@ -694,9 +706,11 @@
             }
 
             this.populateParts();
-            // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+            // Combine the changed date with the current time into the hidden datetime input and dispatch its
+            // input/change events.
             this.dateInput.addEventListener("change", () => this.combineParts());
-            // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+            // Combine the changed time with the current date into the hidden datetime input and dispatch its
+            // input/change events.
             this.timeInput.addEventListener("change", () => this.combineParts());
         }
 
@@ -730,7 +744,8 @@
         (root) => new TimePicker(root)
     );
 
-    // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+    // Close any open custom popover when a click lands outside its root, leaving clicks inside the active control
+    // untouched.
     document.addEventListener("click", (event) => {
         document.querySelectorAll("[data-custom-popover-open='true']").forEach((root) => {
             if (!root.contains(event.target)) {
@@ -739,7 +754,8 @@
         });
     });
 
-    // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+    // Close every open custom popover on Escape so keyboard users can dismiss select, date, and time controls
+    // consistently.
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
             document.querySelectorAll("[data-custom-popover-open='true']").forEach((root) => {

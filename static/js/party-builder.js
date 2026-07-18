@@ -188,7 +188,8 @@
 
         // This helper carries out add keyboard navigation for the visitor-facing interaction managed by this script.
         const addKeyboardNavigation = (container, controls) => {
-            // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+            // Move focus among visible package or add-on controls with arrows and Home/End, wrapping within the current
+            // grid.
             container?.addEventListener("keydown", (event) => {
                 // This helper carries out visible controls for the visitor-facing interaction managed by this script.
                 const visibleControls = controls.filter((control) => !control.closest("[hidden]"));
@@ -248,7 +249,8 @@
                 button.className = "button button-outline recommendation-action";
                 button.dataset.i18n = "builder.selectExperience";
                 button.textContent = translate("builder.selectExperience");
-                // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+                // Select the recommended add-on’s checkbox, dispatch its change event so cart totals refresh, and move
+                // focus to that checkbox.
                 button.addEventListener("click", () => {
                     const checkbox = optionsForm.querySelector(`[data-addon-checkbox][value='${CSS.escape(String(item.id))}']`);
                     if (checkbox && !checkbox.checked) {
@@ -283,12 +285,12 @@
             }
         };
 
-        // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+        // Recalculate the cart and refresh server recommendations when the selected package changes.
         packageRadios.forEach((radio) => radio.addEventListener("change", () => {
             renderCart({ announce: true });
             refreshRecommendations();
         }));
-        // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+        // Recalculate the cart and refresh server recommendations when any add-on checkbox changes.
         addonCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", () => {
             renderCart({ announce: true });
             refreshRecommendations();
@@ -329,7 +331,8 @@
         };
         // This listener responds to the input event and keeps the enhanced interface aligned with the visitor’s action.
         searchInput?.addEventListener("input", applyAddonFilter);
-        // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+        // Activate the selected add-on category filter, update each button’s pressed state, and recalculate the visible
+        // experience results.
         filterButtons.forEach((button) => button.addEventListener("click", () => {
             activeCategory = button.dataset.addonFilter;
             filterButtons.forEach((item) => {
@@ -361,7 +364,8 @@
     });
 
     const paymentForm = document.querySelector("[data-payment-form]");
-    // This listener responds to the submit event and keeps the enhanced interface aligned with the visitor’s action.
+    // Disable the payment submit button and show the simulation-in-progress label while the server completes the
+    // checkout request.
     paymentForm?.addEventListener("submit", () => {
         const submitButton = paymentForm.querySelector("[data-checkout-submit]");
         if (submitButton) {

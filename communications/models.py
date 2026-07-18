@@ -49,8 +49,8 @@ class CustomerChat(models.Model):
         related_name="+",
     )
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('-last_message_at', '-created_at'); create the declared database index(es).
+    # These options are enforced by Django rather than by template input.
     class Meta:
         ordering = ("-last_message_at", "-created_at")
         indexes = [
@@ -102,8 +102,8 @@ class ChatMessage(models.Model):
     body = models.TextField(max_length=5000)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('created_at', 'pk'); create the declared database index(es). These options
+    # are enforced by Django rather than by template input.
     class Meta:
         ordering = ("created_at", "pk")
         indexes = [models.Index(fields=("chat", "created_at"))]
@@ -134,8 +134,8 @@ class ChatReadState(models.Model):
     last_read_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Enforce the declared database constraint(s); create the declared database index(es). These
+    # options are enforced by Django rather than by template input.
     class Meta:
         constraints = [
             models.UniqueConstraint(

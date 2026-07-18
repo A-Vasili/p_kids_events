@@ -33,33 +33,30 @@ from .services.bookings import (
 )
 
 
-# This class groups the information and behaviour needed for operations access mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Gate the operations area to authenticated workers or full managers, routing each account through
+# the shared role predicates instead of template-only checks.
 class OperationsAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
     raise_exception = True
 
-    # This test protects the business rule described by “func”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Allow the view only when the current account satisfies its explicit role predicate.
+    # UserPassesTestMixin turns a false result into the configured redirect or permission denial.
     def test_func(self):
         return can_access_operations(self.request.user)
 
 
-# This class groups the information and behaviour needed for worker required mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Require an authenticated account with an active Worker profile before any worker assignment or
+# availability view can load.
 class WorkerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     raise_exception = True
 
-    # This test protects the business rule described by “func”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Allow the view only when the current account satisfies worker. UserPassesTestMixin turns a
+    # false result into the configured redirect or permission denial.
     def test_func(self):
         user = self.request.user
         return is_worker(user)
 
-    # This helper retrieves worker profile for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Return the active WorkerProfile attached to the signed-in account, raising HTTP 404 when the
+    # worker record is missing or inactive.
     def get_worker_profile(self):
         return get_object_or_404(
             WorkerProfile,
@@ -68,21 +65,21 @@ class WorkerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         )
 
 
-# This view coordinates the operations dashboard view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/dashboard.html for the operations dashboard journey. Responses continue through
+# management:management_dashboard.
 class OperationsDashboardView(OperationsAccessMixin, TemplateView):
     template_name = "operations/dashboard.html"
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Redirect Administrators and Owners to the full management dashboard; other authenticated
+    # operations users continue to the staff dashboard allowed by their role.
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and can_access_full_management(request.user):
             return redirect("management:management_dashboard")
         return super().dispatch(request, *args, **kwargs)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add owner panel, pending assignments, and upcoming assignments to OperationsDashboardView’s
+    # template context. The base context is preserved, and values are derived from the current
+    # request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         worker = get_object_or_404(
@@ -105,9 +102,8 @@ class OperationsDashboardView(OperationsAccessMixin, TemplateView):
         return context
 
 
-# This view coordinates the worker assignment list view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/assignment_list.html for the worker assignment list journey. Access is limited
+# to active workers; the queryset method limits which records can be loaded.
 class WorkerAssignmentListView(WorkerRequiredMixin, ListView):
     template_name = "operations/assignment_list.html"
     context_object_name = "assignments"
@@ -123,9 +119,9 @@ class WorkerAssignmentListView(WorkerRequiredMixin, ListView):
         ).prefetch_related("party_build__addon_items__addon")
 
 
-# This view coordinates the worker assignment detail view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/assignment_detail.html for the worker assignment detail journey using
+# PartyAssignment. Access is limited to active workers; the queryset method limits which records can
+# be loaded.
 class WorkerAssignmentDetailView(WorkerRequiredMixin, DetailView):
     model = PartyAssignment
     template_name = "operations/assignment_detail.html"
@@ -157,13 +153,13 @@ class WorkerAssignmentDetailView(WorkerRequiredMixin, DetailView):
         return context
 
 
-# This view coordinates the worker assignment accept view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the worker assignment accept route. Access is limited to active workers; responses
+# continue through operations:operations_worker_assignment_detail.
 class WorkerAssignmentAcceptView(WorkerRequiredMixin, View):
     http_method_names = ["post"]
 
-    # This request method processes the submitted action after validation and permission checks.
+    # Accept only the signed-in worker’s assignment through accept_assignment; stale or invalid
+    # offers return an error and the same assignment detail page.
     def post(self, request, pk):
         try:
             assignment = accept_assignment(
@@ -214,15 +210,15 @@ class WorkerAssignmentCompleteView(WorkerRequiredMixin, View):
         )
 
 
-# This view coordinates the worker assignment decline view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/assignment_detail.html for the worker assignment decline journey with
+# DeclineAssignmentForm. Access is limited to active workers; responses continue through
+# operations:operations_worker_assignments.
 class WorkerAssignmentDeclineView(WorkerRequiredMixin, FormView):
     form_class = DeclineAssignmentForm
     template_name = "operations/assignment_detail.html"
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Load only an assignment belonging to the signed-in worker before decline handling; another
+    # worker’s assignment is hidden with HTTP 404.
     def dispatch(self, request, *args, **kwargs):
         self.assignment = get_object_or_404(
             PartyAssignment,
@@ -256,17 +252,16 @@ class WorkerAssignmentDeclineView(WorkerRequiredMixin, FormView):
         return redirect("operations:operations_worker_assignments")
 
 
-# This view coordinates the worker profile view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/worker_profile.html for the worker profile journey with WorkerProfileForm.
+# Access is limited to active workers; success continues to
+# reverse_lazy('operations:operations_worker_profile').
 class WorkerProfileView(WorkerRequiredMixin, FormView):
     template_name = "operations/worker_profile.html"
     form_class = WorkerProfileForm
     success_url = reverse_lazy("operations:operations_worker_profile")
 
-    # This helper retrieves form kwargs for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Pass instance into WorkerProfileView’s form constructor so field choices and validation use
+    # the current authorized records. The base view kwargs are preserved.
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["instance"] = self.get_worker_profile()
@@ -280,9 +275,9 @@ class WorkerProfileView(WorkerRequiredMixin, FormView):
         return super().form_valid(form)
 
 
-# This view coordinates the worker availability view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/availability.html for the worker availability journey with
+# WorkerAvailabilityForm. Access is limited to active workers; success continues to
+# reverse_lazy('operations:operations_worker_availability').
 class WorkerAvailabilityView(WorkerRequiredMixin, FormView):
     template_name = "operations/availability.html"
     form_class = WorkerAvailabilityForm
@@ -298,8 +293,8 @@ class WorkerAvailabilityView(WorkerRequiredMixin, FormView):
         messages.success(self.request, "Your availability was saved.")
         return super().form_valid(form)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add availability periods to WorkerAvailabilityView’s template context. The base context is
+    # preserved, and values are derived from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["availability_periods"] = self.get_worker_profile().availability_periods.filter(
@@ -308,13 +303,13 @@ class WorkerAvailabilityView(WorkerRequiredMixin, FormView):
         return context
 
 
-# This view coordinates the worker availability delete view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the worker availability delete route. Access is limited to active workers; responses
+# continue through operations:operations_worker_availability.
 class WorkerAvailabilityDeleteView(WorkerRequiredMixin, View):
     http_method_names = ["post"]
 
-    # This request method processes the submitted action after validation and permission checks.
+    # Delete only a future availability period owned by the signed-in worker, then return to the
+    # worker availability page with confirmation.
     def post(self, request, pk):
         period = get_object_or_404(
             WorkerAvailability,
@@ -327,14 +322,13 @@ class WorkerAvailabilityDeleteView(WorkerRequiredMixin, View):
         return redirect("operations:operations_worker_availability")
 
 
-# This view coordinates the worker schedule view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/worker_schedule.html for the worker schedule journey. Access is limited to
+# active workers.
 class WorkerScheduleView(WorkerRequiredMixin, TemplateView):
     template_name = "operations/worker_schedule.html"
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add worker and assignments to WorkerScheduleView’s template context. The base context is
+    # preserved, and values are derived from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         worker = self.get_worker_profile()
@@ -346,17 +340,15 @@ class WorkerScheduleView(WorkerRequiredMixin, TemplateView):
         return context
 
 
-# This view coordinates the legacy owner booking assignment redirect view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Translate the old integer booking URL to the canonical UUID route. Access is limited to
+# authenticated accounts; responses continue through management:management_booking_assign.
 class LegacyOwnerBookingAssignmentRedirectView(LoginRequiredMixin, UserPassesTestMixin, View):
     """Translate the old integer booking URL to the canonical UUID route."""
 
     raise_exception = True
 
-    # This test protects the business rule described by “func”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Allow the view only when the current account satisfies its explicit role predicate.
+    # UserPassesTestMixin turns a false result into the configured redirect or permission denial.
     def test_func(self):
         return can_access_full_management(self.request.user)
 

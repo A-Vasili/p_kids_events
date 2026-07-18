@@ -19,9 +19,8 @@ class Command(BaseCommand):
 
     help = "Assign an existing user to a Popadoo customer, worker, delegated worker, or owner role."
 
-    # This business action carries out add arguments.
-    # It validates the live records and permissions before changing anything, then keeps related
-    # updates together so partial results are not left behind.
+    # Register the username and constrained role choices accepted by the set_popadoo_role management
+    # command. Invalid role names are rejected by argparse before any account is changed.
     def add_arguments(self, parser):
         parser.add_argument("username")
         parser.add_argument(

@@ -16,9 +16,7 @@ ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 
-# This function handles safe image path as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Return a generated media path while preserving only a safe extension.
 def _safe_image_path(folder: str, filename: str) -> str:
     """Return a generated media path while preserving only a safe extension."""
 
@@ -28,23 +26,20 @@ def _safe_image_path(folder: str, filename: str) -> str:
     return f"catalogue/{folder}/{uuid.uuid4().hex}{extension}"
 
 
-# This function handles category image upload to as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Store uploaded category images under the sanitized categories path, using the shared filename
+# hardening instead of trusting the original upload name.
 def category_image_upload_to(instance, filename: str) -> str:
     return _safe_image_path("categories", filename)
 
 
-# This function handles package image upload to as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Store uploaded package images under the sanitized packages path, using the shared filename
+# hardening instead of trusting the original upload name.
 def package_image_upload_to(instance, filename: str) -> str:
     return _safe_image_path("packages", filename)
 
 
-# This function handles addon image upload to as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Store uploaded add-on images under the sanitized addons path, using the shared filename hardening
+# instead of trusting the original upload name.
 def addon_image_upload_to(instance, filename: str) -> str:
     return _safe_image_path("addons", filename)
 

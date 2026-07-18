@@ -168,9 +168,8 @@ def mark_booking_completed(
     )
 
 
-# This function handles change booking status as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Return the change booking status result from PartyBuild, applying the filters encoded here so
+# every caller sees the same eligible records.
 @transaction.atomic
 def change_booking_status(*, booking: PartyBuild, status: str, actor, note: str = "") -> PartyBuild:
     if not can_access_full_management(actor):
@@ -210,9 +209,8 @@ def change_booking_status(*, booking: PartyBuild, status: str, actor, note: str 
     return locked
 
 
-# This function handles send to manual review as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Move an active booking into the owner attention queue. It locks the live row before applying
+# changes so concurrent requests cannot leave partial state.
 @transaction.atomic
 def send_to_manual_review(*, booking: PartyBuild, actor, reason: str) -> PartyBuild:
     """Move an active booking into the owner attention queue.

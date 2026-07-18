@@ -34,8 +34,8 @@ def reverse_noop(apps, schema_editor):
     pass
 
 
-# This class groups the information and behaviour needed for migration.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Apply the populate review codes data migration through populate review codes. Dependencies keep
+# the data change ordered after the required schema.
 class Migration(migrations.Migration):
     dependencies = [("party_builder", "0010_review_system")]
     operations = [migrations.RunPython(populate_review_codes, reverse_noop)]

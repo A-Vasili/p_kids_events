@@ -104,26 +104,22 @@ class ChatTestBase(TestCase):
 # workflow.
 # Shared setup keeps each scenario focused on the business rule being checked.
 class ChatModelTests(ChatTestBase):
-    # This test protects the business rule described by “one customer has one chat”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that the database’s one-to-one customer relation rejects a second CustomerChat for the
+    # same customer, preserving one conversation thread per account.
     def test_one_customer_has_one_chat(self):
         CustomerChat.objects.create(customer=self.customer)
         with self.assertRaises(Exception):
             CustomerChat.objects.create(customer=self.customer)
 
-    # This test protects the business rule described by “chat uses uuid and waiting staff
-    # default”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that chat uses UUID and waiting staff default. The required outcome is chat.public_id
+    # is true and chat status is CustomerChat.Status.WAITING_STAFF.
     def test_chat_uses_uuid_and_waiting_staff_default(self):
         chat = CustomerChat.objects.create(customer=self.customer)
         self.assertTrue(chat.public_id)
         self.assertEqual(chat.status, CustomerChat.Status.WAITING_STAFF)
 
-    # This test protects the business rule described by “message keeps sender snapshot”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that message keeps sender snapshot. The required outcome is message.sender_name equals
+    # 'Chris' and message.sender_role equals ChatMessage.SenderRole.CUSTOMER.
     def test_message_keeps_sender_snapshot(self):
         chat, message = add_customer_message(customer=self.customer, body="Hello")
         self.customer.first_name = "Changed"
@@ -132,9 +128,8 @@ class ChatModelTests(ChatTestBase):
         self.assertEqual(message.sender_name, "Chris")
         self.assertEqual(message.sender_role, ChatMessage.SenderRole.CUSTOMER)
 
-    # This test protects the business rule described by “read state is unique per user and chat”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that read state is unique per user and chat. The required outcome is
+    # ChatReadState.objects.filter(chat=chat, user=self.admin) count is 1.
     def test_read_state_is_unique_per_user_and_chat(self):
         chat, _ = add_customer_message(customer=self.customer, body="Hello")
         mark_chat_read(chat=chat, user=self.admin)
@@ -143,9 +138,7 @@ class ChatModelTests(ChatTestBase):
             ChatReadState.objects.filter(chat=chat, user=self.admin).count(), 1
         )
 
-    # This test protects the business rule described by “chat protects customer history”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that chat protects customer history. The required outcome is raises ProtectedError.
     def test_chat_protects_customer_history(self):
         CustomerChat.objects.create(customer=self.customer)
         with self.assertRaises(ProtectedError):
@@ -156,18 +149,17 @@ class ChatModelTests(ChatTestBase):
 # workflow.
 # Shared setup keeps each scenario focused on the business rule being checked.
 class CustomerChatTests(ChatTestBase):
-    # This test protects the business rule described by “anonymous page prompts for sign in”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that anonymous page prompts for sign in. A guest sends GET to
+    # communications:customer_chat; the required outcome is HTTP 200, renders 'Sign in to chat with
+    # P Kids Events', and contains a link to accounts:accounts_sign_in.
     def test_anonymous_page_prompts_for_sign_in(self):
         response = self.client.get(reverse("communications:customer_chat"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Sign in to chat with P Kids Events")
         self.assertContains(response, reverse("accounts:accounts_sign_in"))
 
-    # This test protects the business rule described by “anonymous user cannot send”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that anonymous user cannot send. A guest sends POST to communications:customer_send;
+    # the required outcome is HTTP 302 and CustomerChat.objects count is 0.
     def test_anonymous_user_cannot_send(self):
         response = self.client.post(
             reverse("communications:customer_send"), {"message": "Hello"}
@@ -175,10 +167,10 @@ class CustomerChatTests(ChatTestBase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(CustomerChat.objects.count(), 0)
 
-    # This test protects the business rule described by “first message creates chat and later
-    # message reuses it”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that first message creates chat and later message reuses it. The customer sends POST to
+    # communications:customer_send; the required outcome is
+    # CustomerChat.objects.filter(customer=self.customer) count is 1 and
+    # ChatMessage.objects.filter(chat__customer=self.customer) count is 2.
     def test_first_message_creates_chat_and_later_message_reuses_it(self):
         self.client.force_login(self.customer)
         self.client.post(
@@ -190,9 +182,8 @@ class CustomerChatTests(ChatTestBase):
         self.assertEqual(CustomerChat.objects.filter(customer=self.customer).count(), 1)
         self.assertEqual(ChatMessage.objects.filter(chat__customer=self.customer).count(), 2)
 
-    # This test protects the business rule described by “customer message sets waiting staff”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that customer message sets waiting staff. The required outcome is chat status is
+    # CustomerChat.Status.WAITING_STAFF.
     def test_customer_message_sets_waiting_staff(self):
         chat, _ = add_customer_message(customer=self.customer, body="Hello")
         self.delegate_chat()
@@ -201,9 +192,9 @@ class CustomerChatTests(ChatTestBase):
         chat.refresh_from_db()
         self.assertEqual(chat.status, CustomerChat.Status.WAITING_STAFF)
 
-    # This test protects the business rule described by “whitespace only message is rejected”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that whitespace only message is rejected. The customer sends POST to
+    # communications:customer_send; the required outcome is HTTP 400 and ChatMessage.objects count
+    # is 0.
     def test_whitespace_only_message_is_rejected(self):
         self.client.force_login(self.customer)
         response = self.client.post(
@@ -212,10 +203,9 @@ class CustomerChatTests(ChatTestBase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(ChatMessage.objects.count(), 0)
 
-    # This test protects the business rule described by “customer cannot supply identity or
-    # status”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that customer cannot supply identity or status. The customer sends POST to
+    # communications:customer_send; the required outcome is chat.customer equals self.customer, chat
+    # status is CustomerChat.Status.WAITING_STAFF, and message.sender equals self.customer.
     def test_customer_cannot_supply_identity_or_status(self):
         self.client.force_login(self.customer)
         self.client.post(
@@ -233,9 +223,9 @@ class CustomerChatTests(ChatTestBase):
         self.assertEqual(chat.status, CustomerChat.Status.WAITING_STAFF)
         self.assertEqual(message.sender, self.customer)
 
-    # This test protects the business rule described by “message html is escaped”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that message HTML is escaped. The customer sends GET to communications:customer_chat;
+    # the required outcome is renders '&lt;script&gt;alert(1)&lt;/script&gt;' and does not expose
+    # '<script>alert(1)</script>'.
     def test_message_html_is_escaped(self):
         add_customer_message(customer=self.customer, body="<script>alert(1)</script>")
         self.client.force_login(self.customer)
@@ -243,10 +233,9 @@ class CustomerChatTests(ChatTestBase):
         self.assertContains(response, "&lt;script&gt;alert(1)&lt;/script&gt;")
         self.assertNotContains(response, "<script>alert(1)</script>")
 
-    # This test protects the business rule described by “widget endpoint contains only signed in
-    # customers chat”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that widget endpoint contains only signed-in customers chat. The customer sends GET to
+    # communications:customer_panel; the required outcome is renders 'Mine' and does not expose 'Not
+    # mine'.
     def test_widget_endpoint_contains_only_signed_in_customers_chat(self):
         add_customer_message(customer=self.customer, body="Mine")
         add_customer_message(customer=self.other_customer, body="Not mine")
@@ -255,19 +244,16 @@ class CustomerChatTests(ChatTestBase):
         self.assertContains(response, "Mine")
         self.assertNotContains(response, "Not mine")
 
-    # This test protects the business rule described by “staff accounts do not get customer
-    # composer”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that staff accounts do not get customer composer. The admin sends GET to
+    # communications:customer_chat; the required outcome is redirects to
+    # communications:management_inbox.
     def test_staff_accounts_do_not_get_customer_composer(self):
         self.client.force_login(self.admin)
         response = self.client.get(reverse("communications:customer_chat"))
         self.assertRedirects(response, reverse("communications:management_inbox"))
 
-    # This test protects the business rule described by “burst limit rejects eleventh recent
-    # message”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that burst limit rejects eleventh recent message. The required outcome is raises
+    # ValidationError.
     def test_burst_limit_rejects_eleventh_recent_message(self):
         for number in range(10):
             add_customer_message(customer=self.customer, body=f"Message {number}")
@@ -285,19 +271,18 @@ class ManagementChatTests(ChatTestBase):
         super().setUp()
         self.chat, _ = add_customer_message(customer=self.customer, body="Question")
 
-    # This test protects the business rule described by “administrator and owner can open
-    # messages”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that administrator and owner can open messages. The user sends GET to
+    # communications:management_inbox; the required outcome is HTTP 200.
     def test_administrator_and_owner_can_open_messages(self):
         for user in (self.admin, self.owner):
             self.client.force_login(user)
             response = self.client.get(reverse("communications:management_inbox"))
             self.assertEqual(response.status_code, 200)
 
-    # This test protects the business rule described by “full manager can reply”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that full manager can reply. The admin sends POST to communications:management_reply;
+    # the required outcome is redirects to communications:management_chat, self.chat status is
+    # CustomerChat.Status.WAITING_CUSTOMER, and self.chat.messages.last().sender_role equals
+    # 'administrator'.
     def test_full_manager_can_reply(self):
         self.client.force_login(self.admin)
         response = self.client.post(
@@ -312,28 +297,25 @@ class ManagementChatTests(ChatTestBase):
         self.assertEqual(self.chat.status, CustomerChat.Status.WAITING_CUSTOMER)
         self.assertEqual(self.chat.messages.last().sender_role, "administrator")
 
-    # This test protects the business rule described by “customer and ordinary worker are denied”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that customer and ordinary worker are denied. The user sends GET to
+    # communications:management_inbox; the required outcome is HTTP 403.
     def test_customer_and_ordinary_worker_are_denied(self):
         for user in (self.customer, self.worker):
             self.client.force_login(user)
             response = self.client.get(reverse("communications:management_inbox"))
             self.assertEqual(response.status_code, 403)
 
-    # This test protects the business rule described by “pricing only worker is denied”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that pricing only worker is denied. The worker sends GET to
+    # communications:management_inbox; the required outcome is HTTP 403.
     def test_pricing_only_worker_is_denied(self):
         self.pricing_group.user_set.add(self.worker)
         self.client.force_login(self.worker)
         response = self.client.get(reverse("communications:management_inbox"))
         self.assertEqual(response.status_code, 403)
 
-    # This test protects the business rule described by “delegated active worker can view and
-    # reply”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that delegated active worker can view and reply. The worker sends GET to
+    # communications:management_inbox; the required outcome is HTTP 200, HTTP 302, and
+    # self.chat.messages.last().sender_role equals 'worker'.
     def test_delegated_active_worker_can_view_and_reply(self):
         self.delegate_chat()
         self.client.force_login(self.worker)
@@ -346,9 +328,8 @@ class ManagementChatTests(ChatTestBase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.chat.messages.last().sender_role, "worker")
 
-    # This test protects the business rule described by “inactive delegated worker is denied”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that inactive delegated worker is denied. The worker sends GET to
+    # communications:management_inbox; the required outcome is HTTP 403.
     def test_inactive_delegated_worker_is_denied(self):
         self.delegate_chat()
         self.worker_profile.is_active_worker = False
@@ -357,10 +338,9 @@ class ManagementChatTests(ChatTestBase):
         response = self.client.get(reverse("communications:management_inbox"))
         self.assertEqual(response.status_code, 403)
 
-    # This test protects the business rule described by “chat responder cannot access unrelated
-    # management sections”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that chat responder cannot access unrelated management sections. The worker sends GET
+    # to management:management_dashboard; the required outcome is redirects to
+    # communications:management_inbox, self returns HTTP 403, and self returns HTTP 403.
     def test_chat_responder_cannot_access_unrelated_management_sections(self):
         self.delegate_chat()
         self.client.force_login(self.worker)
@@ -377,10 +357,9 @@ class ManagementChatTests(ChatTestBase):
             403,
         )
 
-    # This test protects the business rule described by “worker with pricing and chat keeps both
-    # sections”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that worker with pricing and chat keeps both sections. The worker sends GET to
+    # communications:management_inbox; the required outcome is self returns HTTP 200 and self
+    # returns HTTP 200.
     def test_worker_with_pricing_and_chat_keeps_both_sections(self):
         self.pricing_group.user_set.add(self.worker)
         self.delegate_chat()
@@ -394,9 +373,8 @@ class ManagementChatTests(ChatTestBase):
             200,
         )
 
-    # This test protects the business rule described by “management search finds message text”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that management search finds message text. The admin sends GET to
+    # communications:management_inbox; the required outcome is renders 'self.customer.email'.
     def test_management_search_finds_message_text(self):
         self.client.force_login(self.admin)
         response = self.client.get(
@@ -409,9 +387,9 @@ class ManagementChatTests(ChatTestBase):
 # staff workflow.
 # Shared setup keeps each scenario focused on the business rule being checked.
 class ChatRoleManagementTests(ChatTestBase):
-    # This test protects the business rule described by “admin can grant and revoke chat access”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that admin can grant and revoke chat access. The required outcome is self.worker
+    # membership in CHAT_RESPONDER_GROUP exists and self.worker membership in CHAT_RESPONDER_GROUP
+    # does not exist.
     def test_admin_can_grant_and_revoke_chat_access(self):
         grant_chat_responder_access(self.worker, self.admin)
         self.worker.refresh_from_db()
@@ -419,27 +397,22 @@ class ChatRoleManagementTests(ChatTestBase):
         revoke_chat_responder_access(self.worker, self.admin)
         self.assertFalse(self.worker.groups.filter(name=CHAT_RESPONDER_GROUP).exists())
 
-    # This test protects the business rule described by “inactive worker cannot receive chat
-    # access”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that inactive worker cannot receive chat access. The required outcome is raises
+    # ValidationError.
     def test_inactive_worker_cannot_receive_chat_access(self):
         self.worker_profile.is_active_worker = False
         self.worker_profile.save(update_fields=["is_active_worker"])
         with self.assertRaises(ValidationError):
             grant_chat_responder_access(self.worker, self.admin)
 
-    # This test protects the business rule described by “customer cannot receive chat access”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that customer cannot receive chat access. The required outcome is raises
+    # ValidationError.
     def test_customer_cannot_receive_chat_access(self):
         with self.assertRaises(ValidationError):
             grant_chat_responder_access(self.customer, self.admin)
 
-    # This test protects the business rule described by “grant and revoke create safe audit
-    # events”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that grant and revoke create safe audit events. The required outcome is events count is
+    # 2 and serialised.lower() omits 'customer message'.
     def test_grant_and_revoke_create_safe_audit_events(self):
         grant_chat_responder_access(self.worker, self.admin)
         revoke_chat_responder_access(self.worker, self.admin)
@@ -450,9 +423,9 @@ class ChatRoleManagementTests(ChatTestBase):
         )
         self.assertNotIn("customer message", serialised.lower())
 
-    # This test protects the business rule described by “demoting worker removes chat access”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that demoting worker removes chat access. The required outcome is self.worker
+    # membership in CHAT_RESPONDER_GROUP does not exist and
+    # can_respond_to_customer_chat(self.worker) is false.
     def test_demoting_worker_removes_chat_access(self):
         grant_chat_responder_access(self.worker, self.admin)
         demote_worker(self.worker, self.admin)
@@ -460,10 +433,9 @@ class ChatRoleManagementTests(ChatTestBase):
         self.assertFalse(self.worker.groups.filter(name=CHAT_RESPONDER_GROUP).exists())
         self.assertFalse(can_respond_to_customer_chat(self.worker))
 
-    # This test protects the business rule described by “management user action grants chat
-    # access”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that management user action grants chat access. The admin sends POST to
+    # management:management_user_action; the required outcome is HTTP 302 and self.worker membership
+    # in CHAT_RESPONDER_GROUP exists.
     def test_management_user_action_grants_chat_access(self):
         self.client.force_login(self.admin)
         response = self.client.post(
@@ -483,10 +455,9 @@ class ChatRoleManagementTests(ChatTestBase):
 # customer or staff workflow.
 # Shared setup keeps each scenario focused on the business rule being checked.
 class ChatUnreadAndNavigationTests(ChatTestBase):
-    # This test protects the business rule described by “unread state is independent for each
-    # responder”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that unread state is independent for each responder. The required outcome is
+    # unread_chat_count(self.worker) equals 1, unread_chat_count(self.other_worker) equals 1, and
+    # unread_chat_count(self.worker) equals 0.
     def test_unread_state_is_independent_for_each_responder(self):
         chat, _ = add_customer_message(customer=self.customer, body="Hello")
         self.delegate_chat(self.worker)
@@ -497,10 +468,9 @@ class ChatUnreadAndNavigationTests(ChatTestBase):
         self.assertEqual(unread_chat_count(self.worker), 0)
         self.assertEqual(unread_chat_count(self.other_worker), 1)
 
-    # This test protects the business rule described by “staff reply is unread for customer until
-    # opened”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that staff reply is unread for customer until opened. The customer sends GET to
+    # communications:customer_panel; the required outcome is unread_chat_count(self.customer) equals
+    # 1 and unread_chat_count(self.customer) equals 0.
     def test_staff_reply_is_unread_for_customer_until_opened(self):
         chat, _ = add_customer_message(customer=self.customer, body="Hello")
         self.delegate_chat()
@@ -510,10 +480,9 @@ class ChatUnreadAndNavigationTests(ChatTestBase):
         self.client.get(reverse("communications:customer_panel"))
         self.assertEqual(unread_chat_count(self.customer), 0)
 
-    # This test protects the business rule described by “customer page contains launcher but staff
-    # page does not”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that customer page contains launcher but staff page does not. The admin sends GET to
+    # core:core_home; the required outcome is renders 'data-chat-launcher' and does not expose
+    # 'data-chat-launcher'.
     def test_customer_page_contains_launcher_but_staff_page_does_not(self):
         self.client.force_login(self.customer)
         response = self.client.get(reverse("core:core_home"))
@@ -522,18 +491,16 @@ class ChatUnreadAndNavigationTests(ChatTestBase):
         response = self.client.get(reverse("core:core_home"))
         self.assertNotContains(response, "data-chat-launcher")
 
-    # This test protects the business rule described by “customer account menu contains messages”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that customer account menu contains messages. The customer sends GET to core:core_home;
+    # the required outcome is contains a link to communications:customer_chat.
     def test_customer_account_menu_contains_messages(self):
         self.client.force_login(self.customer)
         response = self.client.get(reverse("core:core_home"))
         self.assertContains(response, reverse("communications:customer_chat"))
 
-    # This test protects the business rule described by “chat responder navigation shows messages
-    # not bookings”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that chat responder navigation shows messages not bookings. The worker sends GET to
+    # communications:management_inbox; the required outcome is renders '> Messages' and does not
+    # expose '> Bookings'.
     def test_chat_responder_navigation_shows_messages_not_bookings(self):
         self.delegate_chat()
         self.client.force_login(self.worker)
@@ -541,10 +508,8 @@ class ChatUnreadAndNavigationTests(ChatTestBase):
         self.assertContains(response, "> Messages")
         self.assertNotContains(response, "> Bookings")
 
-    # This test protects the business rule described by “chat history blocks safe customer
-    # deletion”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that a customer with chat messages reports customer chat history as a deletion blocker,
+    # preventing safe-deletion workflows from removing the account.
     def test_chat_history_blocks_safe_customer_deletion(self):
         add_customer_message(customer=self.customer, body="Keep this")
         self.assertIn("customer chat history", customer_delete_blockers(self.customer))

@@ -29,9 +29,8 @@ MESSAGE_LIMIT = 10
 MESSAGE_WINDOW_MINUTES = 5
 
 
-# This role check answers whether the current account qualifies as chat customer.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Treat an account as a chat customer only when it is authenticated, active, not a superuser, and
+# belongs to neither the Owner nor Worker group.
 def is_chat_customer(user) -> bool:
     """A customer is an active account without a protected business role."""
 
@@ -62,9 +61,8 @@ def sender_name_for(user) -> str:
     return (user.get_full_name() or user.username)[:150]
 
 
-# This helper prepares visible chats for the page or service that called it.
-# It returns a consistent, permission-aware result so callers do not need to repeat the same
-# selection rules.
+# Return a role-filtered CustomerChat queryset: responders see all chats, customers see only their
+# own chat, and every other account receives an empty queryset.
 def visible_chats_for(user):
     """Return a role-restricted queryset used by every chat detail view."""
 
@@ -103,9 +101,8 @@ def _enforce_customer_burst_limit(customer) -> None:
         )
 
 
-# This business action carries out add customer message.
-# It validates the live records and permissions before changing anything, then keeps related
-# updates together so partial results are not left behind.
+# Create or reuse the customer's one chat and append a trusted message. Rechecks the actor’s
+# permission, locks the live row, updates ChatMessage, commits related changes atomically.
 @transaction.atomic
 def add_customer_message(*, customer, body: str) -> tuple[CustomerChat, ChatMessage]:
     """Create or reuse the customer's one chat and append a trusted message."""
@@ -135,9 +132,8 @@ def add_customer_message(*, customer, body: str) -> tuple[CustomerChat, ChatMess
     return chat, message
 
 
-# This business action carries out add staff message.
-# It validates the live records and permissions before changing anything, then keeps related
-# updates together so partial results are not left behind.
+# Reply only after re-checking the responder's live delegation. Rechecks the actor’s permission,
+# locks the live row, updates ChatMessage, commits related changes atomically.
 @transaction.atomic
 def add_staff_message(*, chat_id: int, responder, body: str) -> ChatMessage:
     """Reply only after re-checking the responder's live delegation."""
@@ -185,9 +181,8 @@ def mark_chat_read(*, chat: CustomerChat, user, read_at=None) -> None:
     )
 
 
-# This helper prepares unread chats for the page or service that called it.
-# It returns a consistent, permission-aware result so callers do not need to repeat the same
-# selection rules.
+# Return only chats with messages newer than the current user’s read marker, after applying the same
+# role-scoped visibility queryset used by chat detail views.
 def unread_chats_for(user):
     """Find unread chats without creating read rows for every possible responder."""
 
@@ -203,9 +198,8 @@ def unread_chats_for(user):
     ).filter(already_read=False)
 
 
-# This helper prepares unread chat count for the page or service that called it.
-# It returns a consistent, permission-aware result so callers do not need to repeat the same
-# selection rules.
+# Count unread role-visible chats without exposing chat contents. Customers and responders share the
+# same read-marker and visibility rules.
 def unread_chat_count(user) -> int:
     return unread_chats_for(user).count()
 

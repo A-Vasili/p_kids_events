@@ -8,8 +8,9 @@ from django.conf import settings
 from django.db import migrations, models
 
 
-# This class groups the information and behaviour needed for migration.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Create the AddonRating and PartyReview database tables and their declared relationships,
+# constraints, and indexes. This initial schema is applied only after its listed migration
+# dependencies.
 class Migration(migrations.Migration):
 
     dependencies = [

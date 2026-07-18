@@ -14,9 +14,7 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# This function handles env flag as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Read a conventional true/false environment value.
 def env_flag(name: str, default: bool = False) -> bool:
     """Read a conventional true/false environment value."""
 

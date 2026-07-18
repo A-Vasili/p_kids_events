@@ -28,9 +28,8 @@ REVIEW_AUTH_LIFETIME = timedelta(minutes=30)
 GENERIC_CODE_ERROR = "That party code is not valid for an eligible booking."
 
 
-# This function handles verify review code as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Find an eligible booking without revealing codes owned by other users. The queryset applies the
+# same visibility and activity restrictions for every caller.
 def verify_review_code(*, user, submitted_code: str) -> PartyBuild:
     """Find an eligible booking without revealing codes owned by other users."""
 
@@ -51,9 +50,8 @@ def verify_review_code(*, user, submitted_code: str) -> PartyBuild:
     return booking
 
 
-# This function handles authorize review session as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Remember successful code verification for a short period in this session. It also removes stale
+# session values and marks the browser session modified when cleanup occurs.
 def authorize_review_session(request, booking: PartyBuild) -> None:
     """Remember successful code verification for a short period in this session."""
 
@@ -72,9 +70,7 @@ def authorize_review_session(request, booking: PartyBuild) -> None:
     request.session.modified = True
 
 
-# This function handles review session is authorized as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Return whether this browser recently verified this booking's code.
 def review_session_is_authorized(request, booking: PartyBuild) -> bool:
     """Return whether this browser recently verified this booking's code."""
 
@@ -87,9 +83,8 @@ def review_session_is_authorized(request, booking: PartyBuild) -> bool:
     return timezone.now().timestamp() - timestamp <= REVIEW_AUTH_LIFETIME.total_seconds()
 
 
-# This helper retrieves reviewable booking for the page or service that called it.
-# It returns a consistent, permission-aware result so callers do not need to repeat the same
-# selection rules.
+# Load a completed booking owned by the authenticated customer. The selection is reused so callers
+# cannot broaden the permitted records independently.
 def get_reviewable_booking(*, user, public_id) -> PartyBuild:
     """Load a completed booking owned by the authenticated customer."""
 
@@ -124,9 +119,8 @@ def ensure_review_eligible(*, booking: PartyBuild, reviewer) -> None:
         raise PermissionDenied("Only completed parties can be reviewed.")
 
 
-# This function handles save party review as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Create or update one verified review and its selected add-on ratings. It locks the live row before
+# applying changes so concurrent requests cannot leave partial state.
 @transaction.atomic
 def save_party_review(
     *,

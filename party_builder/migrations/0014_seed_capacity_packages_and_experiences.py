@@ -226,8 +226,8 @@ def keep_catalogue_on_reverse(apps, schema_editor):
     """Catalogue records may be referenced by bookings, so reversal is a safe no-op."""
 
 
-# This class groups the information and behaviour needed for migration.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Apply the seed capacity packages and experiences data migration through seed capacity packages and
+# experiences. Dependencies keep the data change ordered after the required schema.
 class Migration(migrations.Migration):
     dependencies = [("party_builder", "0013_testimonial_visibility")]
     operations = [

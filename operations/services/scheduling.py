@@ -15,9 +15,8 @@ from party_builder.models import PartyBuild
 from ..models import PartyAssignment, WorkerAvailability
 
 
-# This helper retrieves event window for the page or service that called it.
-# It returns a consistent, permission-aware result so callers do not need to repeat the same
-# selection rules.
+# Return aware start/end datetimes, or None until a start time is provided. The selection is reused
+# so callers cannot broaden the permitted records independently.
 def get_event_window(party_build: PartyBuild):
     """Return aware start/end datetimes, or None until a start time is provided."""
 
@@ -33,9 +32,8 @@ def get_event_window(party_build: PartyBuild):
     return start, end
 
 
-# This function handles worker is available as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Require one positive window covering the event and no blocking overlap. The queryset applies the
+# same visibility and activity restrictions for every caller.
 def worker_is_available(worker: WorkerProfile, start_at, end_at) -> bool:
     """Require one positive window covering the event and no blocking overlap."""
 
@@ -56,9 +54,8 @@ def worker_is_available(worker: WorkerProfile, start_at, end_at) -> bool:
     return positive and not blocked
 
 
-# This helper prepares find schedule conflicts for the page or service that called it.
-# It returns a consistent, permission-aware result so callers do not need to repeat the same
-# selection rules.
+# Return accepted assignments whose calculated event windows overlap. This keeps the same selection
+# or calculation rule available to every caller.
 def find_schedule_conflicts(
     worker: WorkerProfile,
     start_at,
@@ -90,9 +87,8 @@ def find_schedule_conflicts(
     return conflicts
 
 
-# This helper retrieves worker daily load for the page or service that called it.
-# It returns a consistent, permission-aware result so callers do not need to repeat the same
-# selection rules.
+# Retrieve worker daily load from PartyAssignment with the filters and ownership checks defined
+# here. Missing or unauthorized records follow the view’s controlled error path.
 def get_worker_daily_load(worker: WorkerProfile, event_date) -> int:
     return PartyAssignment.objects.filter(
         worker=worker,

@@ -85,8 +85,7 @@ from .services.users import (
 User = get_user_model()
 
 
-# This class groups the information and behaviour needed for management context mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Supply page title, active navigation, breadcrumbs, and filter links. Adds shared template context.
 class ManagementContextMixin:
     """Supply page title, active navigation, breadcrumbs, and filter links."""
 
@@ -94,8 +93,9 @@ class ManagementContextMixin:
     active_section = "dashboard"
     breadcrumbs: tuple[tuple[str, str | None], ...] = ()
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add management page title, management active section, management breadcrumbs, and pagination
+    # query to ManagementContextMixin’s template context. The base context is preserved, and values
+    # are derived from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         query = self.request.GET.copy()
@@ -116,8 +116,8 @@ class ManagementContextMixin:
         return context
 
 
-# This class groups the information and behaviour needed for full management access mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Permit Administrators and Owners; authenticated failures receive HTTP 403. Requires
+# authentication; applies a role predicate before dispatch.
 class FullManagementAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Permit Administrators and Owners; authenticated failures receive HTTP 403."""
 
@@ -135,15 +135,14 @@ class FullManagementAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
             )
         raise PermissionDenied
 
-    # This test protects the business rule described by “func”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Allow the view only when the current account satisfies its explicit role predicate.
+    # UserPassesTestMixin turns a false result into the configured redirect or permission denial.
     def test_func(self):
         return can_access_full_management(self.request.user)
 
 
-# This class groups the information and behaviour needed for catalogue management mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Permit owners and workers who were explicitly delegated pricing access. Requires authentication;
+# applies a role predicate before dispatch.
 class CatalogueManagementMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Permit owners and workers who were explicitly delegated pricing access."""
 
@@ -161,23 +160,21 @@ class CatalogueManagementMixin(LoginRequiredMixin, UserPassesTestMixin):
             )
         raise PermissionDenied
 
-    # This test protects the business rule described by “func”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Allow the view only when the current account satisfies its explicit role predicate.
+    # UserPassesTestMixin turns a false result into the configured redirect or permission denial.
     def test_func(self):
         return can_manage_pricing(self.request.user)
 
 
-# This view coordinates the management dashboard view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/dashboard.html for the management dashboard journey. Access is
+# limited to full management users; responses continue through communications:management_inbox.
 class ManagementDashboardView(FullManagementAccessMixin, ManagementContextMixin, TemplateView):
     template_name = "operations/management/dashboard.html"
     page_title = "Management dashboard"
     active_section = "dashboard"
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Redirect chat-only delegated workers from the management dashboard to the inbox; full managers
+    # and pricing delegates continue to their permitted management landing page.
     def dispatch(self, request, *args, **kwargs):
         # Delegated workers land in the section they are actually allowed to use
         # instead of seeing a forbidden dashboard after selecting Management.
@@ -190,8 +187,9 @@ class ManagementDashboardView(FullManagementAccessMixin, ManagementContextMixin,
             return redirect("communications:management_inbox")
         return super().dispatch(request, *args, **kwargs)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add stats, attention bookings, upcoming bookings, recent catalogue events, and recent audit
+    # events to ManagementDashboardView’s template context. The values come from AuditEvent,
+    # PartyBuild, and 5 other values using the view’s already-authorized objects and filters.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
@@ -238,17 +236,17 @@ class ManagementDashboardView(FullManagementAccessMixin, ManagementContextMixin,
         return context
 
 
-# This view coordinates the catalogue index view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/catalogue/index.html for the catalogue index journey. Access is
+# limited to catalogue managers.
 class CatalogueIndexView(CatalogueManagementMixin, ManagementContextMixin, TemplateView):
     template_name = "operations/management/catalogue/index.html"
     page_title = "Catalogue"
     active_section = "catalogue"
     breadcrumbs = (("Catalogue", None),)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add package count, tier count, addon count, and category count to CatalogueIndexView’s
+    # template context. The values come from PartyPackage, GuestPriceTier, and 2 other values using
+    # the view’s already-authorized objects and filters.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -262,9 +260,8 @@ class CatalogueIndexView(CatalogueManagementMixin, ManagementContextMixin, Templ
         return context
 
 
-# This view coordinates the category list view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/categories/list.html for the category list journey. Access is limited
+# to catalogue managers; the queryset method limits which records can be loaded.
 class CategoryListView(CatalogueManagementMixin, ManagementContextMixin, ListView):
     template_name = "operations/management/categories/list.html"
     context_object_name = "categories"
@@ -301,9 +298,9 @@ class CategoryListView(CatalogueManagementMixin, ManagementContextMixin, ListVie
         return queryset.order_by(*self.ORDERING.get(self.request.GET.get("ordering", "order"), self.ORDERING["order"]))
 
 
-# This view coordinates the category detail view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/categories/detail.html for the category detail journey using
+# Category. Access is limited to catalogue managers; responses continue through
+# management:management_category_list.
 class CategoryDetailView(CatalogueManagementMixin, ManagementContextMixin, DetailView):
     model = Category
     template_name = "operations/management/categories/detail.html"
@@ -316,17 +313,15 @@ class CategoryDetailView(CatalogueManagementMixin, ManagementContextMixin, Detai
     def get_queryset(self):
         return Category.objects.select_related("parent").prefetch_related("children", "packages", "addons")
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add management breadcrumbs to CategoryDetailView’s template context. The base context is
+    # preserved, and values are derived from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["management_breadcrumbs"] = (("Categories", reverse("management:management_category_list")), (self.object.name, None))
         return context
 
 
-# This view coordinates the catalogue form view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Reusable create/edit workflow for catalogue records. Access is limited to catalogue managers.
 class CatalogueFormView(CatalogueManagementMixin, ManagementContextMixin, FormView):
     """Reusable create/edit workflow for catalogue records."""
 
@@ -336,25 +331,25 @@ class CatalogueFormView(CatalogueManagementMixin, ManagementContextMixin, FormVi
     template_name = "operations/management/catalogue/form.html"
     object = None
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # For catalogue edit routes, load the requested model instance by primary key before form
+    # handling; an unknown ID returns HTTP 404.
     def dispatch(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         if pk:
             self.object = get_object_or_404(self.model, pk=pk)
         return super().dispatch(request, *args, **kwargs)
 
-    # This helper retrieves form kwargs for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Pass instance and files into CatalogueFormView’s form constructor so field choices and
+    # validation use the current authorized records. The base view kwargs are preserved.
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["instance"] = self.object
         kwargs["files"] = self.request.FILES or None
         return kwargs
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add object, object label, create, and cancel URL to CatalogueFormView’s template context. The
+    # base context is preserved, and values are derived from the current request or object rather
+    # than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -381,9 +376,8 @@ class CatalogueFormView(CatalogueManagementMixin, ManagementContextMixin, FormVi
         return redirect(self.success_name)
 
 
-# This view coordinates the category create view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the category create route with CategoryForm. Its methods keep record selection and the
+# browser response inside the route’s permission boundary.
 class CategoryCreateView(CatalogueFormView):
     model = Category
     form_class = CategoryForm
@@ -394,16 +388,14 @@ class CategoryCreateView(CatalogueFormView):
     breadcrumbs = (("Categories", "management:management_category_list"), ("Create", None))
 
 
-# This view coordinates the category update view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the category update route. Its methods keep record selection and the browser response
+# inside the route’s permission boundary.
 class CategoryUpdateView(CategoryCreateView):
     page_title = "Edit category"
 
 
-# This view coordinates the catalogue remove view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/confirm_action.html for the catalogue remove journey with
+# ActionConfirmationForm. Access is limited to catalogue managers.
 class CatalogueRemoveView(CatalogueManagementMixin, ManagementContextMixin, FormView):
     form_class = ActionConfirmationForm
     template_name = "operations/management/confirm_action.html"
@@ -413,14 +405,15 @@ class CatalogueRemoveView(CatalogueManagementMixin, ManagementContextMixin, Form
     object_label = "record"
     object = None
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Load the catalogue record targeted for removal before any handler runs, returning HTTP 404 for
+    # an unknown primary key.
     def dispatch(self, request, *args, **kwargs):
         self.object = get_object_or_404(self.model, pk=kwargs["pk"])
         return super().dispatch(request, *args, **kwargs)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add target, target name, eyebrow, will archive, usage summary, and 4 other values to
+    # CatalogueRemoveView’s template context. The base context is preserved, and values are derived
+    # from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -468,9 +461,8 @@ class CatalogueRemoveView(CatalogueManagementMixin, ManagementContextMixin, Form
         return redirect(self.success_name)
 
 
-# This view coordinates the category remove view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the category remove route using Category. Its methods keep record selection and the
+# browser response inside the route’s permission boundary.
 class CategoryRemoveView(CatalogueRemoveView):
     model = Category
     remove_service = staticmethod(remove_category)
@@ -499,9 +491,8 @@ class CategoryRemoveView(CatalogueRemoveView):
         return ", ".join(parts)
 
 
-# This view coordinates the package list view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/packages/list.html for the package list journey. Access is limited to
+# catalogue managers; the queryset method limits which records can be loaded.
 class PackageListView(CatalogueManagementMixin, ManagementContextMixin, ListView):
     template_name = "operations/management/packages/list.html"
     context_object_name = "packages"
@@ -536,17 +527,17 @@ class PackageListView(CatalogueManagementMixin, ManagementContextMixin, ListView
             queryset = queryset.filter(is_default=(default == "yes"))
         return queryset.order_by(*self.ORDERING.get(self.request.GET.get("ordering", "order"), self.ORDERING["order"]))
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add category options to PackageListView’s template context. The values come from Category
+    # using the view’s already-authorized objects and filters.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["category_options"] = Category.objects.order_by("display_order", "name")
         return context
 
 
-# This view coordinates the package detail view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/packages/detail.html for the package detail journey using
+# PartyPackage. Access is limited to catalogue managers; responses continue through
+# management:management_catalogue and management:management_package_list.
 class PackageDetailView(CatalogueManagementMixin, ManagementContextMixin, DetailView):
     model = PartyPackage
     template_name = "operations/management/packages/detail.html"
@@ -559,17 +550,16 @@ class PackageDetailView(CatalogueManagementMixin, ManagementContextMixin, Detail
     def get_queryset(self):
         return PartyPackage.objects.select_related("category").prefetch_related("guest_price_tiers")
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add management breadcrumbs to PackageDetailView’s template context. The base context is
+    # preserved, and values are derived from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["management_breadcrumbs"] = (("Catalogue", reverse("management:management_catalogue")), ("Packages", reverse("management:management_package_list")), (self.object.name, None))
         return context
 
 
-# This view coordinates the package create view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the package create route with PackageForm. Its methods keep record selection and the
+# browser response inside the route’s permission boundary.
 class PackageCreateView(CatalogueFormView):
     model = PartyPackage
     form_class = PackageForm
@@ -579,16 +569,14 @@ class PackageCreateView(CatalogueFormView):
     active_section = "catalogue"
 
 
-# This view coordinates the package update view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the package update route. Its methods keep record selection and the browser response
+# inside the route’s permission boundary.
 class PackageUpdateView(PackageCreateView):
     page_title = "Edit package"
 
 
-# This view coordinates the package remove view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the package remove route using PartyPackage. Its methods keep record selection and the
+# browser response inside the route’s permission boundary.
 class PackageRemoveView(CatalogueRemoveView):
     model = PartyPackage
     remove_service = staticmethod(remove_package)
@@ -611,9 +599,9 @@ class PackageRemoveView(CatalogueRemoveView):
         return f"{count} historical booking(s)" if count else "Historical tier references"
 
 
-# This view coordinates the legacy tier compatibility view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Keep old tier URLs safe while directing managers to fixed-price packages. Access is limited to
+# catalogue managers; responses continue through management:management_catalogue and
+# management:management_package_detail.
 class LegacyTierCompatibilityView(CatalogueManagementMixin, View):
     """Keep old tier URLs safe while directing managers to fixed-price packages.
 
@@ -623,8 +611,8 @@ class LegacyTierCompatibilityView(CatalogueManagementMixin, View):
 
     http_method_names = ["get", "post"]
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Resolve the package behind either a legacy package ID or guest-tier ID so old management links
+    # redirect safely; missing records return HTTP 404.
     def dispatch(self, request, *args, **kwargs):
         self.package = None
         package_id = kwargs.get("package_id")
@@ -658,14 +646,14 @@ class LegacyTierCompatibilityView(CatalogueManagementMixin, View):
     def get(self, request, *args, **kwargs):
         return self._redirect()
 
-    # This request method processes the submitted action after validation and permission checks.
+    # Preserve legacy guest-tier POST links by redirecting them to the package-compatible management
+    # destination without changing any catalogue records.
     def post(self, request, *args, **kwargs):
         return self._redirect()
 
 
-# This view coordinates the addon list view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/addons/list.html for the addon list journey. Access is limited to
+# catalogue managers; the queryset method limits which records can be loaded.
 class AddonListView(CatalogueManagementMixin, ManagementContextMixin, ListView):
     template_name = "operations/management/addons/list.html"
     context_object_name = "addons"
@@ -698,17 +686,17 @@ class AddonListView(CatalogueManagementMixin, ManagementContextMixin, ListView):
             queryset = queryset.filter(is_featured=(featured == "yes"))
         return queryset.order_by(*self.ORDERING.get(self.request.GET.get("ordering", "order"), self.ORDERING["order"]))
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add category options to AddonListView’s template context. The values come from Category using
+    # the view’s already-authorized objects and filters.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["category_options"] = Category.objects.order_by("display_order", "name")
         return context
 
 
-# This view coordinates the addon detail view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/addons/detail.html for the addon detail journey using
+# AddonExperience. Access is limited to catalogue managers; the queryset method limits which records
+# can be loaded.
 class AddonDetailView(CatalogueManagementMixin, ManagementContextMixin, DetailView):
     model = AddonExperience
     template_name = "operations/management/addons/detail.html"
@@ -722,9 +710,8 @@ class AddonDetailView(CatalogueManagementMixin, ManagementContextMixin, DetailVi
         return AddonExperience.objects.select_related("category")
 
 
-# This view coordinates the addon create view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the addon create route with AddonForm. Its methods keep record selection and the
+# browser response inside the route’s permission boundary.
 class AddonCreateView(CatalogueFormView):
     model = AddonExperience
     form_class = AddonForm
@@ -734,16 +721,14 @@ class AddonCreateView(CatalogueFormView):
     active_section = "catalogue"
 
 
-# This view coordinates the addon update view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the addon update route. Its methods keep record selection and the browser response
+# inside the route’s permission boundary.
 class AddonUpdateView(AddonCreateView):
     page_title = "Edit add-on"
 
 
-# This view coordinates the addon remove view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the addon remove route using AddonExperience. Its methods keep record selection and the
+# browser response inside the route’s permission boundary.
 class AddonRemoveView(CatalogueRemoveView):
     model = AddonExperience
     remove_service = staticmethod(remove_addon)
@@ -766,9 +751,8 @@ class AddonRemoveView(CatalogueRemoveView):
         return f"{count} historical booking add-on selection(s)" if count else ""
 
 
-# This view coordinates the user list view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/users/list.html for the user list journey. Access is limited to full
+# management users; the queryset method limits which records can be loaded.
 class UserListView(FullManagementAccessMixin, ManagementContextMixin, ListView):
     template_name = "operations/management/users/list.html"
     context_object_name = "managed_users"
@@ -813,13 +797,13 @@ class UserListView(FullManagementAccessMixin, ManagementContextMixin, ListView):
         return queryset.distinct().order_by("last_name", "first_name", "username")
 
 
-# This class groups the information and behaviour needed for protected user object mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Centralize protected-account lookup and authorization for management user views. Unauthorized
+# identifiers are concealed with HTTP 404 before subclass-specific validation runs.
 class ProtectedUserObjectMixin:
     user_object = None
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Load the target account with profiles and groups, conceal protected accounts with HTTP 404
+    # when the manager lacks access, then run the view-specific object validation.
     def dispatch(self, request, *args, **kwargs):
         self.user_object = get_object_or_404(
             User.objects.select_related(
@@ -844,16 +828,16 @@ class ProtectedUserObjectMixin:
 
 
 
-# This view coordinates the user detail view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/users/detail.html for the user detail journey. Access is limited to
+# full management users.
 class UserDetailView(FullManagementAccessMixin, ProtectedUserObjectMixin, ManagementContextMixin, TemplateView):
     template_name = "operations/management/users/detail.html"
     page_title = "User details"
     active_section = "users"
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add managed user, managed user is customer, managed user is worker, managed user is owner, can
+    # edit worker, and 7 other values to UserDetailView’s template context. The values come from
+    # AuditEvent using the view’s already-authorized objects and filters.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.user_object
@@ -888,9 +872,9 @@ class UserDetailView(FullManagementAccessMixin, ProtectedUserObjectMixin, Manage
         return context
 
 
-# This view coordinates the user update view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/users/form.html for the user update journey with ManagedWorkerForm.
+# Access is limited to full management users; responses continue through
+# management:management_user_detail.
 class UserUpdateView(FullManagementAccessMixin, ProtectedUserObjectMixin, ManagementContextMixin, FormView):
     template_name = "operations/management/users/form.html"
     form_class = ManagedWorkerForm
@@ -906,16 +890,16 @@ class UserUpdateView(FullManagementAccessMixin, ProtectedUserObjectMixin, Manage
                 "Customer and Owner profile information is read-only in management."
             )
 
-    # This helper retrieves form kwargs for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Pass instance into UserUpdateView’s form constructor so field choices and validation use the
+    # current authorized records. The base view kwargs are preserved.
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["instance"] = self.user_object.worker_profile
         return kwargs
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add managed user, form eyebrow, form title, form description, submit label, and cancel URL to
+    # UserUpdateView’s template context. The base context is preserved, and values are derived from
+    # the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -958,17 +942,18 @@ class UserUpdateView(FullManagementAccessMixin, ProtectedUserObjectMixin, Manage
         return redirect("management:management_user_detail", pk=self.user_object.pk)
 
 
-# This view coordinates the user create worker view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/users/form.html for the user create worker journey with
+# OwnerWorkerCreationForm. Access is limited to full management users; responses continue through
+# management:management_user_detail and management:management_user_list.
 class UserCreateWorkerView(FullManagementAccessMixin, ManagementContextMixin, FormView):
     template_name = "operations/management/users/form.html"
     form_class = OwnerWorkerCreationForm
     page_title = "Create worker account"
     active_section = "users"
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add form eyebrow, form title, form description, submit label, and cancel URL to
+    # UserCreateWorkerView’s template context. The base context is preserved, and values are derived
+    # from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -990,9 +975,9 @@ class UserCreateWorkerView(FullManagementAccessMixin, ManagementContextMixin, Fo
         return redirect("management:management_user_detail", pk=user.pk)
 
 
-# This view coordinates the user create owner view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Create a protected Owner without granting system-administrator rights. Access is limited to
+# authenticated accounts; responses continue through management:management_user_detail and
+# management:management_user_list.
 class UserCreateOwnerView(LoginRequiredMixin, UserPassesTestMixin, ManagementContextMixin, FormView):
     """Create a protected Owner without granting system-administrator rights."""
 
@@ -1014,14 +999,14 @@ class UserCreateOwnerView(LoginRequiredMixin, UserPassesTestMixin, ManagementCon
             )
         raise PermissionDenied
 
-    # This test protects the business rule described by “func”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Allow the view only when the current account satisfies its explicit role predicate.
+    # UserPassesTestMixin turns a false result into the configured redirect or permission denial.
     def test_func(self):
         return can_create_owner(self.request.user)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add form eyebrow, form title, form description, submit label, and cancel URL to
+    # UserCreateOwnerView’s template context. The base context is preserved, and values are derived
+    # from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -1046,9 +1031,9 @@ class UserCreateOwnerView(LoginRequiredMixin, UserPassesTestMixin, ManagementCon
         return redirect("management:management_user_detail", pk=user.pk)
 
 
-# This view coordinates the user action view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/confirm_action.html for the user action journey with
+# ActionConfirmationForm. Access is limited to full management users; responses continue through
+# management:management_user_detail and management:management_user_list.
 class UserActionView(FullManagementAccessMixin, ProtectedUserObjectMixin, ManagementContextMixin, FormView):
     template_name = "operations/management/confirm_action.html"
     form_class = ActionConfirmationForm
@@ -1084,16 +1069,17 @@ class UserActionView(FullManagementAccessMixin, ProtectedUserObjectMixin, Manage
         }:
             raise Http404
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Accept only action names declared in ACTION_LABELS before the user-action view runs; unknown
+    # URL actions return HTTP 404.
     def dispatch(self, request, *args, **kwargs):
         self.action = kwargs["action"]
         if self.action not in self.ACTION_LABELS:
             raise Http404
         return super().dispatch(request, *args, **kwargs)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add target, target name, eyebrow, action label, title, and 3 other values to UserActionView’s
+    # template context. The base context is preserved, and values are derived from the current
+    # request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -1165,9 +1151,8 @@ class UserActionView(FullManagementAccessMixin, ProtectedUserObjectMixin, Manage
         return redirect("management:management_user_detail", pk=target.pk)
 
 
-# This view coordinates the booking list view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/bookings/list.html for the booking list journey. Access is limited to
+# full management users; the queryset method limits which records can be loaded.
 class BookingListView(FullManagementAccessMixin, ManagementContextMixin, ListView):
     template_name = "operations/management/bookings/list.html"
     context_object_name = "bookings"
@@ -1212,8 +1197,9 @@ class BookingListView(FullManagementAccessMixin, ManagementContextMixin, ListVie
             queryset = queryset.filter(event_date__lte=parsed_to)
         return queryset.distinct().order_by("event_date", "event_time", "-created_at")
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add package options, worker options, booking status choices, and assignment state choices to
+    # BookingListView’s template context. The values come from PartyPackage and WorkerProfile using
+    # the view’s already-authorized objects and filters.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -1227,9 +1213,9 @@ class BookingListView(FullManagementAccessMixin, ManagementContextMixin, ListVie
         return context
 
 
-# This view coordinates the booking detail view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/bookings/detail.html for the booking detail journey using PartyBuild.
+# Access is limited to full management users; the queryset method limits which records can be
+# loaded.
 class BookingDetailView(FullManagementAccessMixin, ManagementContextMixin, DetailView):
     model = PartyBuild
     slug_field = "public_id"
@@ -1296,13 +1282,14 @@ class BookingCompleteView(FullManagementAccessMixin, View):
         )
 
 
-# This view coordinates the booking status update view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the booking status update route. Access is limited to full management users; responses
+# continue through management:management_booking_detail.
 class BookingStatusUpdateView(FullManagementAccessMixin, View):
     http_method_names = ["post"]
 
-    # This request method processes the submitted action after validation and permission checks.
+    # Validate the requested booking status against the live booking, apply it through
+    # change_booking_status with the current manager as actor, and always return to the booking
+    # detail page.
     def post(self, request, public_id):
         booking = get_object_or_404(PartyBuild, public_id=public_id)
         form = BookingStatusForm(request.POST, booking=booking)
@@ -1322,13 +1309,14 @@ class BookingStatusUpdateView(FullManagementAccessMixin, View):
         return redirect("management:management_booking_detail", public_id=booking.public_id)
 
 
-# This view coordinates the booking manual review view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the booking manual review route. Access is limited to full management users; responses
+# continue through management:management_booking_detail.
 class BookingManualReviewView(FullManagementAccessMixin, View):
     http_method_names = ["post"]
 
-    # This request method processes the submitted action after validation and permission checks.
+    # Validate the manual-review reason, move the booking through send_to_manual_review with the
+    # current manager as actor, and return to the booking detail page with success or error
+    # feedback.
     def post(self, request, public_id):
         booking = get_object_or_404(PartyBuild, public_id=public_id)
         form = ManualReviewForm(request.POST)
@@ -1347,17 +1335,17 @@ class BookingManualReviewView(FullManagementAccessMixin, View):
         return redirect("management:management_booking_detail", public_id=booking.public_id)
 
 
-# This view coordinates the booking assign view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/bookings/assign.html for the booking assign journey with
+# ManualAssignmentForm. Access is limited to full management users; responses continue through
+# management:management_booking_detail.
 class BookingAssignView(FullManagementAccessMixin, ManagementContextMixin, FormView):
     template_name = "operations/management/bookings/assign.html"
     form_class = ManualAssignmentForm
     page_title = "Assign worker"
     active_section = "bookings"
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Load the requested booking with its package and add-ons before manual assignment, returning
+    # HTTP 404 for an unknown public ID.
     def dispatch(self, request, *args, **kwargs):
         self.booking = get_object_or_404(
             PartyBuild.objects.select_related("package").prefetch_related("addon_items__addon"),
@@ -1365,8 +1353,8 @@ class BookingAssignView(FullManagementAccessMixin, ManagementContextMixin, FormV
         )
         return super().dispatch(request, *args, **kwargs)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add booking and worker rows to BookingAssignView’s template context. The values come from
+    # WorkerProfile using the view’s already-authorized objects and filters.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         event_window = get_event_window(self.booking)
@@ -1400,16 +1388,16 @@ class BookingAssignView(FullManagementAccessMixin, ManagementContextMixin, FormV
         return redirect("management:management_booking_detail", public_id=self.booking.public_id)
 
 
-# This view coordinates the schedule view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/schedules.html for the schedule journey. Access is limited to full
+# management users.
 class ScheduleView(FullManagementAccessMixin, ManagementContextMixin, TemplateView):
     template_name = "operations/management/schedules.html"
     page_title = "Worker schedules"
     active_section = "schedules"
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add assignments, availability periods, workers, date from, and date to to ScheduleView’s
+    # template context. The values come from PartyAssignment, WorkerAvailability, and WorkerProfile
+    # using the view’s already-authorized objects and filters.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         requested_from = self.request.GET.get("date_from", "")
@@ -1445,9 +1433,8 @@ class ScheduleView(FullManagementAccessMixin, ManagementContextMixin, TemplateVi
         return context
 
 
-# This view coordinates the audit list view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render operations/management/audit/list.html for the audit list journey. Access is limited to full
+# management users; the queryset method limits which records can be loaded.
 class AuditListView(FullManagementAccessMixin, ManagementContextMixin, ListView):
     template_name = "operations/management/audit/list.html"
     context_object_name = "events"
@@ -1478,8 +1465,8 @@ class AuditListView(FullManagementAccessMixin, ManagementContextMixin, ListView)
             queryset = queryset.filter(created_at__date__lte=parsed_to)
         return queryset.order_by("-created_at")
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add event type options and actor options to AuditListView’s template context. The values come
+    # from AuditEvent and User using the view’s already-authorized objects and filters.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["event_type_options"] = AuditEvent.objects.order_by("event_type").values_list("event_type", flat=True).distinct()
@@ -1487,9 +1474,8 @@ class AuditListView(FullManagementAccessMixin, ManagementContextMixin, ListView)
         return context
 
 
-# This view coordinates the analytics view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Show completed-party usage, verified ratings, and common combinations. Access is limited to full
+# management users.
 class AnalyticsView(FullManagementAccessMixin, ManagementContextMixin, TemplateView):
     """Show completed-party usage, verified ratings, and common combinations."""
 
@@ -1498,8 +1484,8 @@ class AnalyticsView(FullManagementAccessMixin, ManagementContextMixin, TemplateV
     active_section = "analytics"
     breadcrumbs = (("Analytics", None),)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add period key and period options to AnalyticsView’s template context. The base context is
+    # preserved, and values are derived from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         period_key, days = resolve_period(self.request.GET.get("period"))

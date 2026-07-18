@@ -175,14 +175,16 @@
         }
     };
 
-    // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+    // Toggle the customer chat panel from its launcher while updating aria-expanded and moving focus into or back out
+    // of the panel.
     launcher.addEventListener("click", (event) => {
         event.preventDefault();
         panel.hidden ? openPanel() : closePanel();
     });
-    // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+    // Close the customer chat panel, restore focus to the launcher, and expose the collapsed state to assistive
+    // technology.
     closeButton.addEventListener("click", () => closePanel());
-    // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+    // Close the open chat panel on Escape and return keyboard focus to its launcher.
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && !panel.hidden) {
             closePanel();
@@ -195,7 +197,8 @@
     // This listener responds to the popadoo:language-applied event and keeps the enhanced interface aligned with the visitor’s action.
     document.addEventListener("popadoo:language-applied", () => applyTranslations(widget));
 
-    // This listener responds to the submit event and keeps the enhanced interface aligned with the visitor’s action.
+    // Submit the widget message once, disable the send button during the request, restore the typed text on failure,
+    // and display the server-authorized result.
     panelBody.addEventListener("submit", async (event) => {
         const form = event.target.closest("[data-widget-form]");
         if (!form) {

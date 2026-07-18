@@ -134,8 +134,9 @@ class Category(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('display_order', 'name'); create the declared database index(es); set
+    # verbose name plural to categories. These options are enforced by Django rather than by
+    # template input.
     class Meta:
         ordering = ("display_order", "name")
         verbose_name_plural = "categories"
@@ -224,8 +225,9 @@ class PartyPackage(models.Model):
     )
     image_alt_text = models.CharField(max_length=180, blank=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('display_order', 'name'); enforce the declared database constraint(s);
+    # create the declared database index(es). These options are enforced by Django rather than by
+    # template input.
     class Meta:
         ordering = ("display_order", "name")
         indexes = [models.Index(fields=("is_active", "display_order", "name"))]
@@ -311,9 +313,8 @@ class PartyPackage(models.Model):
     def display_image_alt_text(self) -> str:
         return self.image_alt_text or f"Illustration for {self.name}"
 
-    # This helper retrieves absolute url for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Return the named detail URL party_ideas:package_detail, using the object identifier expected
+    # by the route instead of a hard-coded path.
     def get_absolute_url(self) -> str:
         return reverse("party_ideas:package_detail", kwargs={"slug": self.slug})
 
@@ -345,8 +346,8 @@ class GuestPriceTier(models.Model):
     is_active = models.BooleanField(default=True)
     display_order = models.PositiveSmallIntegerField(default=0)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('display_order', 'min_guests'); enforce the declared database constraint(s).
+    # These options are enforced by Django rather than by template input.
     class Meta:
         ordering = ("display_order", "min_guests")
         constraints = [
@@ -469,8 +470,9 @@ class AddonExperience(models.Model):
     )
     image_alt_text = models.CharField(max_length=180, blank=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('display_order', 'name'); enforce the declared database constraint(s);
+    # create the declared database index(es). These options are enforced by Django rather than by
+    # template input.
     class Meta:
         ordering = ("display_order", "name")
         indexes = [models.Index(fields=("is_active", "is_featured", "display_order"))]
@@ -521,9 +523,8 @@ class AddonExperience(models.Model):
     def display_image_alt_text(self) -> str:
         return self.image_alt_text or f"Illustration for {self.name}"
 
-    # This helper retrieves absolute url for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Return the named detail URL party_ideas:addon_detail, using the object identifier expected by
+    # the route instead of a hard-coded path.
     def get_absolute_url(self) -> str:
         return reverse("party_ideas:addon_detail", kwargs={"slug": self.slug})
 
@@ -531,9 +532,7 @@ class AddonExperience(models.Model):
 REVIEW_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 
 
-# This function handles format review code as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Return a normalized human-readable code without ambiguous characters.
 def format_review_code(raw: str) -> str:
     """Return a normalized human-readable code without ambiguous characters."""
 
@@ -545,9 +544,7 @@ def format_review_code(raw: str) -> str:
     return f"POP-{compact[:4]}-{compact[4:]}"
 
 
-# This function handles generate review code candidate as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Create one readable candidate; database uniqueness is checked separately.
 def generate_review_code_candidate() -> str:
     """Create one readable candidate; database uniqueness is checked separately."""
 
@@ -555,9 +552,8 @@ def generate_review_code_candidate() -> str:
     return f"POP-{body[:4]}-{body[4:]}"
 
 
-# This function handles generate unique review code as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Return a code not currently stored in the booking table. The queryset applies the same visibility
+# and activity restrictions for every caller.
 def generate_unique_review_code() -> str:
     """Return a code not currently stored in the booking table."""
 
@@ -703,8 +699,8 @@ class PartyBuild(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('-created_at',); create the declared database index(es). These options are
+    # enforced by Django rather than by template input.
     class Meta:
         ordering = ("-created_at",)
         indexes = [
@@ -739,9 +735,8 @@ class PartyBuild(models.Model):
 
         return self.guest_tier_label or f"Up to {self.guest_count} children"
 
-    # This helper retrieves absolute url for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Return the named detail URL party_builder:party_builder_order_success, using the object
+    # identifier expected by the route instead of a hard-coded path.
     def get_absolute_url(self) -> str:
         return reverse(
             "party_builder:party_builder_order_success",
@@ -771,8 +766,8 @@ class PartyBuildAddon(models.Model):
         validators=[MinValueValidator(Decimal("0.00"))],
     )
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('addon__display_order', 'addon__name'); enforce the declared database
+    # constraint(s). These options are enforced by Django rather than by template input.
     class Meta:
         ordering = ("addon__display_order", "addon__name")
         constraints = [
@@ -841,8 +836,9 @@ class PartyReview(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('-updated_at',); enforce the declared database constraint(s); create the
+    # declared database index(es). These options are enforced by Django rather than by template
+    # input.
     class Meta:
         ordering = ("-updated_at",)
         constraints = [
@@ -895,9 +891,8 @@ class PartyReview(models.Model):
             if self.booking.status != PartyBuild.Status.COMPLETED:
                 raise ValidationError("Only completed parties can be reviewed.")
 
-    # This role check answers whether the current account qualifies as public testimonial.
-    # Callers use the answer for navigation and convenience, while protected views and services
-    # still enforce access themselves.
+    # Treat a review as a public testimonial only when testimonial visibility, recorded consent, a
+    # non-blank comment, and a completed booking are all present.
     @property
     def is_public_testimonial(self) -> bool:
         """Return whether this review currently has active publication consent."""
@@ -952,8 +947,9 @@ class AddonRating(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('build_addon__addon__display_order', 'build_addon__addon__name'); enforce
+    # the declared database constraint(s); create the declared database index(es). These options are
+    # enforced by Django rather than by template input.
     class Meta:
         ordering = ("build_addon__addon__display_order", "build_addon__addon__name")
         constraints = [

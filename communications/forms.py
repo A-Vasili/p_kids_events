@@ -12,9 +12,7 @@ from django.db.models import Q
 from .models import CustomerChat
 
 
-# This form collects and validates the information needed for message form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# The message screen accepts message through this form. It validates message.
 class MessageForm(forms.Form):
     message = forms.CharField(
         label="Write your message",
@@ -31,9 +29,9 @@ class MessageForm(forms.Form):
         ),
     )
 
-    # This method handles init for the surrounding message form.
-    # It keeps that responsibility close to the object while relying on the existing validation
-    # and permission boundaries.
+    # Configure MessageForm at construction time: message receive ARIA relationships and widget
+    # attributes. This setup runs before validation and keeps dynamic choices or permissions tied to
+    # the current instance.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["message"].widget.attrs["aria-describedby"] = "id_message-help"
@@ -58,9 +56,9 @@ class MessageForm(forms.Form):
         return message
 
 
-# This form collects and validates the information needed for chat filter form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# The chat filter screen accepts search, status, unread only, and ordering through this form. Only
+# the declared inputs are accepted; identities, permissions, and calculated values remain server
+# controlled.
 class ChatFilterForm(forms.Form):
     SORT_CHOICES = (
         ("recent", "Most recent"),

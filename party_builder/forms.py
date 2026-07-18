@@ -19,9 +19,8 @@ from .models import AddonExperience, Category, PartyPackage, PartyReview
 from .services import SafePaymentResult
 
 
-# This function handles apply accessible attributes as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Connect every control to predictable help and error containers. Checkbox and standard widgets
+# receive consistent classes, help/error references, and invalid-state markup.
 def _apply_accessible_attributes(form: forms.BaseForm) -> None:
     """Connect every control to predictable help and error containers."""
 
@@ -56,9 +55,7 @@ def _public_category_content_filter(idea_type: str) -> Q:
     return package_content | experience_content
 
 
-# This form collects and validates the information needed for party ideas filter form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# Validate public catalogue search and filter values from the URL. It validates q.
 class PartyIdeasFilterForm(forms.Form):
     """Validate public catalogue search and filter values from the URL."""
 
@@ -208,9 +205,8 @@ class PartyIdeasFilterForm(forms.Form):
         return cleaned
 
 
-# This form collects and validates the information needed for package options form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# Validate one capacity-based package and its optional experiences. Only the declared inputs are
+# accepted; identities, permissions, and calculated values remain server controlled.
 class PackageOptionsForm(forms.Form):
     """Validate one capacity-based package and its optional experiences."""
 
@@ -227,9 +223,9 @@ class PackageOptionsForm(forms.Form):
         label="Optional experiences",
     )
 
-    # This method handles init for the surrounding package options form.
-    # It keeps that responsibility close to the object while relying on the existing validation
-    # and permission boundaries.
+    # Configure PackageOptionsForm at construction time: package and addons receive role- or
+    # record-scoped querysets and shared accessible styling. This setup runs before validation and
+    # keeps dynamic choices or permissions tied to the current instance.
     def __init__(self, *args, package: PartyPackage | None = None, **kwargs):
         super().__init__(*args, **kwargs)
         visible_category = Q(category__parent__isnull=True) | Q(
@@ -251,9 +247,8 @@ class PackageOptionsForm(forms.Form):
         _apply_accessible_attributes(self)
 
 
-# This form collects and validates the information needed for party details form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# Step two: collect customer and event details without saving yet. It validates contact phone, event
+# date, and postal code.
 class PartyDetailsForm(forms.Form):
     """Step two: collect customer and event details without saving yet."""
 
@@ -351,9 +346,9 @@ class PartyDetailsForm(forms.Form):
         ),
     )
 
-    # This method handles init for the surrounding party details form.
-    # It keeps that responsibility close to the object while relying on the existing validation
-    # and permission boundaries.
+    # Configure PartyDetailsForm at construction time: event date receive widget attributes and
+    # shared accessible styling. This setup runs before validation and keeps dynamic choices or
+    # permissions tied to the current instance.
     def __init__(self, *args, show_save_profile=False, user=None, **kwargs):
         self.user = user
         super().__init__(*args, **kwargs)
@@ -408,9 +403,8 @@ class PartyDetailsForm(forms.Form):
         return cleaned_data
 
 
-# This form collects and validates the information needed for simulated payment form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# Step three: validate test card details and discard sensitive values. It validates card number,
+# security code, and billing postal code.
 class SimulatedPaymentForm(forms.Form):
     """Step three: validate test card details and discard sensitive values."""
 
@@ -482,9 +476,9 @@ class SimulatedPaymentForm(forms.Form):
         ),
     )
 
-    # This method handles init for the surrounding simulated payment form.
-    # It keeps that responsibility close to the object while relying on the existing validation
-    # and permission boundaries.
+    # Configure SimulatedPaymentForm at construction time: expiry year receive runtime choices and
+    # shared accessible styling. This setup runs before validation and keeps dynamic choices or
+    # permissions tied to the current instance.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         current_year = timezone.localdate().year
@@ -578,9 +572,8 @@ class SimulatedPaymentForm(forms.Form):
         )
 
 
-# This form collects and validates the information needed for review code form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# Collect a private party code before opening the verified review form. Only the declared inputs are
+# accepted; identities, permissions, and calculated values remain server controlled.
 class ReviewCodeForm(forms.Form):
     """Collect a private party code before opening the verified review form."""
 
@@ -599,17 +592,16 @@ class ReviewCodeForm(forms.Form):
         ),
     )
 
-    # This method handles init for the surrounding review code form.
-    # It keeps that responsibility close to the object while relying on the existing validation
-    # and permission boundaries.
+    # Configure ReviewCodeForm at construction time: its runtime fields receive shared accessible
+    # styling. This setup runs before validation and keeps dynamic choices or permissions tied to
+    # the current instance.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _apply_accessible_attributes(self)
 
 
-# This form collects and validates the information needed for party review form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# Rate the package and exactly the add-ons recorded in one booking. Only the declared inputs are
+# accepted; identities, permissions, and calculated values remain server controlled.
 class PartyReviewForm(forms.Form):
     """Rate the package and exactly the add-ons recorded in one booking."""
 
@@ -653,9 +645,9 @@ class PartyReviewForm(forms.Form):
         help_text="Only your first name can be shown. Your surname and account details stay private.",
     )
 
-    # This method handles init for the surrounding party review form.
-    # It keeps that responsibility close to the object while relying on the existing validation
-    # and permission boundaries.
+    # Configure PartyReviewForm at construction time: its runtime fields receive shared accessible
+    # styling. This setup runs before validation and keeps dynamic choices or permissions tied to
+    # the current instance.
     def __init__(self, *args, booking, **kwargs):
         self.booking = booking
         self.build_addons = list(booking.addon_items.all())

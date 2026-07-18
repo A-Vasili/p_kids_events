@@ -30,13 +30,14 @@
         document.body.style.overflow = open ? "hidden" : "";
     };
 
-    // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+    // Open or close the management sidebar and synchronize the backdrop, body scrolling, and toggle’s aria-expanded
+    // state.
     sidebarToggle?.addEventListener("click", () => {
         setSidebarOpen(sidebar?.dataset.open !== "true");
     });
-    // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+    // Close the management sidebar when its backdrop is clicked.
     backdrop?.addEventListener("click", () => setSidebarOpen(false));
-    // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+    // Close the management sidebar on Escape and return focus to the sidebar toggle.
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && sidebar?.dataset.open === "true") {
             setSidebarOpen(false);
@@ -57,7 +58,8 @@
         );
     };
 
-    // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+    // Switch the management theme, persist the preference when local storage is available, and update aria-checked and
+    // the toggle label.
     themeToggle?.addEventListener("click", () => {
         const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
         document.documentElement.dataset.theme = next;
@@ -71,7 +73,8 @@
     updateThemeToggle();
 
     document.querySelectorAll("form[data-prevent-double-submit]").forEach((form) => {
-        // This listener responds to the submit event and keeps the enhanced interface aligned with the visitor’s action.
+        // Disable and relabel the form’s submit button as Saving after submission starts, preventing a second
+        // management action.
         form.addEventListener("submit", () => {
             const button = form.querySelector('button[type="submit"]');
             if (!button) {
@@ -85,7 +88,7 @@
     });
 
     document.querySelectorAll('input[type="file"]').forEach((input) => {
-        // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+        // Preview a newly selected image file in its management form while ignoring empty or non-image selections.
         input.addEventListener("change", () => {
             const file = input.files?.[0];
             const card = input.closest("form")?.querySelector("[data-image-preview]");

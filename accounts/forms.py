@@ -18,9 +18,8 @@ from .models import CustomerProfile
 User = get_user_model()
 
 
-# This function handles apply form control classes as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Apply consistent classes and accessible error/help relationships. Checkbox and standard widgets
+# receive consistent classes, help/error references, and invalid-state markup.
 def apply_form_control_classes(form: forms.BaseForm) -> None:
     """Apply consistent classes and accessible error/help relationships."""
 
@@ -36,9 +35,8 @@ def apply_form_control_classes(form: forms.BaseForm) -> None:
             field.widget.attrs["aria-invalid"] = "true"
 
 
-# This form collects and validates the information needed for sign up form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# Public registration form; every new account starts as a normal customer. It binds only the
+# declared fields to User, validates email, applies the shared accessible widget setup.
 class SignUpForm(UserCreationForm):
     """Public registration form; every new account starts as a normal customer."""
 
@@ -52,8 +50,9 @@ class SignUpForm(UserCreationForm):
         label="I agree that P Kids Events may store these details for account and booking use.",
     )
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Bind SignUpForm to User; expose 8 explicitly listed fields, beginning with username, first
+    # name, last name, and email. These options are enforced by Django rather than by template
+    # input.
     class Meta(UserCreationForm.Meta):
         model = User
         fields = (
@@ -67,9 +66,10 @@ class SignUpForm(UserCreationForm):
             "privacy_consent",
         )
 
-    # This method handles init for the surrounding sign up form.
-    # It keeps that responsibility close to the object while relying on the existing validation
-    # and permission boundaries.
+    # Configure SignUpForm at construction time: username, email, and phone receive browser
+    # autocomplete hints, field guidance, widget attributes, and shared accessible styling. This
+    # setup runs before validation and keeps dynamic choices or permissions tied to the current
+    # instance.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["username"].help_text = "Used to sign in. It must be unique."
@@ -101,15 +101,14 @@ class SignUpForm(UserCreationForm):
         return user
 
 
-# This form collects and validates the information needed for popadoo authentication form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# Django authentication with project styling and safe generic errors. It applies the shared
+# accessible widget setup.
 class PopadooAuthenticationForm(AuthenticationForm):
     """Django authentication with project styling and safe generic errors."""
 
-    # This method handles init for the surrounding popadoo authentication form.
-    # It keeps that responsibility close to the object while relying on the existing validation
-    # and permission boundaries.
+    # Configure PopadooAuthenticationForm at construction time: username and password receive
+    # browser autocomplete hints, widget attributes, and shared accessible styling. This setup runs
+    # before validation and keeps dynamic choices or permissions tied to the current instance.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["username"].widget.attrs["autocomplete"] = "username"
@@ -117,9 +116,8 @@ class PopadooAuthenticationForm(AuthenticationForm):
         apply_form_control_classes(self)
 
 
-# This form collects and validates the information needed for profile form.
-# It accepts only the fields shown to the person using the page and leaves trusted identities,
-# prices, and permissions to the server.
+# Edit the account identity and saved booking-autofill fields together. It binds only the declared
+# fields to CustomerProfile, validates email, applies the shared accessible widget setup.
 class ProfileForm(forms.ModelForm):
     """Edit the account identity and saved booking-autofill fields together."""
 
@@ -127,8 +125,9 @@ class ProfileForm(forms.ModelForm):
     last_name = forms.CharField(max_length=150, required=True)
     email = forms.EmailField(required=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Bind ProfileForm to CustomerProfile; expose 7 explicitly listed fields, beginning with first
+    # name, last name, email, and phone. These options are enforced by Django rather than by
+    # template input.
     class Meta:
         model = CustomerProfile
         fields = (
@@ -145,9 +144,9 @@ class ProfileForm(forms.ModelForm):
             "default_postal_code": forms.TextInput(attrs={"autocomplete": "postal-code"}),
         }
 
-    # This method handles init for the surrounding profile form.
-    # It keeps that responsibility close to the object while relying on the existing validation
-    # and permission boundaries.
+    # Configure ProfileForm at construction time: first name, last name, and email receive shared
+    # accessible styling. This setup runs before validation and keeps dynamic choices or permissions
+    # tied to the current instance.
     def __init__(self, *args, user, **kwargs):
         self.user = user
         super().__init__(*args, **kwargs)

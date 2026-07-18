@@ -141,18 +141,21 @@
     showSlide(activeIndex);
     startAutoplay();
 
-    // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+    // Move to the previous carousel slide, restart manual-navigation timing, and update the active indicator and live
+    // status.
     previousButton.addEventListener("click", () => {
         navigateManually(showPreviousSlide);
     });
 
-    // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+    // Move to the next carousel slide, restart manual-navigation timing, and update the active indicator and live
+    // status.
     nextButton.addEventListener("click", () => {
         navigateManually(showNextSlide);
     });
 
     indicatorButtons.forEach((button) => {
-        // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+        // Show the slide selected by the clicked indicator, then restart autoplay timing and refresh the indicator and
+        // status state.
         button.addEventListener("click", () => {
             navigateManually(() => {
                 showSlide(Number(button.dataset.carouselIndicator));
@@ -160,7 +163,8 @@
         });
     });
 
-    // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+    // Use ArrowLeft and ArrowRight to navigate the carousel, preventing page scrolling while the slide, indicator, and
+    // status are updated.
     carousel.addEventListener("keydown", (event) => {
         if (event.key === "ArrowLeft") {
             event.preventDefault();
@@ -185,7 +189,8 @@
     });
 
     if (typeof prefersReducedMotion.addEventListener === "function") {
-        // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+        // Re-evaluate carousel autoplay when the visitor’s reduced-motion preference changes, keeping motion disabled
+        // whenever that preference is active.
         prefersReducedMotion.addEventListener("change", startAutoplay);
     } else if (typeof prefersReducedMotion.addListener === "function") {
         prefersReducedMotion.addListener(startAutoplay);

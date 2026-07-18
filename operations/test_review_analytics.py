@@ -62,9 +62,8 @@ class ManagementAnalyticsTests(TestCase):
         )
         return booking
 
-    # This test protects the business rule described by “access control and sidebar link”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that access control and sidebar link. The owner sends GET to url; the required outcome
+    # is self returns HTTP 302, self returns HTTP 403, and HTTP 200.
     def test_access_control_and_sidebar_link(self):
         url = reverse("management:management_analytics")
         self.assertEqual(self.client.get(url).status_code, 302)
@@ -75,10 +74,10 @@ class ManagementAnalyticsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Analytics")
 
-    # This test protects the business rule described by “reporting period filters results and
-    # comments are escaped”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that reporting period filters results and comments are escaped. The owner sends GET to
+    # management:management_analytics; the required outcome is response.context['summary'] completed
+    # parties equals 1, renders '&lt;strong&gt;Verified comment&lt;/strong&gt;', and
+    # response.context['summary'] completed parties equals 2.
     def test_reporting_period_filters_results_and_comments_are_escaped(self):
         self.make_completed(10)
         self.make_completed(120)
@@ -89,9 +88,9 @@ class ManagementAnalyticsTests(TestCase):
         response = self.client.get(reverse("management:management_analytics"), {"period": "365"})
         self.assertEqual(response.context["summary"]["completed_parties"], 2)
 
-    # This test protects the business rule described by “analytics query count remains bounded”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that analytics query count remains bounded. The owner sends GET to
+    # management:management_analytics; the required outcome is HTTP 200 and len(queries) is at most
+    # 30.
     def test_analytics_query_count_remains_bounded(self):
         self.make_completed(10)
         self.client.force_login(self.owner)
@@ -100,10 +99,9 @@ class ManagementAnalyticsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertLessEqual(len(queries), 30)
 
-    # This test protects the business rule described by “owner booking detail displays review
-    # code”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that owner booking detail displays review code. The owner sends GET to
+    # management:management_booking_detail; the required outcome is HTTP 200 and renders
+    # 'booking.review_code'.
     def test_owner_booking_detail_displays_review_code(self):
         booking = self.make_completed(5)
         self.client.force_login(self.owner)
@@ -113,10 +111,9 @@ class ManagementAnalyticsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, booking.review_code)
 
-    # This test protects the business rule described by “owner can mark past confirmed booking
-    # completed”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that owner can mark past confirmed booking completed. The owner sends POST to
+    # management:management_booking_status; the required outcome is HTTP 302, booking status is
+    # PartyBuild.Status.COMPLETED, and booking.completed_at is present.
     def test_owner_can_mark_past_confirmed_booking_completed(self):
         booking = PartyBuild.objects.create(
             customer=self.customer,

@@ -23,9 +23,7 @@ PRICING_GROUP = "Pricing Managers"
 CHAT_RESPONDER_GROUP = "Chat Responders"
 
 
-# This function handles user in group as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Return group membership without assuming the user is authenticated.
 def user_in_group(user: AbstractBaseUser, group_name: str) -> bool:
     """Return group membership without assuming the user is authenticated."""
 
@@ -35,9 +33,8 @@ def user_in_group(user: AbstractBaseUser, group_name: str) -> bool:
     )
 
 
-# This role check answers whether the current account qualifies as administrator.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Return true only for an authenticated superuser; membership in the Owner group does not make a
+# business owner an Administrator.
 def is_administrator(user: AbstractBaseUser) -> bool:
     """Identify system administrators without treating them as Owners."""
 
@@ -47,9 +44,8 @@ def is_administrator(user: AbstractBaseUser) -> bool:
     )
 
 
-# This role check answers whether the current account qualifies as owner.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Return true only for an authenticated, non-superuser account in the Owner group, keeping Owners
+# distinct from Django Administrators.
 def is_owner(user: AbstractBaseUser) -> bool:
     """Identify business Owners, which are deliberately not superusers."""
 
@@ -78,9 +74,8 @@ def can_create_owner(user: AbstractBaseUser) -> bool:
     return is_administrator(user)
 
 
-# This role check answers whether the current account qualifies as worker.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Return true only for an authenticated, active account in the Worker group whose WorkerProfile is
+# also marked active.
 def is_worker(user: AbstractBaseUser) -> bool:
     """Return true only for an active worker, never for an Administrator."""
 

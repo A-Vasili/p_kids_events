@@ -15,9 +15,7 @@ from accounts.permissions import (
 register = template.Library()
 
 
-# This function handles group names as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Reuse prefetched groups on management lists instead of querying per row.
 def _group_names(user) -> set[str]:
     """Reuse prefetched groups on management lists instead of querying per row."""
 
@@ -29,41 +27,34 @@ def _group_names(user) -> set[str]:
     return set(user.groups.values_list("name", flat=True))
 
 
-# This function handles in group as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Return whether the account’s cached group-name set contains the requested group, avoiding another
+# query for each template check.
 @register.filter
 def in_group(user, group_name: str) -> bool:
     return group_name in _group_names(user)
 
 
-# This role check answers whether the current account qualifies as administrator account.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Expose the shared Administrator predicate to templates without duplicating its
+# authenticated-superuser rule.
 @register.filter
 def is_administrator_account(user) -> bool:
     return is_administrator(user)
 
 
-# This role check answers whether the current account qualifies as owner account.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Expose Owner status to templates only for non-superusers whose cached group names include Owners.
 @register.filter
 def is_owner_account(user) -> bool:
     return bool(not getattr(user, "is_superuser", False) and OWNER_GROUP in _group_names(user))
 
 
-# This role check answers whether the current account qualifies as worker account.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Expose Worker status to templates when the cached group names include Workers.
 @register.filter
 def is_worker_account(user) -> bool:
     return WORKER_GROUP in _group_names(user)
 
 
-# This role check answers whether the current account qualifies as customer account.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Expose Customer status to templates only for non-superusers whose cached groups include neither
+# Owners nor Workers.
 @register.filter
 def is_customer_account(user) -> bool:
     group_names = _group_names(user)
@@ -74,9 +65,8 @@ def is_customer_account(user) -> bool:
     )
 
 
-# This function handles management role as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Label a management account as Administrator, Owner, Worker, or Customer from its superuser flag
+# and protected group memberships.
 @register.filter
 def management_role(user) -> str:
     if getattr(user, "is_superuser", False):
@@ -105,9 +95,8 @@ def has_chat_access(user) -> bool:
     return CHAT_RESPONDER_GROUP in _group_names(user)
 
 
-# This function handles status css as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Map stored workflow statuses to the badge style used by management templates, with unknown values
+# falling back to the muted variant.
 @register.filter
 def status_css(value: str) -> str:
     mapping = {
@@ -129,9 +118,7 @@ def status_css(value: str) -> str:
     return mapping.get(str(value), "muted")
 
 
-# This function handles audit event label as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Turn stored machine-friendly action names into readable labels.
 @register.filter
 def audit_event_label(value: str) -> str:
     """Turn stored machine-friendly action names into readable labels."""

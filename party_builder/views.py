@@ -47,15 +47,15 @@ from .services import (
 )
 
 
-# This class groups the information and behaviour needed for checkout state mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Shared session and catalogue helpers for the checkout steps. Reuses the same setup and validation
+# across subclasses.
 class CheckoutStateMixin:
     """Shared session and catalogue helpers for the checkout steps."""
 
     package: PartyPackage
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Resolve the active package and clean archived add-ons from the checkout session before any
+    # checkout step runs, preventing stale catalogue items from reaching pricing.
     def dispatch(self, request, *args, **kwargs):
         self.package = self.get_package()
         # Old browser sessions may reference catalogue items that were archived.
@@ -63,18 +63,16 @@ class CheckoutStateMixin:
         self.get_selected_addons()
         return super().dispatch(request, *args, **kwargs)
 
-    # This helper retrieves package for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Resolve the active package stored in the checkout session; missing or archived package IDs are
+    # removed instead of reaching later pricing steps.
     def get_package(self) -> PartyPackage:
         package = resolve_active_package(self.request.session)
         if package is None:
             raise Http404("No active party package is currently available.")
         return package
 
-    # This helper retrieves checkout state for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Return the sanitized checkout-session dictionary, discarding malformed or obsolete values
+    # before a checkout view uses them.
     def get_checkout_state(self) -> dict[str, Any]:
         return checkout_state(self.request.session)
 
@@ -90,15 +88,13 @@ class CheckoutStateMixin:
     def clear_checkout_state(self) -> None:
         clear_checkout_state(self.request.session)
 
-    # This helper retrieves selected addons for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Resolve only active add-ons referenced by the session, remove stale IDs, preserve catalogue
+    # order, and save the cleaned selection back to the session.
     def get_selected_addons(self) -> list[AddonExperience]:
         return active_session_addons(self.request.session)
 
-    # This helper retrieves quote context for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Build the package, selected add-ons, and calculated quote values shared by checkout templates
+    # from the cleaned session state.
     def get_quote_context(self) -> dict[str, Any]:
         addons = self.get_selected_addons()
         return {
@@ -108,18 +104,16 @@ class CheckoutStateMixin:
         }
 
 
-# This view coordinates the party options view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Step one: choose a capacity-based package and optional experiences. Responses continue through
+# party_builder:party_builder_customer_details.
 class PartyOptionsView(CheckoutStateMixin, FormView):
     """Step one: choose a capacity-based package and optional experiences."""
 
     template_name = "party_builder/options.html"
     form_class = PackageOptionsForm
 
-    # This helper retrieves form kwargs for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Pass package and initial into PartyOptionsView’s form constructor so field choices and
+    # validation use the current authorized records. The base view kwargs are preserved.
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["package"] = self.package
@@ -131,8 +125,9 @@ class PartyOptionsView(CheckoutStateMixin, FormView):
             }
         return kwargs
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add form, package, package options, selected package ID, addon categories, and 4 other values
+    # to PartyOptionsView’s template context. The base context is preserved, and values are derived
+    # from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         form = context["form"]
@@ -185,25 +180,23 @@ class PartyOptionsView(CheckoutStateMixin, FormView):
         return redirect("party_builder:party_builder_customer_details")
 
 
-# This view coordinates the party details view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Step two: collect personal, venue, and event information. Responses continue through
+# party_builder:party_builder_simulated_checkout and party_builder:party_builder_package_options.
 class PartyDetailsView(CheckoutStateMixin, FormView):
     """Step two: collect personal, venue, and event information."""
 
     template_name = "party_builder/details.html"
     form_class = PartyDetailsForm
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Require a selected package in the checkout session before opening customer details; incomplete
+    # sessions return to package selection.
     def dispatch(self, request, *args, **kwargs):
         if not checkout_state(request.session).get("package_id"):
             return redirect("party_builder:party_builder_package_options")
         return super().dispatch(request, *args, **kwargs)
 
-    # This helper retrieves form kwargs for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Pass show save profile, user, and initial into PartyDetailsView’s form constructor so field
+    # choices and validation use the current authorized records. The base view kwargs are preserved.
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["show_save_profile"] = self.request.user.is_authenticated
@@ -224,8 +217,8 @@ class PartyDetailsView(CheckoutStateMixin, FormView):
             }
         return kwargs
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add current step to PartyDetailsView’s template context. The base context is preserved, and
+    # values are derived from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(self.get_quote_context())
@@ -265,17 +258,16 @@ class PartyDetailsView(CheckoutStateMixin, FormView):
         return redirect("party_builder:party_builder_simulated_checkout")
 
 
-# This view coordinates the party checkout view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Step three: review the cart and validate a simulated card payment. Responses continue through
+# party_builder:party_builder_package_options and party_builder:party_builder_customer_details.
 class PartyCheckoutView(CheckoutStateMixin, FormView):
     """Step three: review the cart and validate a simulated card payment."""
 
     template_name = "party_builder/checkout.html"
     form_class = SimulatedPaymentForm
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Require both a selected package and valid serialized customer details before checkout; missing
+    # or malformed details are cleared and redirected to the appropriate earlier step.
     def dispatch(self, request, *args, **kwargs):
         if not checkout_state(request.session).get("package_id"):
             return redirect("party_builder:party_builder_package_options")
@@ -290,8 +282,8 @@ class PartyCheckoutView(CheckoutStateMixin, FormView):
             return redirect("party_builder:party_builder_customer_details")
         return super().dispatch(request, *args, **kwargs)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add details and current step to PartyCheckoutView’s template context. The base context is
+    # preserved, and values are derived from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(self.get_quote_context())
@@ -334,23 +326,22 @@ class PartyCheckoutView(CheckoutStateMixin, FormView):
         return HttpResponseRedirect(party_build.get_absolute_url())
 
 
-# This view coordinates the party builder restart view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Clear the in-progress cart and return to the first checkout step. Responses continue through
+# party_builder:party_builder_package_options.
 class PartyBuilderRestartView(CheckoutStateMixin, View):
     """Clear the in-progress cart and return to the first checkout step."""
 
     http_method_names = ["post"]
 
-    # This request method processes the submitted action after validation and permission checks.
+    # Clear the browser’s checkout session and restart the party builder at package selection; no
+    # persisted booking is changed.
     def post(self, request, *args, **kwargs):
         self.clear_checkout_state()
         return redirect("party_builder:party_builder_package_options")
 
 
-# This view coordinates the party build success view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Show the completed simulated order only to its creating browser session. The queryset method
+# limits which records can be loaded.
 class PartyBuildSuccessView(DetailView):
     """Show the completed simulated order only to its creating browser session."""
 
@@ -370,9 +361,8 @@ class PartyBuildSuccessView(DetailView):
             .prefetch_related("addon_items__addon")
         )
 
-    # This helper retrieves object for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Load the completed booking identified by the success token only when it belongs to the
+    # signed-in customer; otherwise return HTTP 404.
     def get_object(self, queryset=None):
         party_build = super().get_object(queryset)
         permitted_builds = self.request.session.get(
@@ -392,9 +382,8 @@ class PartyBuildSuccessView(DetailView):
         return party_build
 
 
-# This view coordinates the party review code view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Verify a private code before opening a completed booking review. Access is limited to
+# authenticated accounts; responses continue through party_builder:party_builder_review.
 class PartyReviewCodeView(LoginRequiredMixin, FormView):
     """Verify a private code before opening a completed booking review."""
 
@@ -419,17 +408,15 @@ class PartyReviewCodeView(LoginRequiredMixin, FormView):
         )
 
 
-# This view coordinates the party review view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Display feedback fields for the package and selected add-ons only. Access is limited to
+# authenticated accounts.
 class PartyReviewView(LoginRequiredMixin, TemplateView):
     """Display feedback fields for the package and selected add-ons only."""
 
     template_name = "party_builder/review.html"
 
-    # This helper retrieves booking for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Load the reviewable booking for the current customer and public ID, reusing the service that
+    # enforces ownership, status, and review availability.
     def get_booking(self):
         booking = get_reviewable_booking(
             user=self.request.user,
@@ -439,8 +426,9 @@ class PartyReviewView(LoginRequiredMixin, TemplateView):
             raise PermissionDenied("Verify the party code before opening the review form.")
         return booking
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add booking, review form, and review stats to PartyReviewView’s template context. The base
+    # context is preserved, and values are derived from the current request or object rather than
+    # client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         booking = kwargs.get("booking") or self.get_booking()
@@ -462,9 +450,7 @@ class PartyReviewView(LoginRequiredMixin, TemplateView):
         return context
 
 
-# This function handles review template context as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Build the same rating summaries for valid and invalid form renders.
 def _review_template_context(booking, form):
     """Build the same rating summaries for valid and invalid form renders."""
 
@@ -482,9 +468,8 @@ def _review_template_context(booking, form):
     }
 
 
-# This function handles json form errors as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Compute JSON form errors for the surrounding analytics or service workflow. Centralizing the
+# calculation keeps date, status, and filtering rules consistent across callers.
 def _json_form_errors(form):
     return {
         field: [error["message"] for error in errors.get_json_data()]
@@ -492,15 +477,15 @@ def _json_form_errors(form):
     }
 
 
-# This view coordinates the party review submit view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Save review feedback through AJAX or a normal accessible POST fallback. Access is limited to
+# authenticated accounts; responses continue through party_builder:party_builder_review.
 class PartyReviewSubmitView(LoginRequiredMixin, View):
     """Save review feedback through AJAX or a normal accessible POST fallback."""
 
     http_method_names = ["post"]
 
-    # This request method processes the submitted action after validation and permission checks.
+    # Recheck booking ownership and review-code authorization, validate PartyReviewForm, and save
+    # feedback; AJAX receives JSON errors or success while normal POST falls back to redirects.
     def post(self, request, *args, **kwargs):
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         try:
@@ -595,9 +580,8 @@ class PartyReviewSubmitView(LoginRequiredMixin, View):
         )
 
 
-# This view coordinates the party recommendation view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Return minimal public recommendation data for the live party builder. Its methods keep record
+# selection and the browser response inside the route’s permission boundary.
 class PartyRecommendationView(View):
     """Return minimal public recommendation data for the live party builder."""
 

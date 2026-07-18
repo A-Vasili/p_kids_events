@@ -10,9 +10,9 @@ from accounts.permissions import can_respond_to_customer_chat
 from .services import is_chat_customer, unread_chat_count
 
 
-# This function handles chat navigation context as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Build navigation URLs, launcher visibility, responder capability, and unread counts from the
+# current account’s chat role. Guests receive safe zero-count defaults without querying private
+# chats.
 def chat_navigation_context(request):
     user = request.user
     context = {

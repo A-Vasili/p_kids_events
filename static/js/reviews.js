@@ -32,7 +32,8 @@
     };
 
     visibilityInputs.forEach((input) => {
-        // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+        // Show or hide the testimonial name controls when review visibility changes, updating aria-hidden with the same
+        // state.
         input.addEventListener("change", updateNameSection);
     });
     updateNameSection();
@@ -57,7 +58,8 @@
         });
     };
 
-    // This listener responds to the submit event and keeps the enhanced interface aligned with the visitor’s action.
+    // Submit the review through AJAX once, render server field and permission errors accessibly, and retain the normal
+    // form as a fallback when fetch is unavailable.
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         clearErrors();

@@ -8,8 +8,8 @@ import party_builder.validators
 from django.db import migrations, models
 
 
-# This class groups the information and behaviour needed for migration.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Add category image fields and related catalogue image metadata declared by this migration, after
+# the category schema dependency is present.
 class Migration(migrations.Migration):
 
     dependencies = [

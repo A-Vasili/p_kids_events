@@ -7,9 +7,8 @@
 from django.db import migrations
 
 
-# This business action carries out create existing profiles.
-# It validates the live records and permissions before changing anything, then keeps related
-# updates together so partial results are not left behind.
+# Backfill one CustomerProfile for every existing auth user during the migration, using
+# get_or_create so reruns do not duplicate profiles.
 def create_existing_profiles(apps, schema_editor):
     User = apps.get_model("auth", "User")
     CustomerProfile = apps.get_model("accounts", "CustomerProfile")

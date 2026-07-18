@@ -41,9 +41,8 @@ class PartyCheckoutTests(TestCase):
             },
         )
 
-    # This business action carries out submit details.
-    # It validates the live records and permissions before changing anything, then keeps related
-    # updates together so partial results are not left behind.
+    # Apply the submit details business action to the selected records. Validation completes before
+    # any persistent change, so failures leave the existing state intact.
     def submit_details(self):
         return self.client.post(
             reverse("party_builder:party_builder_customer_details"),
@@ -61,9 +60,10 @@ class PartyCheckoutTests(TestCase):
             },
         )
 
-    # This test protects the business rule described by “descriptive namespaced urls”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that descriptive namespaced urls. The required outcome is
+    # party_builder:party_builder_package_options equals '/party-builder/',
+    # party_builder:party_builder_customer_details equals '/party-builder/details/', and
+    # party_builder:party_builder_simulated_checkout equals '/party-builder/checkout/'.
     def test_descriptive_namespaced_urls(self):
         self.assertEqual(
             reverse("party_builder:party_builder_package_options"),
@@ -78,10 +78,9 @@ class PartyCheckoutTests(TestCase):
             "/party-builder/checkout/",
         )
 
-    # This test protects the business rule described by “options page contains capacity packages
-    # addons and status”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that options page contains capacity packages addons and status. The test client sends
+    # GET to party_builder:party_builder_package_options; the required outcome is HTTP 200, renders
+    # 'Up to 10 children', and renders 'Up to 50 children'.
     def test_options_page_contains_capacity_packages_addons_and_status(self):
         response = self.client.get(
             reverse("party_builder:party_builder_package_options")
@@ -93,18 +92,15 @@ class PartyCheckoutTests(TestCase):
         self.assertContains(response, 'aria-live="polite"')
         self.assertNotContains(response, 'name="guest_tier"')
 
-    # This test protects the business rule described by “forms no longer collect a tier or exact
-    # child count”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that the public party forms no longer accept a guest tier or exact child count; package
+    # and add-on selection remain the supported inputs.
     def test_forms_no_longer_collect_a_tier_or_exact_child_count(self):
         self.assertNotIn("guest_tier", PackageOptionsForm().fields)
         self.assertNotIn("guest_count", PartyDetailsForm().fields)
 
-    # This test protects the business rule described by “quote uses package and database addon
-    # prices”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that quote uses package and database addon prices. The required outcome is
+    # quote.package_price equals Decimal('255.00'), quote.addon_price equals self.addon.price, and
+    # quote.total_price equals Decimal('255.00') + self.addon.price.
     def test_quote_uses_package_and_database_addon_prices(self):
         quote = calculate_party_quote(self.larger_package, [self.addon])
         self.assertEqual(quote.package_price, Decimal("255.00"))
@@ -114,10 +110,9 @@ class PartyCheckoutTests(TestCase):
             Decimal("255.00") + self.addon.price,
         )
 
-    # This test protects the business rule described by “later steps redirect when cart is
-    # missing”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that later steps redirect when cart is missing. The test client sends GET to
+    # party_builder:party_builder_customer_details; the required outcome is redirects to target and
+    # redirects to target.
     def test_later_steps_redirect_when_cart_is_missing(self):
         details_response = self.client.get(
             reverse("party_builder:party_builder_customer_details")
@@ -129,9 +124,9 @@ class PartyCheckoutTests(TestCase):
         self.assertRedirects(details_response, target)
         self.assertRedirects(checkout_response, target)
 
-    # This test protects the business rule described by “legacy tier session key is removed”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that legacy tier session key is removed. The test client sends GET to
+    # party_builder:party_builder_package_options; the required outcome is HTTP 200 and
+    # self.client.session checkout session key omits 'guest_tier_id'.
     def test_legacy_tier_session_key_is_removed(self):
         session = self.client.session
         session[CHECKOUT_SESSION_KEY] = {
@@ -151,10 +146,10 @@ class PartyCheckoutTests(TestCase):
             self.client.session[CHECKOUT_SESSION_KEY],
         )
 
-    # This test protects the business rule described by “complete checkout saves capacity snapshot
-    # and safe card metadata”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that complete checkout saves capacity snapshot and safe card metadata. The test client
+    # sends POST to party_builder:party_builder_simulated_checkout; the required outcome is
+    # redirects to party_builder:party_builder_customer_details, redirects to
+    # party_builder:party_builder_simulated_checkout, and redirects to build.get_absolute_url().
     def test_complete_checkout_saves_capacity_snapshot_and_safe_card_metadata(self):
         self.assertRedirects(
             self.select_options(package=self.larger_package, addons=[self.addon]),
@@ -192,9 +187,8 @@ class PartyCheckoutTests(TestCase):
         self.assertNotIn("4242424242424242", str(build.__dict__))
         self.assertFalse(hasattr(build, "security_code"))
 
-    # This test protects the business rule described by “invalid test card is rejected”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that an unapproved test card number returns the checkout form with the demo-card
+    # guidance and does not create a PartyBuild.
     def test_invalid_test_card_is_rejected(self):
         self.select_options()
         self.submit_details()
@@ -217,10 +211,9 @@ class PartyCheckoutTests(TestCase):
         )
         self.assertFalse(PartyBuild.objects.exists())
 
-    # This test protects the business rule described by “details step uses custom date and time
-    # controls”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Verify that details step uses custom date and time controls. The test client sends GET to
+    # party_builder:party_builder_customer_details; the required outcome is renders
+    # 'data-date-picker', renders 'data-time-picker', and renders 'type="hidden" name="event_date"'.
     def test_details_step_uses_custom_date_and_time_controls(self):
         self.select_options()
         response = self.client.get(

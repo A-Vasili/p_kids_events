@@ -54,8 +54,8 @@ class CustomerProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('user__last_name', 'user__first_name', 'user__username'). These options are
+    # enforced by Django rather than by template input.
     class Meta:
         ordering = ("user__last_name", "user__first_name", "user__username")
 
@@ -95,8 +95,8 @@ class WorkerProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('display_name', 'user__username'). These options are enforced by Django
+    # rather than by template input.
     class Meta:
         ordering = ("display_name", "user__username")
         permissions = [

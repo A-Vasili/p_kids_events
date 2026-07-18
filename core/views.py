@@ -11,9 +11,8 @@ from django.views.generic import ListView
 from party_builder.models import PartyBuild, PartyReview
 
 
-# This view coordinates the testimonials view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Publish only explicitly consented feedback from completed parties. The queryset method limits
+# which records can be loaded.
 class TestimonialsView(ListView):
     """Publish only explicitly consented feedback from completed parties."""
 

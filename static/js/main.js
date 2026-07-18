@@ -461,20 +461,21 @@
 
     /* Bind responsive navigation interactions only when the header is present. */
     if (navigationToggle && navigationMenu) {
-        // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+        // Toggle the responsive site navigation and keep menu visibility, aria-expanded, and the accessible button
+        // label synchronized.
         navigationToggle.addEventListener("click", () => {
             const isOpen = navigationToggle.getAttribute("aria-expanded") === "true";
             isOpen ? closeNavigation() : openNavigation();
         });
 
-        // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+        // Close the mobile navigation after a menu link is chosen, while leaving desktop navigation unchanged.
         navigationMenu.addEventListener("click", (event) => {
             if (event.target.closest("a") && navigationBreakpoint.matches) {
                 closeNavigation();
             }
         });
 
-        // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+        // Close the open mobile navigation when the visitor clicks outside the site-navigation container.
         document.addEventListener("click", (event) => {
             if (
                 navigationBreakpoint.matches
@@ -485,14 +486,15 @@
             }
         });
 
-        // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+        // Close the open mobile navigation on Escape and return focus to the navigation toggle.
         document.addEventListener("keydown", (event) => {
             if (event.key === "Escape" && navigationMenu.classList.contains("is-open")) {
                 closeNavigation(true);
             }
         });
 
-        // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+        // Reset the mobile navigation when the viewport leaves the mobile breakpoint so hidden state and aria-expanded
+        // match the desktop layout.
         navigationBreakpoint.addEventListener("change", (event) => {
             if (!event.matches) {
                 closeNavigation();
@@ -501,7 +503,8 @@
     }
 
     /* Event delegation keeps the language dropdown working even if the header is re-rendered. */
-    // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+    // Apply the selected language when the delegated #language-selector change event fires, including after the header
+    // is re-rendered.
     document.addEventListener("change", (event) => {
         if (event.target.matches("#language-selector")) {
             applyLanguage(event.target.value);
@@ -510,7 +513,8 @@
 
     /* Persist the visitor-selected theme and update accessible control text. */
     if (themeToggle) {
-        // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+        // Switch between light and dark themes, persist the choice when storage is available, and refresh the toggle’s
+        // accessible label.
         themeToggle.addEventListener("click", () => {
             const currentTheme = document.documentElement.getAttribute("data-theme");
             const nextTheme = currentTheme === "dark" ? "light" : "dark";
@@ -535,7 +539,8 @@
         applySelectedPackageToBookingForm();
         validateBookingFields();
 
-        // This listener responds to the submit event and keeps the enhanced interface aligned with the visitor’s action.
+        // Validate the booking form before the demo submission, focus the first invalid field, and show confirmation
+        // only after native and custom checks pass.
         bookingForm.addEventListener("submit", (event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -571,17 +576,18 @@
             hideBookingConfirmation();
         });
 
-        // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+        // Apply the custom-package description when that package is selected, leaving other package choices unchanged.
         bookingPackage?.addEventListener("change", () => {
             if (bookingPackage.value === customPackageId) {
                 applyCustomPackageDetails();
             }
         });
 
-        // This listener responds to the change event and keeps the enhanced interface aligned with the visitor’s action.
+        // Re-run booking-field validation after any select, checkbox, or other change without replacing the browser or
+        // server validation rules.
         bookingForm.addEventListener("change", validateBookingFields);
 
-        // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+        // Clear the booking form and move focus to its first input so the visitor can start a new entry immediately.
         bookingClearButton?.addEventListener("click", () => {
             clearBookingForm();
             bookingForm.querySelector("input, select, textarea")?.focus();
@@ -623,9 +629,10 @@
         }
 
         bindEvents() {
-            // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+            // Toggle the account menu from its button while synchronizing expanded state, panel visibility, and focus.
             this.button.addEventListener("click", () => this.toggle());
-            // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+            // Open the account menu with Enter, Space, or arrow keys, choose the initial item by direction, and close
+            // it with Escape.
             this.button.addEventListener("keydown", (event) => {
                 if (["Enter", " ", "ArrowDown", "ArrowUp"].includes(event.key)) {
                     event.preventDefault();
@@ -635,12 +642,14 @@
                 }
             });
 
-            // This listener responds to the keydown event and keeps the enhanced interface aligned with the visitor’s action.
+            // Route menu-panel keys through the account menu’s navigation handler for item movement, activation,
+            // closing, and focus return.
             this.panel.addEventListener("keydown", (event) => {
                 this.handlePanelKeyboard(event);
             });
 
-            // This listener responds to the click event and keeps the enhanced interface aligned with the visitor’s action.
+            // Close the account menu when a click occurs outside its root, without interfering with clicks inside the
+            // menu.
             document.addEventListener("click", (event) => {
                 if (!this.root.contains(event.target)) {
                     this.close();

@@ -44,8 +44,8 @@ def reverse_seed(apps, schema_editor):
     pass
 
 
-# This class groups the information and behaviour needed for migration.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Apply the seed catalogue categories data migration through seed categories. Dependencies keep the
+# data change ordered after the required schema.
 class Migration(migrations.Migration):
     dependencies = [
         ("party_builder", "0006_addonexperience_image_addonexperience_image_alt_text_and_more"),

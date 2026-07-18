@@ -33,16 +33,15 @@ from .services import (
 )
 
 
-# This class groups the information and behaviour needed for customer only mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Reject staff accounts instead of letting them impersonate a customer. Requires authentication;
+# applies a role predicate before dispatch.
 class CustomerOnlyMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Reject staff accounts instead of letting them impersonate a customer."""
 
     raise_exception = True
 
-    # This test protects the business rule described by “func”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Allow the view only when the current account satisfies chat customer. UserPassesTestMixin
+    # turns a false result into the configured redirect or permission denial.
     def test_func(self):
         return is_chat_customer(self.request.user)
 
@@ -59,16 +58,15 @@ class CustomerOnlyMixin(LoginRequiredMixin, UserPassesTestMixin):
         raise PermissionDenied
 
 
-# This class groups the information and behaviour needed for chat management access mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Allow full managers and explicitly delegated active chat responders. Requires authentication;
+# applies a role predicate before dispatch.
 class ChatManagementAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Allow full managers and explicitly delegated active chat responders."""
 
     raise_exception = True
 
-    # This test protects the business rule described by “func”.
-    # It guards against a future change silently weakening the expected customer, staff, or data
-    # behaviour.
+    # Allow the view only when the current account satisfies can respond to customer chat.
+    # UserPassesTestMixin turns a false result into the configured redirect or permission denial.
     def test_func(self):
         return can_respond_to_customer_chat(self.request.user)
 
@@ -85,14 +83,15 @@ class ChatManagementAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
         raise PermissionDenied
 
 
-# This class groups the information and behaviour needed for chat management context mixin.
-# Keeping the related rules together makes the surrounding workflow easier to reuse and test.
+# Provide the page title, active navigation section, breadcrumbs, and pagination query shared by
+# chat-management views. Subclasses add only their page-specific records.
 class ChatManagementContextMixin:
     management_page_title = "Messages"
     management_active_section = "messages"
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add management page title, management active section, management breadcrumbs, and pagination
+    # query to ChatManagementContextMixin’s template context. The base context is preserved, and
+    # values are derived from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         query = self.request.GET.copy()
@@ -108,9 +107,8 @@ class ChatManagementContextMixin:
         return context
 
 
-# This function handles customer chat context as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Compute customer chat context for the surrounding analytics or service workflow. Centralizing the
+# calculation keeps date, status, and filtering rules consistent across callers.
 def _customer_chat_context(request, *, form=None, message_limit=None):
     chat = visible_chats_for(request.user).prefetch_related("messages__sender").first()
     if chat:
@@ -131,14 +129,13 @@ def _customer_chat_context(request, *, form=None, message_limit=None):
     }
 
 
-# This view coordinates the customer chat view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render communications/customer/chat.html for the customer chat journey. Responses continue through
+# communications:management_inbox.
 class CustomerChatView(TemplateView):
     template_name = "communications/customer/chat.html"
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Let guests and active customer accounts use the customer chat route; delegated responders are
+    # redirected to the management inbox and other staff accounts receive HTTP 403.
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and not is_chat_customer(request.user):
             if can_respond_to_customer_chat(request.user):
@@ -146,8 +143,9 @@ class CustomerChatView(TemplateView):
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add chat, thread messages, form, and hide chat launcher to CustomerChatView’s template
+    # context. The base context is preserved, and values are derived from the current request or
+    # object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.user.is_authenticated:
@@ -157,13 +155,13 @@ class CustomerChatView(TemplateView):
         return context
 
 
-# This view coordinates the customer send view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the customer send route. Access is limited to customers; responses continue through
+# communications:customer_chat.
 class CustomerSendView(CustomerOnlyMixin, View):
     http_method_names = ["post"]
 
-    # This request method processes the submitted action after validation and permission checks.
+    # Validate the customer message, append it through the rate-limited chat service, and redirect
+    # to the customer thread on success; validation errors return the chat page with HTTP 400.
     def post(self, request):
         form = MessageForm(request.POST)
         if form.is_valid():
@@ -186,9 +184,7 @@ class CustomerSendView(CustomerOnlyMixin, View):
         )
 
 
-# This view coordinates the customer panel view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the customer panel route. Access is limited to customers.
 class CustomerPanelView(CustomerOnlyMixin, View):
     http_method_names = ["get"]
 
@@ -201,9 +197,7 @@ class CustomerPanelView(CustomerOnlyMixin, View):
         )
 
 
-# This view coordinates the customer refresh view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the customer refresh route. Access is limited to customers.
 class CustomerRefreshView(CustomerOnlyMixin, View):
     http_method_names = ["get"]
 
@@ -225,13 +219,13 @@ class CustomerRefreshView(CustomerOnlyMixin, View):
         )
 
 
-# This view coordinates the customer widget send view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the customer widget send route. Access is limited to customers; POST is the only
+# state-changing method.
 class CustomerWidgetSendView(CustomerOnlyMixin, View):
     http_method_names = ["post"]
 
-    # This request method processes the submitted action after validation and permission checks.
+    # Validate the widget message and append it through the customer chat service, then return
+    # refreshed panel HTML with HTTP 200 or field errors with HTTP 400.
     def post(self, request):
         form = MessageForm(request.POST)
         if form.is_valid():
@@ -258,9 +252,8 @@ class CustomerWidgetSendView(CustomerOnlyMixin, View):
         )
 
 
-# This view coordinates the management inbox view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render communications/management/inbox.html for the management inbox journey. The queryset method
+# limits which records can be loaded.
 class ManagementInboxView(
     ChatManagementAccessMixin,
     ChatManagementContextMixin,
@@ -270,9 +263,8 @@ class ManagementInboxView(
     context_object_name = "chats"
     paginate_by = 20
 
-    # This helper retrieves filter form for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Build the inbox filter form from the current query string so status and search selections
+    # remain visible while the chat queryset is filtered.
     def get_filter_form(self):
         return ChatFilterForm(self.request.GET or None)
 
@@ -289,8 +281,9 @@ class ManagementInboxView(
             )
         return queryset
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add chats, filter form, and page obj to ManagementInboxView’s template context. The base
+    # context is preserved, and values are derived from the current request or object rather than
+    # client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         page_chats = list(context["page_obj"].object_list)
@@ -301,9 +294,8 @@ class ManagementInboxView(
         return context
 
 
-# This view coordinates the management chat view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render communications/management/chat.html for the management chat journey. Responses continue
+# through communications:management_inbox.
 class ManagementChatView(
     ChatManagementAccessMixin,
     ChatManagementContextMixin,
@@ -311,8 +303,8 @@ class ManagementChatView(
 ):
     template_name = "communications/management/chat.html"
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Resolve the requested chat only from the current user’s visible-chat queryset, mark it read,
+    # and return HTTP 404 when the public ID is outside that permission scope.
     def dispatch(self, request, *args, **kwargs):
         self.chat = get_object_or_404(
             visible_chats_for(request.user).prefetch_related("messages__sender"),
@@ -321,8 +313,9 @@ class ManagementChatView(
         mark_chat_read(chat=self.chat, user=request.user)
         return super().dispatch(request, *args, **kwargs)
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add chat, thread messages, form, management page title, and management breadcrumbs to
+    # ManagementChatView’s template context. The base context is preserved, and values are derived
+    # from the current request or object rather than client input.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -340,13 +333,13 @@ class ManagementChatView(
         return context
 
 
-# This view coordinates the management reply view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the management reply route. Responses continue through communications:management_chat
+# and communications:management_inbox.
 class ManagementReplyView(ChatManagementAccessMixin, View):
     http_method_names = ["post"]
 
-    # This request method processes the submitted action after validation and permission checks.
+    # Load only a chat visible to the responder, validate the reply, and append it through the
+    # delegated-access service; failures redisplay the thread without saving a message.
     def post(self, request, public_id):
         chat = get_object_or_404(visible_chats_for(request.user), public_id=public_id)
         form = MessageForm(request.POST)

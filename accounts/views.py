@@ -25,16 +25,15 @@ from .forms import PopadooAuthenticationForm, ProfileForm, SignUpForm
 from .models import CustomerProfile
 
 
-# This view coordinates the sign up view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render accounts/sign_up.html for the sign-up journey with SignUpForm. Success continues to
+# reverse_lazy('accounts:accounts_customer_dashboard').
 class SignUpView(FormView):
     template_name = "accounts/sign_up.html"
     form_class = SignUpForm
     success_url = reverse_lazy("accounts:accounts_customer_dashboard")
 
-    # This entry check decides whether the signed-in person may reach any method on the view,
-    # preventing direct URLs from bypassing role restrictions.
+    # Redirect authenticated accounts to the customer dashboard before the registration view runs.
+    # Only guests may open or submit the sign-up form.
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect("accounts:accounts_customer_dashboard")
@@ -50,34 +49,29 @@ class SignUpView(FormView):
         return super().form_valid(form)
 
 
-# This view coordinates the sign in view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render accounts/sign_in.html for the sign in journey with PopadooAuthenticationForm. Its methods
+# keep record selection and the browser response inside the route’s permission boundary.
 class SignInView(LoginView):
     template_name = "accounts/sign_in.html"
     authentication_form = PopadooAuthenticationForm
     redirect_authenticated_user = True
 
 
-# This view coordinates the sign out view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Coordinate the sign out route. Responses continue through core:core_home.
 class SignOutView(LogoutView):
     next_page = reverse_lazy("core:core_home")
     http_method_names = ["post", "options"]
 
 
-# This view coordinates the profile update view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render accounts/profile.html for the profile update journey with ProfileForm. Access is limited to
+# authenticated accounts; success continues to reverse_lazy('accounts:accounts_profile').
 class ProfileUpdateView(LoginRequiredMixin, FormView):
     template_name = "accounts/profile.html"
     form_class = ProfileForm
     success_url = reverse_lazy("accounts:accounts_profile")
 
-    # This helper retrieves form kwargs for the page or service that called it.
-    # It returns a consistent, permission-aware result so callers do not need to repeat the same
-    # selection rules.
+    # Pass instance and user into ProfileUpdateView’s form constructor so field choices and
+    # validation use the current authorized records. The base view kwargs are preserved.
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         profile, _ = CustomerProfile.objects.get_or_create(user=self.request.user)
@@ -93,14 +87,13 @@ class ProfileUpdateView(LoginRequiredMixin, FormView):
         return super().form_valid(form)
 
 
-# This view coordinates the customer dashboard view page or action.
-# It prepares only the records allowed for the signed-in person before choosing the response shown
-# in the browser.
+# Render accounts/dashboard.html for the customer dashboard journey. Access is limited to
+# authenticated accounts.
 class CustomerDashboardView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/dashboard.html"
 
-    # This step gathers the additional labels, forms, and summary information the template needs
-    # to explain the page clearly.
+    # Add bookings to CustomerDashboardView’s template context. The values come from PartyBuild
+    # using the view’s already-authorized objects and filters.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["bookings"] = (

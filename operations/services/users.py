@@ -28,42 +28,35 @@ from .audit import record_audit
 User = get_user_model()
 
 
-# This function handles require business manager as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Compute require business manager for the surrounding analytics or service workflow. Centralizing
+# the calculation keeps date, status, and filtering rules consistent across callers.
 def _require_business_manager(actor) -> None:
     if not can_access_full_management(actor):
         raise PermissionDenied("Administrator or Owner access is required.")
 
 
-# This function handles require worker manager as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Compute require worker manager for the surrounding analytics or service workflow. Centralizing the
+# calculation keeps date, status, and filtering rules consistent across callers.
 def _require_worker_manager(actor) -> None:
     _require_business_manager(actor)
     if not actor.has_perm("accounts.manage_worker_roles"):
         raise PermissionDenied("Worker-management permission is required.")
 
 
-# This role check answers whether the current account qualifies as owner account.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Return true only for a non-superuser account in the Owner group.
 def is_owner_account(user) -> bool:
     """Return true for a protected Owner account, never for a superuser."""
 
     return bool(not user.is_superuser and user.groups.filter(name=OWNER_GROUP).exists())
 
 
-# This role check answers whether the current account qualifies as worker account.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Return whether the account belongs to the Worker group.
 def is_worker_account(user) -> bool:
     return user.groups.filter(name=WORKER_GROUP).exists()
 
 
-# This role check answers whether the current account qualifies as customer account.
-# Callers use the answer for navigation and convenience, while protected views and services still
-# enforce access themselves.
+# Treat an account as a customer only when it is not a superuser and belongs to neither the Owner
+# nor Worker group.
 def is_customer_account(user) -> bool:
     """Customers have no protected business role."""
 
@@ -102,17 +95,15 @@ def ensure_manager_can_manage(actor, target) -> None:
 ensure_owner_can_manage = ensure_manager_can_manage
 
 
-# This function handles reject worker role target as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Compute reject worker role target for the surrounding analytics or service workflow. Centralizing
+# the calculation keeps date, status, and filtering rules consistent across callers.
 def _reject_worker_role_target(user) -> None:
     if user.is_superuser or is_owner_account(user):
         raise PermissionDenied("Owner and Administrator accounts cannot be changed here.")
 
 
-# This business action carries out create owner account.
-# It validates the live records and permissions before changing anything, then keeps related
-# updates together so partial results are not left behind.
+# Create an Owner without granting Django staff or superuser privileges. Rechecks the actor’s
+# permission, updates Group and User, commits related changes atomically.
 @transaction.atomic
 def create_owner_account(
     *,
@@ -346,9 +337,7 @@ def _validate_owner_status_change(*, actor, target, active: bool) -> None:
             raise ValidationError("At least one other active Owner must remain.")
 
 
-# This function handles set account banned as part of this module’s workflow.
-# It keeps the repeated decision in one place so callers receive the same result and controlled
-# failure behaviour.
+# Ban or unban an eligible account while preserving all business history.
 @transaction.atomic
 def set_account_banned(*, target, banned: bool, actor):
     """Ban or unban an eligible account while preserving all business history."""
@@ -415,9 +404,8 @@ def customer_delete_blockers(user) -> list[str]:
     return blockers
 
 
-# This business action carries out delete unused customer.
-# It validates the live records and permissions before changing anything, then keeps related
-# updates together so partial results are not left behind.
+# Delete only an unused customer; historical accounts must be banned instead. Rechecks the actor’s
+# permission, updates AuditEvent, commits related changes atomically.
 @transaction.atomic
 def delete_unused_customer(*, target, actor) -> None:
     """Delete only an unused customer; historical accounts must be banned instead."""

@@ -45,8 +45,8 @@ class WorkerAvailability(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('start_at', 'worker__display_name'); create the declared database index(es).
+    # These options are enforced by Django rather than by template input.
     class Meta:
         ordering = ("start_at", "worker__display_name")
         permissions = [
@@ -121,8 +121,9 @@ class PartyAssignment(models.Model):
     owner_note = models.CharField(max_length=500, blank=True)
     conflict_override_reason = models.CharField(max_length=500, blank=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('-assigned_at',); enforce the declared database constraint(s); create the
+    # declared database index(es). These options are enforced by Django rather than by template
+    # input.
     class Meta:
         ordering = ("-assigned_at",)
         permissions = [
@@ -174,8 +175,8 @@ class AuditEvent(models.Model):
     after_data = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # This inner configuration tells Django how the surrounding record should be ordered,
-    # labelled, indexed, or constrained.
+    # Order records by ('-created_at',); create the declared database index(es). These options are
+    # enforced by Django rather than by template input.
     class Meta:
         ordering = ("-created_at",)
         indexes = [
