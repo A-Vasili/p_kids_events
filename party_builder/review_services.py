@@ -145,11 +145,11 @@ def save_party_review(
     withdrawn, while the same transaction continues to protect all ratings.
     """
 
-    locked = (
-        PartyBuild.objects.select_for_update()
-        .select_related("package", "customer")
-        .get(pk=booking.pk)
-    )
+    # The booking itself is the only row that must be locked while feedback is saved.
+    # Loading the optional customer relation in the same locking query works in SQLite but
+    # PostgreSQL rejects the resulting outer join, so related display data is loaded only when
+    # it is actually needed later.
+    locked = PartyBuild.objects.select_for_update().get(pk=booking.pk)
     ensure_review_eligible(booking=locked, reviewer=reviewer)
 
     valid_visibilities = {choice[0] for choice in PartyReview.Visibility.choices}

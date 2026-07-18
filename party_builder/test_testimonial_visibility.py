@@ -328,6 +328,24 @@ class PartyReviewVisibilityModelAndFormTests(TestimonialFeatureMixin, TestCase):
 # customer or staff workflow.
 # Shared setup keeps each scenario focused on the business rule being checked.
 class PartyReviewConsentServiceTests(TestimonialFeatureMixin, TestCase):
+    # This test keeps the booking lock limited to the booking row itself. That matters in
+    # production because PostgreSQL refuses to lock an optional customer relation through an
+    # outer join, even though SQLite accepts the same query during local development.
+    def test_review_booking_lock_does_not_join_optional_customer(self):
+        booking = self.make_booking()
+
+        with CaptureQueriesContext(connection) as captured:
+            self.service_save(booking)
+
+        booking_queries = [
+            query["sql"]
+            for query in captured.captured_queries
+            if 'FROM "party_builder_partybuild"' in query["sql"]
+            and '"party_builder_partybuild"."id" =' in query["sql"]
+        ]
+        self.assertTrue(booking_queries)
+        self.assertNotIn(" JOIN ", booking_queries[0].upper())
+
     # This test protects the business rule described by “private feedback has no consent and
     # normalises name choice”.
     # It guards against a future change silently weakening the expected customer, staff, or data
